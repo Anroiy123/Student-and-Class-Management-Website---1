@@ -1,0 +1,19 @@
+{
+  "name": "student-and-class-management-website-app",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.9"
+  },
+  "packageManager": "npm@10.8.1"
+}
