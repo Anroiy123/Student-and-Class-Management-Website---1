@@ -1,68 +1,84 @@
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useAuth } from '../lib/auth';
+import { useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const schema = z.object({
-  email: z.string().email({ message: "Email không hợp lệ" }),
-  password: z.string().min(6, "Mật khẩu ít nhất 6 ký tự"),
+  email: z.string().email({ message: 'Email không hợp lệ' }),
+  password: z.string().min(6, 'Mật khẩu ít nhất 6 ký tự'),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export const SignInPage = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = async (values: FormValues) => {
-    console.log("Sign-in placeholder", values);
-    // TODO: gọi API đăng nhập tại đây
+    try {
+      setError(null);
+      await login(values.email, values.password);
+      navigate('/');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Đăng nhập thất bại');
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+    <div className="flex min-h-screen items-center justify-center px-4">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-lg"
+        className="nb-card w-full max-w-sm"
       >
-        <h1 className="text-xl font-semibold text-slate-900">
-          Đăng nhập hệ thống
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-xl font-bold">Đăng nhập hệ thống</h1>
+        <p className="mt-1 text-sm opacity-70">
           Sử dụng tài khoản được cấp để truy cập.
         </p>
 
+        {error && (
+          <div className="mt-4 border-3 border-black bg-nb-coral p-3 shadow-neo-sm">
+            <p className="text-sm font-semibold">{error}</p>
+          </div>
+        )}
+
         <div className="mt-6 space-y-4">
-          <label className="block text-sm font-medium text-slate-600">
+          <label className="block text-sm font-semibold">
             Email
             <input
               type="email"
-              {...register("email")}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              {...register('email')}
+              className="nb-input mt-1"
               placeholder="you@example.com"
             />
             {errors.email && (
-              <span className="mt-1 block text-xs text-red-500">
+              <span className="mt-1 block text-xs text-red-600">
                 {errors.email.message}
               </span>
             )}
           </label>
 
-          <label className="block text-sm font-medium text-slate-600">
+          <label className="block text-sm font-semibold">
             Mật khẩu
             <input
               type="password"
-              {...register("password")}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              {...register('password')}
+              className="nb-input mt-1"
               placeholder="••••••••"
             />
             {errors.password && (
-              <span className="mt-1 block text-xs text-red-500">
+              <span className="mt-1 block text-xs text-red-600">
                 {errors.password.message}
               </span>
             )}
@@ -71,11 +87,21 @@ export const SignInPage = () => {
 
         <button
           type="submit"
-          className="mt-6 w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 disabled:opacity-60"
+          className="nb-btn nb-btn--primary mt-6 w-full disabled:opacity-60"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
+          {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </button>
+
+        <div className="mt-4 text-center text-sm">
+          <span className="opacity-70">Chưa có tài khoản? </span>
+          <Link
+            to="/auth/register"
+            className="font-semibold underline hover:no-underline"
+          >
+            Đăng ký
+          </Link>
+        </div>
       </form>
     </div>
   );

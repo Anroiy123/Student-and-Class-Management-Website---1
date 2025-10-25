@@ -1,55 +1,79 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import type { ReactNode } from "react";
-import { clsx } from "clsx";
+import { Link, NavLink, Outlet } from 'react-router-dom';
+import type { ReactNode } from 'react';
+import { clsx } from 'clsx';
+import { useAuth, type UserRole } from '../lib/auth';
 
 type NavItem = {
   label: string;
   path: string;
-  roles?: string[];
+  roles?: UserRole[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", path: "/" },
-  { label: "Quản lý sinh viên", path: "/students" },
-  { label: "Quản lý lớp học", path: "/classes" },
-  { label: "Quản lý môn học", path: "/courses" },
-  { label: "Quản lý điểm", path: "/grades" },
-  { label: "Báo cáo", path: "/reports" },
+  { label: 'Dashboard', path: '/' },
+  {
+    label: 'Quản lý sinh viên',
+    path: '/students',
+    roles: ['ADMIN', 'TEACHER'],
+  },
+  { label: 'Quản lý lớp học', path: '/classes', roles: ['ADMIN', 'TEACHER'] },
+  { label: 'Quản lý môn học', path: '/courses', roles: ['ADMIN', 'TEACHER'] },
+  { label: 'Quản lý điểm', path: '/grades', roles: ['ADMIN', 'TEACHER'] },
+  { label: 'Báo cáo', path: '/reports' },
 ];
 
 export const AppLayout = () => {
-  const navigate = useNavigate();
+  const { logout, user } = useAuth();
 
   const handleSignOut = () => {
-    // TODO: replace with real sign-out logic when auth is implemented.
-    navigate("/auth/sign-in");
+    logout();
   };
 
+  // Filter nav items based on user role
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (!item.roles) return true;
+    return user && item.roles.includes(user.role);
+  });
+
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="sticky top-0 z-10 bg-white shadow">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="text-lg font-semibold text-blue-600">
+    <div className="min-h-screen flex">
+      <aside className="sticky top-0 h-screen w-64 border-r-3 border-black bg-nb-lemon">
+        <div className="flex h-full flex-col gap-4 p-4">
+          <Link
+            to="/"
+            className="border-3 border-black bg-white px-3 py-2 font-display text-lg font-semibold shadow-neo"
+          >
             Student/Class Admin
           </Link>
-          <nav className="hidden items-center gap-1 text-sm font-medium sm:flex">
-            {NAV_ITEMS.map((item) => (
+          <nav className="nb-nav flex-col">
+            {visibleNavItems.map((item) => (
               <NavItem key={item.path} to={item.path}>
                 {item.label}
               </NavItem>
             ))}
           </nav>
-          <button
-            type="button"
-            className="rounded-md border border-slate-200 px-3 py-1 text-sm hover:bg-slate-50"
-            onClick={handleSignOut}
-          >
-            Đăng xuất
-          </button>
+          <div className="mt-auto">
+            {user && (
+              <div className="mb-3 border-3 border-black bg-white p-2 shadow-neo-sm">
+                <p className="text-xs font-semibold">{user.email}</p>
+                <p className="text-xs opacity-70">
+                  {user.role === 'ADMIN' && 'Quản trị viên'}
+                  {user.role === 'TEACHER' && 'Giảng viên'}
+                  {user.role === 'STUDENT' && 'Sinh viên'}
+                </p>
+              </div>
+            )}
+            <button
+              type="button"
+              className="nb-btn nb-btn--accent w-full"
+              onClick={handleSignOut}
+            >
+              Đăng xuất
+            </button>
+          </div>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+      </aside>
+      <main className="flex-1 px-4 py-6 sm:px-6">
         <Outlet />
       </main>
     </div>
@@ -61,13 +85,11 @@ const NavItem = ({ to, children }: { to: string; children: ReactNode }) => (
     to={to}
     className={({ isActive }) =>
       clsx(
-        "rounded-md px-3 py-2 transition-colors hover:bg-blue-50 hover:text-blue-600",
-        isActive
-          ? "bg-blue-100 text-blue-700"
-          : "text-slate-600 hover:text-blue-600",
+        'nb-nav__item block w-full text-left',
+        isActive && 'nb-nav__item--active',
       )
     }
-    end={to === "/"}
+    end={to === '/'}
   >
     {children}
   </NavLink>

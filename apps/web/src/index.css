@@ -1,10 +1,73 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 :root {
   color-scheme: light;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
     sans-serif;
-  background-color: #f5f5f5;
+  background-color: #f8f7f2; /* nb.paper */
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply min-h-screen bg-nb-paper text-nb-ink;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+  ::selection {
+    background: #ffe76a; /* nb.lemon */
+    color: #111;
+  }
+}
+
+@layer components {
+  .nb-card {
+    @apply border-3 border-black bg-white shadow-neo p-4 md:p-6;
+  }
+  .nb-card--flat {
+    @apply border-3 border-black bg-nb-paper shadow-neo p-4 md:p-6;
+  }
+  .nb-btn {
+    @apply inline-flex items-center justify-center gap-2 border-3 border-black px-4 py-2 shadow-neo transition-transform active:translate-x-0 active:translate-y-0;
+  }
+  .nb-btn:hover {
+    transform: translate(2px, -2px);
+  }
+  .nb-btn:active {
+    box-shadow: 2px 2px 0 0 #111;
+    transform: translate(0, 0);
+  }
+  .nb-btn--primary {
+    @apply bg-nb-lemon text-nb-ink;
+  }
+  .nb-btn--accent {
+    @apply bg-nb-sky text-nb-ink;
+  }
+  .nb-input {
+    @apply w-full border-3 border-black bg-white px-3 py-2 shadow-neo focus:outline-none focus:ring-0;
+  }
+  .nb-nav {
+    @apply flex items-center gap-2 text-sm font-semibold;
+  }
+  .nb-nav__item {
+    @apply border-3 border-black bg-white px-3 py-2 shadow-neo transition-transform;
+  }
+  .nb-nav__item:hover {
+    transform: translate(2px, -2px);
+  }
+  .nb-nav__item--active {
+    @apply bg-nb-mint;
+  }
 }
