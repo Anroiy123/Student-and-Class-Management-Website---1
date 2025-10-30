@@ -17,6 +17,7 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router = Router();
 
+// Bật lại authentication
 router.use(requireAuth());
 
 router.get(

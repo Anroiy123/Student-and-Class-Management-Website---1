@@ -8,35 +8,41 @@
     "build": "tsc --project tsconfig.build.json",
     "start": "node dist/index.js",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --check \"src/**/*.{ts,tsx}\""
+    "format": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "seed:users": "tsx src/scripts/seedUsers.ts",
+    "seed:classes": "tsx scripts/seed-classes.ts",
+    "seed:students": "tsx scripts/seed-students.ts",
+    "seed:courses": "tsx scripts/seed-courses.ts",
+    "seed:enrollments": "tsx scripts/seed-enrollments.ts",
+    "seed:grades": "tsx scripts/seed-grades.ts"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "express": "^4.21.1",
     "helmet": "^7.1.0",
-    "mongoose": "^8.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.2",
     "morgan": "^1.10.0",
-    "zod": "^3.23.8",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/morgan": "^1.9.7",
-    "@types/node": "^22.8.4",
+    "@types/node": "^22.18.12",
     "@typescript-eslint/eslint-plugin": "^8.13.0",
     "@typescript-eslint/parser": "^8.13.0",
     "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.12.0",
     "prettier": "^3.3.3",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
-    "@eslint/js": "^9.15.0",
-    "globals": "^15.12.0",
-    "@types/jsonwebtoken": "^9.0.6",
-    "typescript-eslint": "^8.13.0",
-    "@types/bcryptjs": "^2.4.6"
+    "typescript-eslint": "^8.13.0"
   }
 }

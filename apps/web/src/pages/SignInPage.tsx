@@ -1,6 +1,9 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const schema = z.object({
   email: z.string().email({ message: "Email không hợp lệ" }),
@@ -10,6 +13,10 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export const SignInPage = () => {
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
   const {
     register,
     handleSubmit,
@@ -19,9 +26,22 @@ export const SignInPage = () => {
     defaultValues: { email: "", password: "" },
   });
 
+  // Nếu đã đăng nhập, redirect về trang chủ
+  if (isAuthenticated) {
+    navigate("/");
+    return null;
+  }
+
   const onSubmit = async (values: FormValues) => {
-    console.log("Sign-in placeholder", values);
-    // TODO: gọi API đăng nhập tại đây
+    try {
+      setErrorMessage("");
+      await login(values);
+      // Login thành công, redirect về trang chủ
+      navigate("/");
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
+      setErrorMessage(message);
+    }
   };
 
   return (
@@ -36,6 +56,12 @@ export const SignInPage = () => {
         <p className="mt-1 text-sm text-slate-500">
           Sử dụng tài khoản được cấp để truy cập.
         </p>
+
+        {errorMessage && (
+          <div className="mt-4 rounded-md bg-red-50 border border-red-200 p-3">
+            <p className="text-sm text-red-600">{errorMessage}</p>
+          </div>
+        )}
 
         <div className="mt-6 space-y-4">
           <label className="block text-sm font-medium text-slate-600">

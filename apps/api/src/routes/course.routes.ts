@@ -16,8 +16,10 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router = Router();
 
+// Tất cả routes đều yêu cầu authentication
 router.use(requireAuth());
 
+// GET routes - cho phép ADMIN và TEACHER xem
 router.get("/", requireRole("ADMIN", "TEACHER"), listCourses);
 router.get(
   "/:id",
@@ -25,6 +27,8 @@ router.get(
   validateRequest(getCourseSchema),
   getCourse,
 );
+
+// CUD routes - chỉ ADMIN mới được phép
 router.post(
   "/",
   requireRole("ADMIN"),

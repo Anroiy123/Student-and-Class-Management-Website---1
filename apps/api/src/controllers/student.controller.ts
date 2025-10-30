@@ -6,17 +6,17 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
   const page = Number(req.query.page ?? 1);
-  const pageSize = Number(req.query.pageSize ?? DEFAULT_PAGE_SIZE);
-  const query = String(req.query.q ?? "").trim();
+  const limit = Number(req.query.limit ?? DEFAULT_PAGE_SIZE);
+  const search = String(req.query.search ?? "").trim();
   const classId = req.query.classId ? String(req.query.classId) : undefined;
 
   const filter: Record<string, unknown> = {};
 
-  if (query) {
+  if (search) {
     filter.$or = [
-      { mssv: { $regex: query, $options: "i" } },
-      { fullName: { $regex: query, $options: "i" } },
-      { email: { $regex: query, $options: "i" } },
+      { studentId: { $regex: search, $options: "i" } },
+      { fullName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
     ];
   }
 
@@ -24,20 +24,22 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
     filter.classId = classId;
   }
 
-  const [items, total] = await Promise.all([
+  const [students, total] = await Promise.all([
     StudentModel.find(filter)
       .populate("classId")
       .sort({ createdAt: -1 })
-      .skip((page - 1) * pageSize)
-      .limit(pageSize),
+      .skip((page - 1) * limit)
+      .limit(limit),
     StudentModel.countDocuments(filter),
   ]);
 
+  const totalPages = Math.ceil(total / limit);
+
   res.json({
-    items,
+    students,
     total,
     page,
-    pageSize,
+    totalPages,
   });
 });
 

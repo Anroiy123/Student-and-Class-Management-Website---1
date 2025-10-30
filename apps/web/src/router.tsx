@@ -7,6 +7,7 @@ import { CoursesPage } from "./pages/CoursesPage";
 import { GradesPage } from "./pages/GradesPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { SignInPage } from "./pages/SignInPage";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
   {
@@ -15,14 +16,53 @@ export const router = createBrowserRouter([
   },
   {
     path: "/",
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: "students", element: <StudentsPage /> },
-      { path: "classes", element: <ClassesPage /> },
-      { path: "courses", element: <CoursesPage /> },
-      { path: "grades", element: <GradesPage /> },
-      { path: "reports", element: <ReportsPage /> },
+      { 
+        path: "students", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <StudentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      { 
+        path: "classes", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <ClassesPage />
+          </ProtectedRoute>
+        ),
+      },
+      { 
+        path: "courses", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <CoursesPage />
+          </ProtectedRoute>
+        ),
+      },
+      { 
+        path: "grades", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <GradesPage />
+          </ProtectedRoute>
+        ),
+      },
+      { 
+        path: "reports", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
