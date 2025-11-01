@@ -23,13 +23,13 @@ router.use(requireAuth());
 router.get(
   "/",
   validateRequest(paginationQuerySchema),
-  requireRole("ADMIN", "TEACHER"),
+  requireRole("ADMIN", "TEACHER", "STUDENT"),
   listStudents,
 );
 router.get(
   "/:id",
   validateRequest(getStudentSchema),
-  requireRole("ADMIN", "TEACHER"),
+  requireRole("ADMIN", "TEACHER", "STUDENT"),
   getStudent,
 );
 router.post(

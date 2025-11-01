@@ -2,14 +2,21 @@ import { useState } from "react";
 import { useClasses, useCreateClass, useUpdateClass, useDeleteClass } from "../hooks/useClasses";
 import { ClassTable } from "../components/classes/ClassTable";
 import { ClassForm } from "../components/classes/ClassForm";
+import { useAuth } from "../contexts/AuthContext";
 import type { Class } from "../services/class.service";
 
 export const ClassesPage = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
+  const { user, isTeacher } = useAuth();
 
   // Fetch classes
   const { data: classes, isLoading, error } = useClasses();
+
+  // Filter classes for teachers - only show classes they teach
+  const filteredClasses = isTeacher && user?.email
+    ? classes?.filter(c => c.homeroomTeacher === user.email)
+    : classes;
 
   // Mutations
   const createMutation = useCreateClass();
@@ -89,22 +96,26 @@ export const ClassesPage = () => {
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Quản lý lớp học
+            {isTeacher ? "Lớp học của tôi" : "Quản lý lớp học"}
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Quản lý thông tin lớp học, sĩ số và giáo viên chủ nhiệm
+            {isTeacher 
+              ? "Danh sách các lớp bạn là giáo viên chủ nhiệm" 
+              : "Quản lý thông tin lớp học, sĩ số và giáo viên chủ nhiệm"}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleAddClass}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:from-purple-700 hover:to-pink-700 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Thêm lớp học
-        </button>
+        {!isTeacher && (
+          <button
+            type="button"
+            onClick={handleAddClass}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 hover:from-purple-700 hover:to-pink-700 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Thêm lớp học
+          </button>
+        )}
       </header>
 
       {/* Stats Cards */}
@@ -117,8 +128,8 @@ export const ClassesPage = () => {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600">Tổng số lớp</p>
-              <p className="text-2xl font-bold text-gray-900">{classes?.length || 0}</p>
+              <p className="text-sm font-medium text-gray-600">{isTeacher ? "Số lớp" : "Tổng số lớp"}</p>
+              <p className="text-2xl font-bold text-gray-900">{filteredClasses?.length || 0}</p>
             </div>
           </div>
         </div>
@@ -133,7 +144,7 @@ export const ClassesPage = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Tổng sinh viên</p>
               <p className="text-2xl font-bold text-gray-900">
-                {classes?.reduce((sum, cls) => sum + (cls.size || 0), 0) || 0}
+                {filteredClasses?.reduce((sum, cls) => sum + (cls.size || 0), 0) || 0}
               </p>
             </div>
           </div>
@@ -149,8 +160,8 @@ export const ClassesPage = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">Sĩ số trung bình</p>
               <p className="text-2xl font-bold text-gray-900">
-                {classes && classes.length > 0
-                  ? Math.round(classes.reduce((sum, cls) => sum + (cls.size || 0), 0) / classes.length)
+                {filteredClasses && filteredClasses.length > 0
+                  ? Math.round(filteredClasses.reduce((sum, cls) => sum + (cls.size || 0), 0) / filteredClasses.length)
                   : 0}
               </p>
             </div>
@@ -165,9 +176,10 @@ export const ClassesPage = () => {
         </div>
       ) : (
         <ClassTable
-          data={classes || []}
+          data={filteredClasses || []}
           onEdit={handleEditClass}
           onDelete={handleDeleteClass}
+          canEdit={!isTeacher}
         />
       )}
 

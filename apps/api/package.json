@@ -10,11 +10,15 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --check \"src/**/*.{ts,tsx}\"",
     "seed:users": "tsx src/scripts/seedUsers.ts",
-    "seed:classes": "tsx scripts/seed-classes.ts",
-    "seed:students": "tsx scripts/seed-students.ts",
+    "seed:classes": "tsx src/scripts/seed-classes.ts",
+    "seed:students": "tsx src/scripts/seed-students.ts",
     "seed:courses": "tsx scripts/seed-courses.ts",
     "seed:enrollments": "tsx scripts/seed-enrollments.ts",
-    "seed:grades": "tsx scripts/seed-grades.ts"
+    "seed:grades": "tsx scripts/seed-grades.ts",
+    "seed:teachers": "tsx scripts/seed-teachers.ts",
+    "assign:teachers-courses": "tsx scripts/assign-teachers-to-courses.ts",
+    "create:student-accounts": "tsx scripts/create-accounts-for-enrolled-students.ts",
+    "sync:teacher-accounts": "tsx scripts/sync-teacher-accounts.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

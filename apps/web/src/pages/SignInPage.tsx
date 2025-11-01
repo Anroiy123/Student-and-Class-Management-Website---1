@@ -13,7 +13,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export const SignInPage = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, isStudent } = useAuth();
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string>("");
 
@@ -26,18 +26,23 @@ export const SignInPage = () => {
     defaultValues: { email: "", password: "" },
   });
 
-  // Nếu đã đăng nhập, redirect về trang chủ
+  // Nếu đã đăng nhập, redirect về trang phù hợp
   if (isAuthenticated) {
-    navigate("/");
+    const redirectPath = isStudent ? "/profile" : "/";
+    navigate(redirectPath);
     return null;
   }
 
   const onSubmit = async (values: FormValues) => {
     try {
       setErrorMessage("");
-      await login(values);
-      // Login thành công, redirect về trang chủ
-      navigate("/");
+      const userData = await login(values);
+      // Login thành công, redirect tùy theo role
+      if (userData.role === "STUDENT") {
+        navigate("/profile");
+      } else {
+        navigate("/");
+      }
     } catch (error: any) {
       const message = error.response?.data?.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.";
       setErrorMessage(message);

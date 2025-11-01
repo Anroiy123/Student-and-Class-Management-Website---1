@@ -16,6 +16,7 @@ export interface GradeRow {
   studentName: string;
   courseCode: string;
   courseName: string;
+  teacherName?: string;
   className: string;
   semester: string;
   attendance: number;
@@ -86,6 +87,18 @@ export const GradeTable = ({ data, onEdit }: GradeTableProps) => {
         <div>
           <div className="font-semibold text-gray-800">{row.original.courseName || "N/A"}</div>
           <div className="text-xs text-gray-500 font-mono">{row.original.courseCode || "N/A"}</div>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "teacherName",
+      header: "Giảng viên",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 text-gray-700">
+          <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <span className="font-medium text-sm">{row.original.teacherName || "Chưa có"}</span>
         </div>
       ),
     },

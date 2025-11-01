@@ -6,6 +6,7 @@ import { ClassesPage } from "./pages/ClassesPage";
 import { CoursesPage } from "./pages/CoursesPage";
 import { GradesPage } from "./pages/GradesPage";
 import { ReportsPage } from "./pages/ReportsPage";
+import { StudentProfilePage } from "./pages/StudentProfilePage";
 import { SignInPage } from "./pages/SignInPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -22,7 +23,22 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <DashboardPage /> },
+      { 
+        index: true, 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      { 
+        path: "dashboard", 
+        element: (
+          <ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]}>
+            <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
       { 
         path: "students", 
         element: (
@@ -60,6 +76,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={["ADMIN"]}>
             <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
+      { 
+        path: "profile", 
+        element: (
+          <ProtectedRoute allowedRoles={["STUDENT"]}>
+            <StudentProfilePage />
           </ProtectedRoute>
         ),
       },

@@ -6,6 +6,7 @@ export interface Class {
   name: string;
   size?: number;
   homeroomTeacher?: string;
+  homeroomTeacherName?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -15,6 +16,7 @@ export interface CreateClassDto {
   name: string;
   size?: number;
   homeroomTeacher?: string;
+  homeroomTeacherName?: string;
 }
 
 export interface UpdateClassDto {
@@ -22,6 +24,7 @@ export interface UpdateClassDto {
   name?: string;
   size?: number;
   homeroomTeacher?: string;
+  homeroomTeacherName?: string;
 }
 
 // Get all classes

@@ -8,7 +8,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isTeacher: boolean;
   isStudent: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<User>;
   logout: () => void;
 }
 
@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { accessToken, user: userData } = await authService.login(credentials);
       authService.setToken(accessToken);
       setUser(userData);
+      return userData; // Return user data để SignInPage có thể dùng
     } catch (error) {
       throw error;
     }

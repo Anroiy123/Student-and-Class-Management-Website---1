@@ -12,6 +12,14 @@ export const useGrades = (filters?: {
   });
 };
 
+export const useStudentSemesterGPA = (studentId: string, semester?: string) => {
+  return useQuery({
+    queryKey: ["semester-gpa", studentId, semester],
+    queryFn: () => gradeService.getStudentSemesterGPA(studentId, semester),
+    enabled: !!studentId,
+  });
+};
+
 export const useUpsertGrade = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -20,6 +28,7 @@ export const useUpsertGrade = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["grades"] });
       queryClient.invalidateQueries({ queryKey: ["enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["semester-gpa"] });
     },
   });
 };

@@ -3,6 +3,7 @@ import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent } fro
 import type { Student } from "../services/student.service";
 import { StudentTable } from "../components/students/StudentTable";
 import { StudentForm } from "../components/students/StudentForm";
+import { useAuth } from "../contexts/AuthContext";
 
 // Adapter để chuyển đổi Student từ API sang Student của Table
 const adaptStudentForTable = (apiStudent: Student) => {
@@ -26,14 +27,16 @@ const adaptStudentForTable = (apiStudent: Student) => {
 };
 
 export function StudentsPage() {
-  const [currentPage, setCurrentPage] = useState(1);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any>(null);
+  
+  // Get user role
+  const { isTeacher } = useAuth();
 
-  // Fetch students với React Query
+  // Fetch ALL students - no pagination
   const { data, isLoading, error } = useStudents({
-    page: currentPage,
-    limit: 10,
+    page: 1,
+    limit: 1000, // Get all students
     search: "",
   });
 
@@ -43,7 +46,6 @@ export function StudentsPage() {
   const deleteMutation = useDeleteStudent();
 
   const students = data?.students || [];
-  const totalPages = data?.totalPages || 1;
 
   const handleAddStudent = () => {
     setEditingStudent(null);
@@ -162,20 +164,26 @@ export function StudentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quản lý Sinh viên</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isTeacher ? "Danh sách Sinh viên" : "Quản lý Sinh viên"}
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Quản lý thông tin sinh viên: thêm, sửa, xóa và tìm kiếm
+            {isTeacher 
+              ? "Xem thông tin sinh viên (chỉ đọc)" 
+              : "Quản lý thông tin sinh viên: thêm, sửa, xóa và tìm kiếm"}
           </p>
         </div>
-        <button
-          onClick={handleAddStudent}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Thêm sinh viên
-        </button>
+        {!isTeacher && (
+          <button
+            onClick={handleAddStudent}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Thêm sinh viên
+          </button>
+        )}
       </div>
 
       {/* Stats */}
@@ -194,29 +202,15 @@ export function StudentsPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-6 border border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-green-600 font-semibold">Trang hiện tại</p>
-              <p className="text-3xl font-bold text-green-900 mt-1">{currentPage} / {totalPages}</p>
-            </div>
-            <div className="w-14 h-14 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
         <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-md p-6 border border-purple-200">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-600 font-semibold">Kết quả hiển thị</p>
+              <p className="text-sm text-purple-600 font-semibold">Tổng số sinh viên</p>
               <p className="text-3xl font-bold text-purple-900 mt-1">{students.length}</p>
             </div>
             <div className="w-14 h-14 bg-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
           </div>
@@ -255,51 +249,8 @@ export function StudentsPage() {
           data={students.map(adaptStudentForTable)}
           onEdit={handleEditStudent}
           onDelete={handleDeleteStudent}
+          canEdit={!isTeacher}
         />
-      )}
-
-      {/* Pagination */}
-      {!isLoading && !error && totalPages > 1 && (
-        <div className="bg-white rounded-xl shadow-md p-4 border border-gray-200">
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className="px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white hover:border-transparent disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              ⏮️ Đầu
-            </button>
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white hover:border-transparent disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              ◀️ Trước
-            </button>
-            
-            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border-2 border-blue-200">
-              <span className="text-sm text-gray-600">Trang</span>
-              <span className="font-bold text-blue-600 text-lg">{currentPage}</span>
-              <span className="text-sm text-gray-600">/</span>
-              <span className="font-bold text-gray-700">{totalPages}</span>
-            </div>
-
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white hover:border-transparent disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              Sau ▶️
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="px-4 py-2 rounded-lg border-2 border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 hover:text-white hover:border-transparent disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              Cuối ⏭️
-            </button>
-          </div>
-        </div>
       )}
 
       {/* Student Form Modal */}

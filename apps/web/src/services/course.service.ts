@@ -5,6 +5,8 @@ export interface Course {
   code: string;
   name: string;
   credits: number;
+  teacherEmail?: string;
+  teacherName?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -13,12 +15,16 @@ export interface CreateCourseDto {
   code: string;
   name: string;
   credits: number;
+  teacherEmail?: string;
+  teacherName?: string;
 }
 
 export interface UpdateCourseDto {
   code?: string;
   name?: string;
   credits?: number;
+  teacherEmail?: string;
+  teacherName?: string;
 }
 
 export const courseService = {

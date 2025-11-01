@@ -14,6 +14,8 @@ export interface Grade {
       code: string;
       name: string;
       credits: number;
+      teacherEmail?: string;
+      teacherName?: string;
     };
     classId?: {
       _id: string;
@@ -37,6 +39,31 @@ export interface UpsertGradeDto {
   final: number;
 }
 
+export interface CourseGrade {
+  courseCode: string;
+  courseName: string;
+  credits: number;
+  semester: string;
+  attendance: number;
+  midterm: number;
+  final: number;
+  total: number;
+  status: string;
+}
+
+export interface StudentSemesterGPA {
+  studentId: string;
+  semester: string;
+  courses: CourseGrade[];
+  gpa: number;
+  totalCredits: number;
+  passedCredits: number;
+  failedCredits: number;
+  totalCourses: number;
+  passedCourses: number;
+  failedCourses: number;
+}
+
 export const gradeService = {
   getAllGrades: async (filters?: {
     studentId?: string;
@@ -54,6 +81,15 @@ export const gradeService = {
 
   upsertGrade: async (enrollmentId: string, data: UpsertGradeDto): Promise<Grade> => {
     const response = await api.put(`/grades/${enrollmentId}`, data);
+    return response.data;
+  },
+
+  getStudentSemesterGPA: async (studentId: string, semester?: string): Promise<StudentSemesterGPA> => {
+    const params = new URLSearchParams();
+    params.append("studentId", studentId);
+    if (semester) params.append("semester", semester);
+    
+    const response = await api.get(`/grades/semester-gpa?${params.toString()}`);
     return response.data;
   },
 };

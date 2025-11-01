@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { listGrades, upsertGrade } from "../controllers/grade.controller";
+import { listGrades, upsertGrade, getStudentSemesterGPA } from "../controllers/grade.controller";
 import {
   listGradesSchema,
   upsertGradeSchema,
@@ -13,9 +13,14 @@ router.use(requireAuth());
 
 router.get(
   "/",
-  requireRole("ADMIN", "TEACHER"),
+  requireRole("ADMIN", "TEACHER", "STUDENT"),
   validateRequest(listGradesSchema),
   listGrades,
+);
+router.get(
+  "/semester-gpa",
+  requireRole("ADMIN", "TEACHER", "STUDENT"),
+  getStudentSemesterGPA,
 );
 router.put(
   "/:enrollmentId",

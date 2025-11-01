@@ -12,6 +12,8 @@ export interface Enrollment {
     code: string;
     name: string;
     credits: number;
+    teacherEmail?: string;
+    teacherName?: string;
   };
   classId?: {
     _id: string;

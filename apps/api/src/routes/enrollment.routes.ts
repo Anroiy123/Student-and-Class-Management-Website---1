@@ -18,7 +18,7 @@ router.use(requireAuth());
 
 router.get(
   "/",
-  requireRole("ADMIN", "TEACHER"),
+  requireRole("ADMIN", "TEACHER", "STUDENT"),
   validateRequest(listEnrollmentSchema),
   listEnrollments,
 );

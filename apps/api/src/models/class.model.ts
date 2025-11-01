@@ -6,6 +6,7 @@ const classSchema = new Schema(
     name: { type: String, required: true, trim: true },
     size: { type: Number, default: 0 },
     homeroomTeacher: { type: String, default: null },
+    homeroomTeacherName: { type: String, default: null },
   },
   { timestamps: true },
 );

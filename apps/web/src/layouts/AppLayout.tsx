@@ -10,12 +10,13 @@ type NavItem = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", path: "/" },
+  { label: "Dashboard", path: "/dashboard", roles: ["ADMIN", "TEACHER"] },
   { label: "Quản lý sinh viên", path: "/students", roles: ["ADMIN", "TEACHER"] },
   { label: "Quản lý lớp học", path: "/classes", roles: ["ADMIN", "TEACHER"] },
   { label: "Quản lý môn học", path: "/courses", roles: ["ADMIN"] },
   { label: "Quản lý điểm", path: "/grades", roles: ["ADMIN", "TEACHER"] },
   { label: "Báo cáo", path: "/reports", roles: ["ADMIN"] },
+  { label: "Thông tin cá nhân", path: "/profile", roles: ["STUDENT"] },
 ];
 
 export const AppLayout = () => {
@@ -32,11 +33,14 @@ export const AppLayout = () => {
     return item.roles.includes(user.role);
   });
 
+  // Determine home link based on role
+  const homeLink = isStudent ? "/profile" : "/";
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <header className="sticky top-0 z-10 bg-white shadow">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="text-lg font-semibold text-blue-600">
+          <Link to={homeLink} className="text-lg font-semibold text-blue-600">
             Student/Class Admin
           </Link>
           <nav className="hidden items-center gap-1 text-sm font-medium sm:flex">
@@ -85,7 +89,7 @@ const NavItem = ({ to, children }: { to: string; children: ReactNode }) => (
           : "text-slate-600 hover:text-blue-600",
       )
     }
-    end={to === "/"}
+    end={to === "/dashboard" || to === "/profile"}
   >
     {children}
   </NavLink>
