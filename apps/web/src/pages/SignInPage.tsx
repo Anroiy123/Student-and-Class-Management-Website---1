@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useAuth } from '../lib/auth';
+import { useAuth } from '../lib/authHooks';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
 

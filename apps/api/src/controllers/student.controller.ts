@@ -1,32 +1,73 @@
-import type { RequestHandler } from "express";
-import { StudentModel } from "../models/student.model";
-import { asyncHandler } from "../utils/asyncHandler";
+import type { RequestHandler } from 'express';
+import type { FilterQuery } from 'mongoose';
+import { StudentModel } from '../models/student.model';
+import type { Student } from '../models/student.model';
+import { asyncHandler } from '../utils/asyncHandler';
 
 const DEFAULT_PAGE_SIZE = 10;
 
 export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
   const page = Number(req.query.page ?? 1);
   const pageSize = Number(req.query.pageSize ?? DEFAULT_PAGE_SIZE);
-  const query = String(req.query.q ?? "").trim();
+  const query = String(req.query.q ?? '').trim();
   const classId = req.query.classId ? String(req.query.classId) : undefined;
+  const mssv = req.query.mssv ? String(req.query.mssv) : undefined;
+  const fullName = req.query.fullName ? String(req.query.fullName) : undefined;
+  const email = req.query.email ? String(req.query.email) : undefined;
+  const phone = req.query.phone ? String(req.query.phone) : undefined;
+  const address = req.query.address ? String(req.query.address) : undefined;
+  const dobFrom = req.query.dobFrom ? String(req.query.dobFrom) : undefined;
+  const dobTo = req.query.dobTo ? String(req.query.dobTo) : undefined;
 
-  const filter: Record<string, unknown> = {};
+  const filter: FilterQuery<Student> = {};
 
   if (query) {
-    filter.$or = [
-      { mssv: { $regex: query, $options: "i" } },
-      { fullName: { $regex: query, $options: "i" } },
-      { email: { $regex: query, $options: "i" } },
-    ];
+    const q = new RegExp(query, 'i');
+    filter.$or = [{ mssv: q }, { fullName: q }, { email: q }];
   }
 
   if (classId) {
-    filter.classId = classId;
+    filter.classId = classId as unknown as FilterQuery<Student>['classId'];
+  }
+
+  if (mssv) {
+    filter.mssv = new RegExp(mssv, 'i');
+  }
+  if (fullName) {
+    filter.fullName = new RegExp(fullName, 'i');
+  }
+  if (email) {
+    filter.email = new RegExp(email, 'i');
+  }
+  if (phone) {
+    filter.phone = new RegExp(phone, 'i');
+  }
+  if (address) {
+    filter.address = new RegExp(address, 'i');
+  }
+
+  if (dobFrom || dobTo) {
+    const dobCond: { $gte?: Date; $lte?: Date } = {};
+    if (dobFrom) {
+      const fromDate = new Date(dobFrom);
+      if (!isNaN(fromDate.getTime())) {
+        dobCond.$gte = fromDate;
+      }
+    }
+    if (dobTo) {
+      const toDate = new Date(dobTo);
+      if (!isNaN(toDate.getTime())) {
+        dobCond.$lte = toDate;
+      }
+    }
+    if (Object.keys(dobCond).length > 0) {
+      filter.dob = dobCond;
+    }
   }
 
   const [items, total] = await Promise.all([
     StudentModel.find(filter)
-      .populate("classId")
+      .populate('classId')
       .sort({ createdAt: -1 })
       .skip((page - 1) * pageSize)
       .limit(pageSize),
@@ -43,10 +84,10 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
 
 export const getStudent: RequestHandler = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const student = await StudentModel.findById(id).populate("classId");
+  const student = await StudentModel.findById(id).populate('classId');
 
   if (!student) {
-    return res.status(404).json({ message: "Student not found" });
+    return res.status(404).json({ message: 'Student not found' });
   }
 
   res.json(student);
@@ -74,7 +115,7 @@ export const updateStudent: RequestHandler = asyncHandler(async (req, res) => {
   });
 
   if (!student) {
-    return res.status(404).json({ message: "Student not found" });
+    return res.status(404).json({ message: 'Student not found' });
   }
 
   res.json(student);
@@ -85,7 +126,7 @@ export const deleteStudent: RequestHandler = asyncHandler(async (req, res) => {
   const student = await StudentModel.findByIdAndDelete(id);
 
   if (!student) {
-    return res.status(404).json({ message: "Student not found" });
+    return res.status(404).json({ message: 'Student not found' });
   }
 
   res.status(204).send();

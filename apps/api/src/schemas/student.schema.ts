@@ -33,5 +33,12 @@ export const paginationQuerySchema = z.object({
     pageSize: z.coerce.number().int().positive().optional(),
     q: z.string().optional(),
     classId: z.string().optional(),
+    mssv: z.string().optional(),
+    fullName: z.string().optional(),
+    email: z.string().optional(),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    dobFrom: z.string().optional(),
+    dobTo: z.string().optional(),
   }),
 });

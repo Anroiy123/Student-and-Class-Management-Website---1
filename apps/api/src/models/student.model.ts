@@ -6,7 +6,7 @@ const studentSchema = new Schema(
     fullName: { type: String, required: true, trim: true, index: true },
     dob: { type: Date, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
-    phone: { type: String, required: true },
+    phone: { type: String, required: true, index: true },
     address: { type: String, required: true },
     classId: { type: Schema.Types.ObjectId, ref: "Class", default: null },
   },

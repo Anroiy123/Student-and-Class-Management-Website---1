@@ -1,32 +1,74 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { clsx } from 'clsx';
-import { useAuth, type UserRole } from '../lib/auth';
+import { useAuth } from '../lib/authHooks';
+import { useTheme } from '../lib/themeHooks';
+import type { UserRole } from '../lib/authContext';
 
 type NavItem = {
   label: string;
   path: string;
+  icon: string;
   roles?: UserRole[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', path: '/' },
+  { label: 'Dashboard', path: '/', icon: '/icons/dashboard.svg' },
   {
     label: 'Quản lý sinh viên',
     path: '/students',
+    icon: '/icons/students.svg',
     roles: ['ADMIN', 'TEACHER'],
   },
-  { label: 'Quản lý lớp học', path: '/classes', roles: ['ADMIN', 'TEACHER'] },
-  { label: 'Quản lý môn học', path: '/courses', roles: ['ADMIN', 'TEACHER'] },
-  { label: 'Quản lý điểm', path: '/grades', roles: ['ADMIN', 'TEACHER'] },
-  { label: 'Báo cáo', path: '/reports' },
+  {
+    label: 'Quản lý lớp học',
+    path: '/classes',
+    icon: '/icons/classes.svg',
+    roles: ['ADMIN', 'TEACHER'],
+  },
+  {
+    label: 'Quản lý môn học',
+    path: '/courses',
+    icon: '/icons/courses.svg',
+    roles: ['ADMIN', 'TEACHER'],
+  },
+  {
+    label: 'Quản lý điểm',
+    path: '/grades',
+    icon: '/icons/grades.svg',
+    roles: ['ADMIN', 'TEACHER'],
+  },
+  { label: 'Báo cáo', path: '/reports', icon: '/icons/reports.svg' },
 ];
 
 export const AppLayout = () => {
   const { logout, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showCollapseButton, setShowCollapseButton] = useState(false);
+
+  // Load collapse state from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedCollapsed = localStorage.getItem('navCollapsed');
+      if (storedCollapsed === 'true') {
+        setIsCollapsed(true);
+      }
+    } catch (error) {
+      console.error('Failed to load nav collapse state:', error);
+    }
+  }, []);
 
   const handleSignOut = () => {
     logout();
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const newState = !prev;
+      localStorage.setItem('navCollapsed', String(newState));
+      return newState;
+    });
   };
 
   // Filter nav items based on user role
@@ -37,41 +79,143 @@ export const AppLayout = () => {
 
   return (
     <div className="min-h-screen flex">
-      <aside className="sticky top-0 h-screen w-64 border-r-3 border-black bg-nb-lemon">
-        <div className="flex h-full flex-col gap-4 p-4">
-          <Link
-            to="/"
-            className="border-3 border-black bg-white px-3 py-2 font-display text-lg font-semibold shadow-neo"
-          >
-            Student/Class Admin
-          </Link>
+      <aside
+        className={clsx(
+          'sticky top-0 h-screen border-r-3 border-black bg-nb-lemon transition-all duration-300 relative',
+          'dark:border-[#4a4a4a] dark:bg-nb-dark-section',
+          isCollapsed ? 'w-20' : 'w-64',
+        )}
+        onMouseEnter={() => setShowCollapseButton(true)}
+        onMouseLeave={() => setShowCollapseButton(false)}
+      >
+        <div
+          className={clsx(
+            'flex h-full flex-col gap-4',
+            isCollapsed ? 'p-2' : 'p-4',
+          )}
+        >
+          {!isCollapsed && (
+            <Link
+              to="/"
+              className="border-3 border-black bg-white px-3 py-2 font-display text-lg font-semibold shadow-neo rounded-md dark:border-[#4a4a4a] dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-dark"
+            >
+              Student/Class Admin
+            </Link>
+          )}
+          {isCollapsed && (
+            <Link
+              to="/"
+              className="border-3 border-black bg-white p-2 font-display text-2xl font-semibold shadow-neo rounded-md dark:border-[#4a4a4a] dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-dark flex items-center justify-center"
+              title="Student/Class Admin"
+            >
+              S
+            </Link>
+          )}
           <nav className="nb-nav flex-col">
             {visibleNavItems.map((item) => (
-              <NavItem key={item.path} to={item.path}>
+              <NavItem
+                key={item.path}
+                to={item.path}
+                icon={item.icon}
+                isCollapsed={isCollapsed}
+              >
                 {item.label}
               </NavItem>
             ))}
           </nav>
           <div className="mt-auto">
-            {user && (
-              <div className="mb-3 border-3 border-black bg-white p-2 shadow-neo-sm">
-                <p className="text-xs font-semibold">{user.email}</p>
-                <p className="text-xs opacity-70">
-                  {user.role === 'ADMIN' && 'Quản trị viên'}
-                  {user.role === 'TEACHER' && 'Giảng viên'}
-                  {user.role === 'STUDENT' && 'Sinh viên'}
-                </p>
+            {user && !isCollapsed && (
+              <div className="mb-3 border-3 border-black bg-white p-2 shadow-neo-sm rounded-md dark:border-[#4a4a4a] dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-sm-dark">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold">{user.email}</p>
+                    <p className="text-xs opacity-70">
+                      {user.role === 'ADMIN' && 'Quản trị viên'}
+                      {user.role === 'TEACHER' && 'Giảng viên'}
+                      {user.role === 'STUDENT' && 'Sinh viên'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="border-2 border-black bg-nb-lemon p-1 shadow-neo-sm hover:scale-110 transition-transform rounded dark:border-[#4a4a4a] dark:bg-nb-gold dark:shadow-neo-sm-dark"
+                    aria-label="Toggle theme"
+                    title={
+                      theme === 'light'
+                        ? 'Switch to dark mode'
+                        : 'Switch to light mode'
+                    }
+                  >
+                    <img
+                      src={
+                        theme === 'light' ? '/icons/moon.svg' : '/icons/sun.svg'
+                      }
+                      alt=""
+                      className="w-4 h-4"
+                    />
+                  </button>
+                </div>
               </div>
+            )}
+            {user && isCollapsed && (
+              <>
+                <div
+                  className="mb-2 border-3 border-black bg-white p-2 shadow-neo-sm rounded-md dark:border-[#4a4a4a] dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-sm-dark flex items-center justify-center"
+                  title={user.email}
+                >
+                  <span className="text-lg font-semibold">
+                    {user.email.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="mb-2 w-full border-3 border-black bg-nb-lemon p-2 shadow-neo-sm hover:scale-110 transition-transform rounded-md dark:border-[#4a4a4a] dark:bg-nb-gold dark:shadow-neo-sm-dark flex items-center justify-center"
+                  aria-label="Toggle theme"
+                  title={
+                    theme === 'light'
+                      ? 'Switch to dark mode'
+                      : 'Switch to light mode'
+                  }
+                >
+                  <img
+                    src={
+                      theme === 'light' ? '/icons/moon.svg' : '/icons/sun.svg'
+                    }
+                    alt=""
+                    className="w-6 h-6"
+                  />
+                </button>
+              </>
             )}
             <button
               type="button"
-              className="nb-btn nb-btn--accent w-full"
+              className={clsx(
+                'nb-btn nb-btn--accent',
+                isCollapsed ? 'w-full p-2 text-lg' : 'w-full',
+              )}
               onClick={handleSignOut}
+              title={isCollapsed ? 'Đăng xuất' : undefined}
             >
-              Đăng xuất
+              {isCollapsed ? '→' : 'Đăng xuất'}
             </button>
           </div>
         </div>
+        {/* Collapse/Expand Button */}
+        <button
+          type="button"
+          onClick={toggleCollapse}
+          className={clsx(
+            'absolute -right-4 top-2/3 -translate-y-1/2 border-3 border-black bg-nb-sky p-2 shadow-neo transition-all rounded-md',
+            'dark:border-[#4a4a4a] dark:bg-nb-sky dark:shadow-neo-dark dark:text-[#1a1a1a]',
+            'hover:scale-110 focus:outline-none focus:ring-2 focus:ring-nb-sky',
+            showCollapseButton ? 'opacity-100' : 'opacity-0',
+          )}
+          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          tabIndex={0}
+        >
+          <span className="text-lg font-bold">{isCollapsed ? '→' : '←'}</span>
+        </button>
       </aside>
       <main className="flex-1 px-4 py-6 sm:px-6">
         <Outlet />
@@ -80,17 +224,36 @@ export const AppLayout = () => {
   );
 };
 
-const NavItem = ({ to, children }: { to: string; children: ReactNode }) => (
+const NavItem = ({
+  to,
+  icon,
+  isCollapsed,
+  children,
+}: {
+  to: string;
+  icon: string;
+  isCollapsed: boolean;
+  children: ReactNode;
+}) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
       clsx(
-        'nb-nav__item block w-full text-left',
+        'nb-nav__item block w-full text-left text-nb-ink dark:text-[#f5f5f5]',
         isActive && 'nb-nav__item--active',
+        isCollapsed
+          ? 'flex items-center justify-center p-2'
+          : 'flex items-center gap-2',
       )
     }
     end={to === '/'}
+    title={isCollapsed ? String(children) : undefined}
   >
-    {children}
+    <img
+      src={icon}
+      alt=""
+      className={clsx(isCollapsed ? 'w-8 h-8' : 'w-6 h-6', 'flex-shrink-0')}
+    />
+    {!isCollapsed && <span>{children}</span>}
   </NavLink>
 );

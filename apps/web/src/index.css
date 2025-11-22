@@ -20,6 +20,13 @@
   #root {
     @apply min-h-screen bg-nb-paper text-nb-ink;
   }
+
+  html.dark,
+  html.dark body,
+  html.dark #root {
+    @apply bg-nb-dark-bg text-nb-dark-text;
+  }
+
   h1,
   h2,
   h3,
@@ -34,14 +41,33 @@
 
 @layer components {
   .nb-card {
-    @apply border-3 border-black bg-white shadow-neo p-4 md:p-6;
+    @apply border-3 border-black bg-white shadow-neo p-4 md:p-6 rounded-lg;
   }
+  .dark .nb-card {
+    @apply border-2 border-[#4a4a4a] bg-nb-dark-section text-nb-dark-text rounded-lg;
+    box-shadow: 6px 6px 0 0 #1f2227;
+  }
+
   .nb-card--flat {
-    @apply border-3 border-black bg-nb-paper shadow-neo p-4 md:p-6;
+    @apply border-3 border-black bg-nb-paper shadow-neo p-4 md:p-6 rounded-lg;
   }
+  .dark .nb-card--flat {
+    @apply border-2 border-[#4a4a4a] bg-nb-dark-section text-nb-dark-text rounded-lg;
+    box-shadow: 6px 6px 0 0 #1f2227;
+  }
+
   .nb-btn {
-    @apply inline-flex items-center justify-center gap-2 border-3 border-black px-4 py-2 shadow-neo transition-transform active:translate-x-0 active:translate-y-0;
+    @apply inline-flex items-center justify-center gap-2 border-3 border-black px-4 py-2 shadow-neo transition-transform active:translate-x-0 active:translate-y-0 rounded-md;
   }
+  .dark .nb-btn {
+    @apply border-2 border-[#4a4a4a] rounded-md;
+    box-shadow: 3px 3px 0 0 #1f2227;
+  }
+  .dark .nb-btn:hover {
+    transform: translate(1px, -1px);
+    box-shadow: 4px 4px 0 0 #1f2227;
+  }
+
   .nb-btn:hover {
     transform: translate(2px, -2px);
   }
@@ -49,25 +75,141 @@
     box-shadow: 2px 2px 0 0 #111;
     transform: translate(0, 0);
   }
+  .dark .nb-btn:active {
+    box-shadow: 2px 2px 0 0 #1f2227;
+  }
+
   .nb-btn--primary {
     @apply bg-nb-lemon text-nb-ink;
   }
+  .dark .nb-btn--primary {
+    @apply bg-nb-gold text-[#1a1a1a];
+  }
+  .dark .nb-btn--primary:hover {
+    @apply bg-nb-gold-hover;
+  }
+  .dark .nb-btn--primary:active {
+    @apply text-[#000000];
+  }
+
   .nb-btn--accent {
     @apply bg-nb-sky text-nb-ink;
   }
-  .nb-input {
-    @apply w-full border-3 border-black bg-white px-3 py-2 shadow-neo focus:outline-none focus:ring-0;
+  .dark .nb-btn--accent {
+    @apply bg-nb-sky text-[#1a1a1a];
   }
+  .dark .nb-btn--accent:active {
+    @apply text-[#000000];
+  }
+
+  .nb-btn--secondary {
+    @apply bg-nb-mint text-nb-ink;
+  }
+  .dark .nb-btn--secondary {
+    @apply bg-nb-mint text-[#1a1a1a];
+  }
+  .dark .nb-btn--secondary:active {
+    @apply text-[#000000];
+  }
+
+  .nb-btn--danger {
+    @apply bg-nb-coral text-nb-ink;
+  }
+  .dark .nb-btn--danger {
+    @apply bg-nb-coral text-[#1a1a1a];
+  }
+  .dark .nb-btn--danger:active {
+    @apply text-[#000000];
+  }
+
+  .nb-btn--ghost {
+    @apply bg-white text-nb-ink;
+  }
+  .dark .nb-btn--ghost {
+    @apply bg-nb-dark-section text-nb-dark-text;
+  }
+  .dark .nb-btn--ghost:active {
+    @apply text-nb-gold;
+  }
+
+  .nb-input {
+    @apply w-full border-3 border-black bg-white px-3 py-2 shadow-neo focus:outline-none focus:ring-0 rounded-md;
+  }
+  .dark .nb-input {
+    @apply border-2 border-[#4a4a4a] bg-nb-dark-section text-nb-dark-text rounded-md;
+    box-shadow: 3px 3px 0 0 #1f2227;
+  }
+  .dark .nb-input:focus {
+    @apply border-nb-gold;
+  }
+
   .nb-nav {
     @apply flex items-center gap-2 text-sm font-semibold;
   }
+
   .nb-nav__item {
-    @apply border-3 border-black bg-white px-3 py-2 shadow-neo transition-transform;
+    @apply border-3 border-black bg-white px-3 py-2 shadow-neo transition-transform rounded-md;
   }
+  .dark .nb-nav__item {
+    @apply border-2 border-[#4a4a4a] bg-nb-dark-section text-nb-dark-text rounded-md;
+    box-shadow: 3px 3px 0 0 #1f2227;
+  }
+
   .nb-nav__item:hover {
     transform: translate(2px, -2px);
   }
+
   .nb-nav__item--active {
     @apply bg-nb-mint;
+  }
+  .dark .nb-nav__item--active {
+    @apply bg-nb-gold text-[#1a1a1a];
+  }
+
+  /* Table Dark Mode Styles */
+  .dark table thead tr {
+    @apply border-b-2 border-[#4a4a4a];
+  }
+
+  .dark table thead th {
+    background-color: #d4af37;
+    color: #1a1a1a;
+    font-weight: 600;
+  }
+
+  .dark table tbody tr {
+    @apply border-b border-[#3a3a3a] transition-colors;
+  }
+
+  .dark table tbody tr:nth-child(even) {
+    background-color: #1f2227;
+  }
+
+  .dark table tbody tr:nth-child(odd) {
+    background-color: #2a2e35;
+  }
+
+  .dark table tbody tr:hover {
+    background-color: #3a3e45 !important;
+    color: #1a1a1a !important;
+  }
+
+  .dark table tbody tr:hover td {
+    color: #1a1a1a;
+  }
+
+  /* Table Action Buttons */
+  .nb-table-btn-edit,
+  .nb-table-btn-delete {
+    @apply rounded;
+  }
+
+  /* Table Action Buttons Dark Mode */
+  .dark .nb-table-btn-edit {
+    @apply bg-[#5a9b6f] border-[#4a8a5f] rounded;
+  }
+
+  .dark .nb-table-btn-delete {
+    @apply bg-[#c75450] border-[#b74440] rounded;
   }
 }

@@ -34,7 +34,12 @@ Tài liệu này mô tả chi tiết cấu trúc dự án hiện tại, công ng
 │       ├── src
 │       │   ├── components      # Reusable components (ProtectedRoute)
 │       │   ├── layouts         # AppLayout sidebar
-│       │   ├── lib             # Auth context, API client, QueryClient
+│       │   ├── lib
+│       │   │   ├── authContext.ts  # Auth Context & types
+│       │   │   ├── authHooks.ts    # Custom hooks (useAuth, useUser, useRequireAuth)
+│       │   │   ├── auth.tsx        # AuthProvider component
+│       │   │   ├── api.ts          # Axios client with interceptors
+│       │   │   └── queryClient.ts  # TanStack Query configuration
 │       │   ├── pages           # Dashboard, Students, Classes, Courses, Grades, Reports, SignIn, RegisterPage
 │       │   ├── index.css       # Tailwind + neo-brutalism styles
 │       │   ├── main.tsx        # React entry with AuthProvider
@@ -70,13 +75,18 @@ Tài liệu này mô tả chi tiết cấu trúc dự án hiện tại, công ng
 
 - **AppLayout**: Sidebar navigation bên trái với filter menu theo role, hiển thị thông tin user hiện tại.
 - **Pages**: Dashboard, Students, Classes, Courses, Grades, Reports, SignIn, RegisterPage.
-- **Auth System** (`lib/auth.tsx`, `lib/api.ts`):
-  - `AuthProvider` context: quản lý trạng thái user, login/logout/register.
-  - `useAuth()` hook: truy cập login/register/logout functions.
-  - `useUser()` hook: lấy thông tin user hiện tại.
-  - `useRequireAuth(roles)` hook: kiểm tra quyền truy cập cho route.
-  - Axios client interceptors: tự động attach JWT token, xử lý lỗi 401.
-  - localStorage persistence: lưu token và user info.
+- **Auth System**:
+  - **`lib/authContext.ts`**: Định nghĩa AuthContext và types (User, UserRole, AuthContextType).
+  - **`lib/auth.tsx`**: AuthProvider component - quản lý trạng thái user, logic login/logout/register.
+  - **`lib/authHooks.ts`**: Custom hooks export riêng:
+    - `useAuth()`: truy cập login/register/logout functions.
+    - `useUser()`: lấy thông tin user hiện tại.
+    - `useRequireAuth(roles)`: kiểm tra quyền truy cập cho route.
+  - **`lib/api.ts`**: Axios client với interceptors:
+    - Request interceptor: tự động attach JWT Bearer token.
+    - Response interceptor: xử lý lỗi 401, auto-logout & redirect.
+  - **localStorage persistence**: lưu token và user info, auto-load khi mount.
+  - **Type-safe error handling**: sử dụng `unknown` thay vì `any` cho error handling.
 - **Protected Routes** (`components/ProtectedRoute.tsx`):
   - Guard route theo role (ADMIN, TEACHER, STUDENT).
   - Loading state khi xác thực.
@@ -142,12 +152,60 @@ Tài liệu này mô tả chi tiết cấu trúc dự án hiện tại, công ng
 1. ✅ **Thiết kế Neo-brutalism**: Bold borders, offset shadows, vibrant colors trên tất cả components.
 2. ✅ **Left sidebar navigation**: Menu bar nằm bên trái, sticky trên scroll.
 3. ✅ **Xác thực và phân quyền**: Login/Register, JWT, role-based route protection, conditional menu.
-4. Hoàn thiện UI/UX cho từng trang (bảng dữ liệu, modal, form CRUD).
-5. Tích hợp API vào frontend thông qua TanStack Query (CRUD students/classes/courses).
-6. Xây dựng module báo cáo (Excel/PDF) và chức năng import/export.
-7. Thiết lập Docker Compose hoặc pipeline deploy (Vercel + Render/Railway).
-8. Refresh token mechanism để duy trì session lâu dài.
-9. User profile page & password change.
-10. Audit log & activity tracking.
+4. ✅ **Code quality improvements**: Tách auth logic thành 3 files riêng biệt (authContext, auth, authHooks) để tuân thủ React Fast Refresh best practices và loại bỏ ESLint warnings.
+5. Hoàn thiện UI/UX cho từng trang (bảng dữ liệu, modal, form CRUD).
+6. Tích hợp API vào frontend thông qua TanStack Query (CRUD students/classes/courses).
+7. Xây dựng module báo cáo (Excel/PDF) và chức năng import/export.
+8. Thiết lập Docker Compose hoặc pipeline deploy (Vercel + Render/Railway).
+9. Refresh token mechanism để duy trì session lâu dài.
+10. User profile page & password change.
+11. Audit log & activity tracking.
 
 Tài liệu sẽ được cập nhật khi kiến trúc thay đổi hoặc có thêm thành phần mới.
+
+BẢNG SO SÁNH QUYỀN
+Chức năng ADMIN TEACHER STUDENT
+Sinh viên
+
+## BẢNG PHÂN QUYỀN CHI TIẾT
+
+| Chức năng             | ADMIN | TEACHER | STUDENT |
+| --------------------- | ----- | ------- | ------- |
+| **SINH VIÊN**         |
+| Xem danh sách         | ✅    | ✅      | ❌      |
+| Xem chi tiết          | ✅    | ✅      | ❌      |
+| Thêm mới              | ✅    | ❌      | ❌      |
+| Chỉnh sửa             | ✅    | ❌      | ❌      |
+| Xóa                   | ✅    | ❌      | ❌      |
+| **LỚP HỌC**           |
+| Xem danh sách         | ✅    | ✅      | ✅      |
+| Xem chi tiết          | ✅    | ✅      | ✅      |
+| Thêm mới              | ✅    | ❌      | ❌      |
+| Chỉnh sửa             | ✅    | ❌      | ❌      |
+| Xóa                   | ✅    | ❌      | ❌      |
+| **MÔN HỌC**           |
+| Xem danh sách         | ✅    | ✅      | ✅      |
+| Xem chi tiết          | ✅    | ✅      | ✅      |
+| Thêm mới              | ✅    | ❌      | ❌      |
+| Chỉnh sửa             | ✅    | ❌      | ❌      |
+| Xóa                   | ✅    | ❌      | ❌      |
+| **ĐIỂM SỐ**           |
+| Xem điểm của lớp      | ✅    | ✅      | ❌      |
+| Xem điểm cá nhân      | ✅    | ✅      | ✅      |
+| Nhập/Cập nhật điểm    | ✅    | ✅      | ❌      |
+| **ĐĂNG KÝ MÔN HỌC**   |
+| Xem danh sách đăng ký | ✅    | ✅      | ✅      |
+| Thêm đăng ký          | ✅    | ❌      | ✅      |
+| Xóa đăng ký           | ✅    | ❌      | ✅      |
+| **KHÁC**              |
+| Dashboard             | ✅    | ✅      | ✅      |
+| Báo cáo tổng hợp      | ✅    | ✅      | ❌      |
+| Báo cáo cá nhân       | ✅    | ✅      | ✅      |
+| Quản lý tài khoản     | ✅    | ❌      | ❌      |
+| Đổi mật khẩu          | ✅    | ✅      | ✅      |
+
+### Ghi chú phân quyền
+
+- **ADMIN**: Toàn quyền quản trị hệ thống
+- **TEACHER**: Quản lý học vụ (sinh viên, lớp, môn, điểm)
+- **STUDENT**: Xem thông tin cá nhân và đăng ký môn học
