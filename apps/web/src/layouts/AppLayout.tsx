@@ -82,9 +82,9 @@ export const AppLayout = () => {
     <div className="min-h-screen flex">
       <aside
         className={clsx(
-          'sticky top-0 h-screen border-r-3 border-black bg-nb-lemon transition-all duration-300 relative',
+          'sticky top-0 h-screen border-r-3 border-black bg-nb-lemon transition-all duration-300 relative flex-shrink-0',
           'dark:border-[#4a4a4a] dark:bg-nb-dark-section',
-          isCollapsed ? 'w-20' : 'w-64',
+          isCollapsed ? 'w-20 min-w-20' : 'w-64 min-w-64',
         )}
         onMouseEnter={() => setShowCollapseButton(true)}
         onMouseLeave={() => setShowCollapseButton(false)}
