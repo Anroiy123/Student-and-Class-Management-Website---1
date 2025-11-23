@@ -2,13 +2,13 @@
 
 **Dựa trên REQUIREMENTS.md - Đồ án Website Quản lý Sinh viên và Lớp học**
 
-**Cập nhật lần cuối: 2025-01-23**
+**Cập nhật lần cuối: 2025-01-24**
 
 ---
 
 ## 📊 Tổng quan tiến độ
 
-### Đã hoàn thành: 4/8 yêu cầu bắt buộc (50%)
+### Đã hoàn thành: 5/8 yêu cầu bắt buộc (62.5%)
 
 ### Đang hoạt động: ✅ Backend API + Frontend UI + Database
 
@@ -18,7 +18,7 @@
 
 ### ✅ Yêu cầu BẮT BUỘC (phải hoàn thành)
 
-#### ✅ HOÀN THÀNH (4/8)
+#### ✅ HOÀN THÀNH (5/8)
 
 - [x] **Auth & Phân quyền**: Admin, Giảng viên, Sinh viên
   - ✅ JWT authentication
@@ -42,13 +42,11 @@
   - ✅ 552 điểm số
   - ✅ 552 đăng ký môn học
 
-#### 🚧 ĐANG PHÁT TRIỂN (4/8)
-
 - [x] **Quản lý sinh viên**: CRUD (họ tên, MSSV, ngày sinh, email, SĐT, **địa chỉ**), tìm kiếm, phân trang
   - ✅ Backend API hoàn chỉnh
   - ✅ Frontend UI với React Table
   - ✅ CRUD operations (Create, Read, Update, Delete)
-  - ✅ Pagination
+  - ✅ Pagination với Pager component
   - ✅ Search và filter với FilterSection component
   - ✅ Single input + dropdown cho search fields (MSSV, Họ tên, Email, SĐT, Địa chỉ)
   - ✅ Additional filters: Class select, Date range (ngày sinh)
@@ -65,11 +63,27 @@
   - ✅ Search fields: Mã môn, Tên môn (CoursesPage)
   - ❌ Chức năng gán sinh viên vào lớp chưa có
 
-- [ ] **Quản lý điểm**: Nhập điểm (chuyên cần, giữa kỳ, cuối kỳ), tính điểm TB môn & TB học kỳ
-  - ✅ Backend API có sẵn
+#### 🚧 ĐANG PHÁT TRIỂN (3/8)
+
+- [x] **Quản lý điểm**: Nhập điểm (chuyên cần, giữa kỳ, cuối kỳ), tính điểm TB môn & TB học kỳ
+  - ✅ Backend API hoàn chỉnh với pagination
   - ✅ Database có 552 điểm số
-  - ❌ Frontend UI chưa hoàn thiện
-  - ❌ Tính điểm TB chưa implement
+  - ✅ Frontend UI hoàn thiện (GradesPage)
+  - ✅ Tính điểm TB tự động: `0.1*CC + 0.3*GK + 0.6*CK`
+  - ✅ Tính điểm TB học kỳ có trọng số theo tín chỉ
+  - ✅ Phân loại điểm: Giỏi/Khá/Trung bình/Yếu
+  - ✅ CRUD operations với modal form
+  - ✅ Validation: điểm 0-10, required fields
+  - ✅ Filter section với:
+    - Search: Tên sinh viên, MSSV
+    - Lọc theo lớp (dropdown)
+    - Lọc theo môn học (dropdown)
+    - Lọc theo học kỳ (2 dropdowns: HK1/HK2/HK3 + Năm)
+  - ✅ Pagination với Pager component
+  - ✅ Responsive table (minWidth: 900px)
+  - ✅ Permission check: chỉ ADMIN/TEACHER mới sửa được
+  - ✅ Color-coded grades (xanh/xanh dương/vàng/đỏ)
+  - ✅ Hover tooltip hiển thị phân loại
 
 - [ ] **Báo cáo**: Xuất Excel/PDF
   - ❌ Chưa implement
@@ -130,9 +144,9 @@
 
 ---
 
-## 🎯 Refactoring đã hoàn thành (2025-01-23)
+## 🎯 Refactoring đã hoàn thành
 
-### ✅ DataTable Component Consolidation
+### ✅ DataTable Component Consolidation (2025-01-23)
 
 - ✅ Tạo shared DataTable component với:
   - Header background: `bg-nb-lilac` (đã update từ `bg-nb-lemon`)
@@ -146,7 +160,7 @@
   - CoursesPage (không pagination)
 - ✅ Giảm ~222 dòng code duplicate
 
-### ✅ FilterSection Component Implementation
+### ✅ FilterSection Component Implementation (2025-01-23)
 
 - ✅ Tạo reusable FilterSection component với:
   - Single input + dropdown thay vì nhiều input fields
@@ -171,10 +185,50 @@
   - Hiển thị "Tìm thấy: X / Y môn học"
 - ✅ 0 TypeScript errors, 0 ESLint errors
 
+### ✅ Pager Component & GradesPage Implementation (2025-01-24)
+
+- ✅ Tạo shared Pager component:
+  - Sliding window hiển thị tối đa 7 số trang
+  - Nút Previous/Next với disabled states
+  - Neobrutalism design system
+  - TypeScript interface `PagerProps`
+  - Reusable cho mọi trang có pagination
+- ✅ Refactor StudentsPage:
+  - Sử dụng Pager component thay vì local function
+  - Giảm ~60 dòng code duplicate
+- ✅ Implement GradesPage hoàn chỉnh:
+  - API integration layer (`apps/web/src/lib/grades.ts`)
+  - Types: `GradeListItem`, `ListGradesResponse`, `UpsertGradePayload`
+  - React Query hooks: `useGradesQuery()`, `useUpsertGrade()`
+  - Helper functions: `computeGradeClassification()`, `computeSemesterAverage()`
+  - Full CRUD với modal form
+  - Validation: Zod schema, điểm 0-10
+  - Filter section với grid layout tiết kiệm không gian
+  - Semester picker: 2 dropdowns (HK1/HK2/HK3 + Năm)
+  - Pagination với Pager component
+  - Responsive table (minWidth: 900px)
+  - Permission check: ADMIN/TEACHER only
+- ✅ Fix backend API:
+  - Sửa response format từ array → pagination object
+  - Thêm pagination support (page, pageSize)
+  - Thêm filter theo semester
+- ✅ Fix sidebar width inconsistency:
+  - Thêm `flex-shrink-0` để ngăn sidebar co lại
+  - Thêm `min-w-20` (collapsed) và `min-w-64` (expanded)
+  - Đảm bảo width đồng nhất trên tất cả các trang
+- ✅ Optimize GradesPage table:
+  - Giảm column widths từ 1050px → 860px
+  - Giảm minWidth từ 1200px → 900px
+  - Cột "Môn học" chỉ hiển thị mã, hover để xem full
+  - Không cần scroll ngang trên màn hình 1366px
+
 **Files Created:**
 
 - `apps/web/src/components/FilterSection/FilterSection.tsx`
 - `apps/web/src/components/FilterSection/index.ts`
+- `apps/web/src/components/Pager/Pager.tsx`
+- `apps/web/src/components/Pager/index.ts`
+- `apps/web/src/lib/grades.ts`
 
 **Files Modified:**
 
@@ -182,6 +236,10 @@
 - `apps/web/src/pages/StudentsPage.tsx`
 - `apps/web/src/pages/ClassesPage.tsx`
 - `apps/web/src/pages/CoursesPage.tsx`
+- `apps/web/src/pages/GradesPage.tsx`
+- `apps/web/src/layouts/AppLayout.tsx`
+- `apps/api/src/controllers/grade.controller.ts`
+- `apps/api/src/schemas/grade.schema.ts`
 - `apps/web/eslint.config.js`
 
 ---
@@ -193,20 +251,20 @@
 1. ✅ Test chức năng CRUD sinh viên trên UI
 2. ✅ Hoàn thiện UI quản lý lớp học
 3. ✅ Hoàn thiện UI quản lý môn học
-4. ⬜ Implement chức năng gán sinh viên vào lớp
+4. ✅ Hoàn thiện UI quản lý điểm
+5. ✅ Implement tính điểm TB
+6. ⬜ Implement chức năng gán sinh viên vào lớp
 
 ### Ưu tiên trung bình (Tuần sau)
 
-5. ⬜ Hoàn thiện UI quản lý điểm
-6. ⬜ Implement tính điểm TB
-7. ⬜ Implement UI cho sinh viên role
-8. ⬜ Implement UI cho giảng viên role
+7. ⬜ Implement UI cho sinh viên role (xem điểm cá nhân)
+8. ⬜ Implement UI cho giảng viên role (quản lý điểm lớp mình dạy)
+9. ⬜ Implement báo cáo Excel/PDF
 
 ### Ưu tiên thấp (2 tuần sau)
 
-9. ⬜ Implement báo cáo Excel/PDF
 10. ⬜ Deploy lên hosting cloud
-11. ⬜ Implement các tính năng nâng cao
+11. ⬜ Implement các tính năng nâng cao (Import/Export, 2FA, Thông báo, Phân tích học tập)
 
 ---
 
