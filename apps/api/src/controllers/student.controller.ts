@@ -6,6 +6,10 @@ import { asyncHandler } from '../utils/asyncHandler';
 
 const DEFAULT_PAGE_SIZE = 10;
 
+const escapeRegExp = (str: string): string => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
 export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
   const page = Number(req.query.page ?? 1);
   const pageSize = Number(req.query.pageSize ?? DEFAULT_PAGE_SIZE);
@@ -22,7 +26,7 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
   const filter: FilterQuery<Student> = {};
 
   if (query) {
-    const q = new RegExp(query, 'i');
+    const q = new RegExp(escapeRegExp(query), 'i');
     filter.$or = [{ mssv: q }, { fullName: q }, { email: q }];
   }
 
@@ -31,19 +35,19 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
   }
 
   if (mssv) {
-    filter.mssv = new RegExp(mssv, 'i');
+    filter.mssv = new RegExp(escapeRegExp(mssv), 'i');
   }
   if (fullName) {
-    filter.fullName = new RegExp(fullName, 'i');
+    filter.fullName = new RegExp(escapeRegExp(fullName), 'i');
   }
   if (email) {
-    filter.email = new RegExp(email, 'i');
+    filter.email = new RegExp(escapeRegExp(email), 'i');
   }
   if (phone) {
-    filter.phone = new RegExp(phone, 'i');
+    filter.phone = new RegExp(escapeRegExp(phone), 'i');
   }
   if (address) {
-    filter.address = new RegExp(address, 'i');
+    filter.address = new RegExp(escapeRegExp(address), 'i');
   }
 
   if (dobFrom || dobTo) {

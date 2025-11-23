@@ -9,6 +9,7 @@
 ## 📊 Thống kê Codebase
 
 ### Frontend (apps/web)
+
 - **Framework**: React 18.3.1 + TypeScript 5.9.3
 - **Build Tool**: Vite 7.1.7
 - **Routing**: React Router v6.28.3
@@ -19,6 +20,7 @@
 - **HTTP Client**: Axios 1.7.7
 
 **Cấu trúc**:
+
 ```
 src/
 ├── api/          (7 files)  - API client & functions
@@ -36,6 +38,7 @@ src/
 ---
 
 ### Backend (apps/api)
+
 - **Framework**: Express 5.0.1 + TypeScript 5.9.3
 - **Database**: MongoDB (Mongoose 8.8.4)
 - **Authentication**: JWT (jsonwebtoken 9.0.2)
@@ -45,6 +48,7 @@ src/
 - **Logging**: Morgan 1.10.0
 
 **Cấu trúc**:
+
 ```
 src/
 ├── controllers/  (6 files)  - Request handlers
@@ -65,6 +69,7 @@ src/
 ### ✅ Hoàn thành (60%)
 
 **1. Authentication & Authorization**
+
 - [x] User registration với role selection (ADMIN, TEACHER, STUDENT)
 - [x] Login với JWT token (2-hour expiry)
 - [x] Protected routes (frontend)
@@ -72,6 +77,7 @@ src/
 - [x] Logout functionality
 
 **2. Student Management**
+
 - [x] CRUD operations (Create, Read, Update, Delete)
 - [x] Pagination (page, pageSize)
 - [x] Search (by MSSV, fullName, email)
@@ -80,22 +86,26 @@ src/
 - [x] Duplicate detection (unique MSSV, email)
 
 **3. Class Management**
+
 - [x] CRUD operations
 - [x] Basic listing
 - [x] Field validation
 
 **4. Course Management**
+
 - [x] CRUD operations
 - [x] Basic listing
 - [x] Field validation
 
 **5. Enrollment Management**
+
 - [x] Create enrollment (Student → Class → Course)
 - [x] Delete enrollment
 - [x] List with filters (studentId, classId, courseId, semester)
 - [x] Populate relationships
 
 **6. Grade Management**
+
 - [x] Upsert grades (create or update)
 - [x] Auto-calculate total score (10% + 30% + 60%)
 - [x] List with filters
@@ -106,6 +116,7 @@ src/
 ### ⚠️ Chưa hoàn thành (40%)
 
 **7. Dashboard** ❌
+
 - [ ] Total students count
 - [ ] Total classes count
 - [ ] Total courses count
@@ -113,12 +124,14 @@ src/
 - [ ] Recent activities
 
 **8. Reports & Export** ❌
+
 - [ ] Export students to Excel
 - [ ] Export grades to Excel
 - [ ] Generate PDF reports
 - [ ] Charts in PDF
 
 **9. Advanced Features** ❌
+
 - [ ] Advanced filtering (multiple criteria)
 - [ ] Bulk import (Excel)
 - [ ] Student profile page
@@ -128,6 +141,7 @@ src/
 - [ ] Semester average calculation
 
 **10. UI/UX Enhancements** ❌
+
 - [ ] Toast notifications
 - [ ] Loading skeletons
 - [ ] Error boundaries
@@ -137,6 +151,7 @@ src/
 - [ ] Responsive design (mobile)
 
 **11. Security & Performance** ❌
+
 - [ ] Refresh token mechanism
 - [ ] Rate limiting
 - [ ] Input sanitization
@@ -145,6 +160,7 @@ src/
 - [ ] Code splitting
 
 **12. Testing & Deployment** ❌
+
 - [ ] Unit tests
 - [ ] Integration tests
 - [ ] E2E tests
@@ -188,33 +204,33 @@ src/
 
 ### Yêu cầu BẮT BUỘC
 
-| Chức năng | Trạng thái | Ghi chú |
-|-----------|-----------|---------|
-| **a. Quản lý sinh viên** | 🟡 70% | CRUD ✅, Search ✅, Pagination ✅, **Địa chỉ field** ✅ |
-| - Thêm, sửa, xóa | ✅ | Hoàn thành |
-| - Tìm kiếm (MSSV, tên, lớp) | ✅ | Hoàn thành |
-| - Hiển thị bảng + phân trang | ✅ | Hoàn thành |
-| **b. Quản lý lớp & môn** | 🟡 60% | CRUD ✅, Gán sinh viên ✅ |
-| - CRUD lớp học | ✅ | Hoàn thành |
-| - CRUD môn học | ✅ | Hoàn thành |
-| - Gán sinh viên vào lớp/môn | ✅ | Enrollment API ✅ |
-| **c. Quản lý điểm*[object Object]50% | Nhập điểm ✅, Tính TB môn ✅, **Xuất báo cáo** ❌ |
-| - Nhập điểm (chuyên cần, giữa kỳ, cuối kỳ) | ✅ | Hoàn thành |
-| - Tính điểm TB môn | ✅ | Auto-calculate ✅ |
-| - Tính điểm TB học kỳ | ❌ | Chưa implement |
-| - Xuất báo cáo Excel/PDF | ❌ | Chưa implement |
-| **d. Tài khoản & Phân quyền** | ✅ 100% | Hoàn thành |
-| - Đăng ký, đăng nhập | ✅ | Hoàn thành |
-| - Admin: Quản lý hệ thống | ✅ | Hoàn thành |
-| - Giảng viên: Quản lý điểm | ✅ | Hoàn thành |
-| - Sinh viên: Xem thông tin & điểm | ✅ | Hoàn thành |
-| **e. Triển khai** | ❌ 0% | Chưa deploy |
-| - Deploy lên cloud | ❌ | Chưa deploy |
-| **f. Giao diện**[object Object]40% | **Dashboard** ❌, Students ✅, Grades ❌ |
-| - Trang chủ Dashboard | ❌ | Chưa có thống kê |
-| - Trang danh sách sinh viên | ✅ | Hoàn thành |
-| - Trang quản lý điểm | ❌ | Chưa có UI nhập điểm |
-| - Trang đăng nhập/đăng ký | ✅ | Hoàn thành |
+| Chức năng                                  | Trạng thái                                        | Ghi chú                                                 |
+| ------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------- |
+| **a. Quản lý sinh viên**                   | 🟡 70%                                            | CRUD ✅, Search ✅, Pagination ✅, **Địa chỉ field** ✅ |
+| - Thêm, sửa, xóa                           | ✅                                                | Hoàn thành                                              |
+| - Tìm kiếm (MSSV, tên, lớp)                | ✅                                                | Hoàn thành                                              |
+| - Hiển thị bảng + phân trang               | ✅                                                | Hoàn thành                                              |
+| **b. Quản lý lớp & môn**                   | 🟡 60%                                            | CRUD ✅, Gán sinh viên ✅                               |
+| - CRUD lớp học                             | ✅                                                | Hoàn thành                                              |
+| - CRUD môn học                             | ✅                                                | Hoàn thành                                              |
+| - Gán sinh viên vào lớp/môn                | ✅                                                | Enrollment API ✅                                       |
+| \*_c. Quản lý điểm_[object Object]50%      | Nhập điểm ✅, Tính TB môn ✅, **Xuất báo cáo** ❌ |
+| - Nhập điểm (chuyên cần, giữa kỳ, cuối kỳ) | ✅                                                | Hoàn thành                                              |
+| - Tính điểm TB môn                         | ✅                                                | Auto-calculate ✅                                       |
+| - Tính điểm TB học kỳ                      | ❌                                                | Chưa implement                                          |
+| - Xuất báo cáo Excel/PDF                   | ❌                                                | Chưa implement                                          |
+| **d. Tài khoản & Phân quyền**              | ✅ 100%                                           | Hoàn thành                                              |
+| - Đăng ký, đăng nhập                       | ✅                                                | Hoàn thành                                              |
+| - Admin: Quản lý hệ thống                  | ✅                                                | Hoàn thành                                              |
+| - Giảng viên: Quản lý điểm                 | ✅                                                | Hoàn thành                                              |
+| - Sinh viên: Xem thông tin & điểm          | ✅                                                | Hoàn thành                                              |
+| **e. Triển khai**                          | ❌ 0%                                             | Chưa deploy                                             |
+| - Deploy lên cloud                         | ❌                                                | Chưa deploy                                             |
+| **f. Giao diện**[object Object]40%         | **Dashboard** ❌, Students ✅, Grades ❌          |
+| - Trang chủ Dashboard                      | ❌                                                | Chưa có thống kê                                        |
+| - Trang danh sách sinh viên                | ✅                                                | Hoàn thành                                              |
+| - Trang quản lý điểm                       | ❌                                                | Chưa có UI nhập điểm                                    |
+| - Trang đăng nhập/đăng ký                  | ✅                                                | Hoàn thành                                              |
 
 **Tổng kết**: **60%** yêu cầu bắt buộc đã hoàn thành
 
@@ -222,16 +238,16 @@ src/
 
 ### Yêu cầu NÂNG CAO (Khuyến khích)
 
-| Chức năng | Trạng thái |
-|-----------|-----------|
-| Tìm kiếm nâng cao | ❌ 0% |
-| Import/Export Excel | ❌ 0% |
-| 2FA | ❌ 0% |
-| Reset password | ❌ 0% |
-| Thông báo | ❌ 0% |
-| Responsive & Dark Mode | ❌ 0% |
-| Phân tích học tập | ❌ 0% |
-| Docker & CI/CD | ❌ 0% |
+| Chức năng              | Trạng thái |
+| ---------------------- | ---------- |
+| Tìm kiếm nâng cao      | ❌ 0%      |
+| Import/Export Excel    | ❌ 0%      |
+| 2FA                    | ❌ 0%      |
+| Reset password         | ❌ 0%      |
+| Thông báo              | ❌ 0%      |
+| Responsive & Dark Mode | ❌ 0%      |
+| Phân tích học tập      | ❌ 0%      |
+| Docker & CI/CD         | ❌ 0%      |
 
 **Tổng kết**: **0%** yêu cầu nâng cao đã hoàn thành
 
@@ -240,24 +256,28 @@ src/
 ## 🚀 Roadmap (Ưu tiên)
 
 ### Phase 1: Hoàn thiện yêu cầu BẮT BUỘC (2 tuần)
+
 1. **Dashboard** - Thống kê tổng quan (số lớp, sinh viên, môn học)
 2. **Grade Input UI** - Form nhập điểm cho từng lớp/môn
 3. **Reports** - Xuất Excel/PDF
 4. **Semester Average** - Tính điểm TB học kỳ
 
 ### Phase 2: UI/UX & Testing (1 tuần)
+
 5. **Toast Notifications** - Feedback cho user
 6. **Loading States** - Skeleton loaders
 7. **Confirmation Dialogs** - Xác nhận delete
 8. **Unit Tests** - Coverage 50%+
 
 ### Phase 3: Deployment (1 tuần)
+
 9. **Production Build** - Optimize bundle
 10. **Deploy Backend** - Railway/Render
 11. **Deploy Frontend** - Vercel/Netlify
 12. **Domain & SSL** - Custom domain
 
 ### Phase 4: Nâng cao (Optional)
+
 13. **Responsive Design** - Mobile support
 14. **Dark Mode** - Theme toggle
 15. **Advanced Features** - Import/Export, Analytics
@@ -268,6 +288,7 @@ src/
 ## 📝 Kết luận
 
 **Codebase hiện tại**:
+
 - ✅ Foundation vững chắc (Auth, CRUD, Validation)
 - ✅ Code quality tốt (TypeScript, ESLint, Prettier)
 - ✅ Architecture rõ ràng (Monorepo, separation of concerns)
@@ -276,6 +297,7 @@ src/
 - ⚠️ Chưa có mobile support
 
 **Khuyến nghị**:
+
 1. **Ưu tiên cao**: Dashboard, Reports, Grade Input UI
 2. **Ưu tiên trung bình**: Testing, Deployment
 3. **Ưu tiên thấp**: Advanced features, Dark mode
@@ -286,4 +308,3 @@ src/
 
 **Document Version**: 1.0.0  
 **Last Updated**: 2025-11-18
-

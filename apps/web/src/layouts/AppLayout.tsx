@@ -4,41 +4,42 @@ import { clsx } from 'clsx';
 import { useAuth } from '../lib/authHooks';
 import { useTheme } from '../lib/themeHooks';
 import type { UserRole } from '../lib/authContext';
+import { Icon } from '../components/Icon';
 
 type NavItem = {
   label: string;
   path: string;
-  icon: string;
+  icon: 'dashboard' | 'students' | 'classes' | 'courses' | 'grades' | 'reports';
   roles?: UserRole[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', path: '/', icon: '/icons/dashboard.svg' },
+  { label: 'Dashboard', path: '/', icon: 'dashboard' },
   {
     label: 'Quản lý sinh viên',
     path: '/students',
-    icon: '/icons/students.svg',
+    icon: 'students',
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Quản lý lớp học',
     path: '/classes',
-    icon: '/icons/classes.svg',
+    icon: 'classes',
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Quản lý môn học',
     path: '/courses',
-    icon: '/icons/courses.svg',
+    icon: 'courses',
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Quản lý điểm',
     path: '/grades',
-    icon: '/icons/grades.svg',
+    icon: 'grades',
     roles: ['ADMIN', 'TEACHER'],
   },
-  { label: 'Báo cáo', path: '/reports', icon: '/icons/reports.svg' },
+  { label: 'Báo cáo', path: '/reports', icon: 'reports' },
 ];
 
 export const AppLayout = () => {
@@ -160,7 +161,7 @@ export const AppLayout = () => {
             {user && isCollapsed && (
               <>
                 <div
-                  className="mb-2 border-3 border-black bg-white p-2 shadow-neo-sm rounded-md dark:border-[#4a4a4a] dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-sm-dark flex items-center justify-center"
+                  className="mb-2 border-3 border-black bg-white p-2 shadow-neo-sm rounded-md dark:border-nb-dark-border dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-sm-dark flex items-center justify-center"
                   title={user.email}
                 >
                   <span className="text-lg font-semibold">
@@ -170,20 +171,13 @@ export const AppLayout = () => {
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="mb-2 w-full border-3 border-black bg-nb-lemon p-2 shadow-neo-sm hover:scale-110 transition-transform rounded-md dark:border-[#4a4a4a] dark:bg-nb-gold dark:shadow-neo-sm-dark flex items-center justify-center"
-                  aria-label="Toggle theme"
-                  title={
-                    theme === 'light'
-                      ? 'Switch to dark mode'
-                      : 'Switch to light mode'
-                  }
+                  className="mb-2 w-full border-3 border-black bg-white p-2 shadow-neo-sm rounded-md hover:translate-x-[2px] hover:-translate-y-[2px] transition-transform dark:border-nb-dark-border dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-sm-dark flex items-center justify-center gap-2"
+                  title={theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
                 >
-                  <img
-                    src={
-                      theme === 'light' ? '/icons/moon.svg' : '/icons/sun.svg'
-                    }
-                    alt=""
-                    className="w-6 h-6"
+                  <Icon
+                    name={theme === 'light' ? 'moon' : 'sun'}
+                    size={24}
+                    className="nb-theme-icon"
                   />
                 </button>
               </>
@@ -231,7 +225,7 @@ const NavItem = ({
   children,
 }: {
   to: string;
-  icon: string;
+  icon: 'dashboard' | 'students' | 'classes' | 'courses' | 'grades' | 'reports';
   isCollapsed: boolean;
   children: ReactNode;
 }) => (
@@ -239,8 +233,10 @@ const NavItem = ({
     to={to}
     className={({ isActive }) =>
       clsx(
-        'nb-nav__item block w-full text-left text-nb-ink dark:text-[#f5f5f5]',
-        isActive && 'nb-nav__item--active',
+        'nb-nav__item block w-full text-left text-nb-ink',
+        isActive
+          ? 'nb-nav__item--active dark:text-nb-ink'
+          : 'dark:text-nb-dark-text-strong',
         isCollapsed
           ? 'flex items-center justify-center p-2'
           : 'flex items-center gap-2',
@@ -249,10 +245,10 @@ const NavItem = ({
     end={to === '/'}
     title={isCollapsed ? String(children) : undefined}
   >
-    <img
-      src={icon}
-      alt=""
-      className={clsx(isCollapsed ? 'w-8 h-8' : 'w-6 h-6', 'flex-shrink-0')}
+    <Icon
+      name={icon}
+      size={isCollapsed ? 32 : 24}
+      className="flex-shrink-0 nb-nav__icon"
     />
     {!isCollapsed && <span>{children}</span>}
   </NavLink>
