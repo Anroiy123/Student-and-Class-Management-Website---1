@@ -19,6 +19,13 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
   if (req.query.courseId) {
     enrollmentMatch.courseId = req.query.courseId;
   }
+  if (req.query.semester) {
+    enrollmentMatch.semester = req.query.semester;
+  }
+
+  const page = Number(req.query.page) || 1;
+  const pageSize = Number(req.query.pageSize) || 10;
+  const skip = (page - 1) * pageSize;
 
   const grades = await GradeModel.find(filter)
     .populate({
@@ -32,7 +39,15 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
   // Filter out grades where enrollmentId is null (didn't match the criteria)
   const filteredGrades = grades.filter((grade) => grade.enrollmentId !== null);
 
-  res.json(filteredGrades);
+  // Apply pagination
+  const paginatedGrades = filteredGrades.slice(skip, skip + pageSize);
+
+  res.json({
+    items: paginatedGrades,
+    total: filteredGrades.length,
+    page,
+    pageSize,
+  });
 });
 
 export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
