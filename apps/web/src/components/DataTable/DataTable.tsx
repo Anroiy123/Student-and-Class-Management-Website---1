@@ -7,6 +7,7 @@ export interface DataTableProps<TData> {
   emptyMessage?: string;
   showPagination?: boolean;
   paginationSlot?: React.ReactNode;
+  overflowYHidden?: boolean;
 }
 
 /**
@@ -20,6 +21,7 @@ export function DataTable<TData>({
   emptyMessage = 'Không có dữ liệu',
   showPagination = false,
   paginationSlot,
+  overflowYHidden = false,
 }: DataTableProps<TData>) {
   if (isLoading) {
     return <p className="text-sm opacity-70">Đang tải dữ liệu…</p>;
@@ -37,16 +39,25 @@ export function DataTable<TData>({
 
   return (
     <>
-      <div className="overflow-x-auto -mx-4 md:mx-0">
+      <div
+        className={`overflow-x-auto ${overflowYHidden ? 'overflow-y-hidden' : ''} -mx-4 md:mx-0 md:rounded-xl`}
+      >
         <div style={{ minWidth }}>
-          <table className="w-full text-sm">
+          <table className="w-full text-sm overflow-hidden md:rounded-xl">
             <thead>
               {table.getHeaderGroups().map((hg) => (
-                <tr key={hg.id} className="border-b-3 border-black">
-                  {hg.headers.map((header) => (
+                <tr
+                  key={hg.id}
+                  className="border-b-3 border-black dark:border-nb-dark-border"
+                >
+                  {hg.headers.map((header, idx) => (
                     <th
                       key={header.id}
-                      className="text-left px-3 py-3 font-bold bg-nb-lemon"
+                      className={`text-left px-3 py-3 font-bold bg-nb-lemon ${
+                        idx === 0 ? 'md:rounded-tl-xl' : ''
+                      } ${
+                        idx === hg.headers.length - 1 ? 'md:rounded-tr-xl' : ''
+                      }`}
                       style={{
                         width: header.column.columnDef.size
                           ? `${header.column.columnDef.size}px`
@@ -65,33 +76,45 @@ export function DataTable<TData>({
               ))}
             </thead>
             <tbody>
-              {rows.map((row, idx) => (
-                <tr
-                  key={row.id}
-                  className={`border-b-2 border-black hover:bg-nb-sky/30 transition-colors ${
-                    idx % 2 === 0 ? 'bg-white' : 'bg-nb-paper'
-                  }`}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-3 py-3">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {rows.map((row, rowIdx) => {
+                const isLastRow = rowIdx === rows.length - 1;
+                return (
+                  <tr
+                    key={row.id}
+                    className={`border-b-2 border-black dark:border-nb-dark-border hover:bg-nb-sky/30 transition-colors ${
+                      rowIdx % 2 === 0 ? 'bg-white' : 'bg-nb-paper'
+                    } ${isLastRow ? 'border-b-0' : ''}`}
+                  >
+                    {row.getVisibleCells().map((cell, cellIdx) => (
+                      <td
+                        key={cell.id}
+                        className={`px-3 py-3 ${
+                          isLastRow && cellIdx === 0 ? 'md:rounded-bl-xl' : ''
+                        } ${
+                          isLastRow &&
+                          cellIdx === row.getVisibleCells().length - 1
+                            ? 'md:rounded-br-xl'
+                            : ''
+                        }`}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
       {showPagination && paginationSlot && (
-        <div className="mt-6 pt-4 border-t-3 border-black dark:border-[#4a4a4a]">
+        <div className="mt-6 pt-4 border-t-3 border-black dark:border-nb-dark-border">
           {paginationSlot}
         </div>
       )}
     </>
   );
 }
-

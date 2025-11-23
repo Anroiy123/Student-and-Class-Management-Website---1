@@ -7,13 +7,10 @@ import {
   useDeleteCourse,
   type CourseListItem,
 } from '../lib/courses';
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useForm } from 'react-hook-form';
+import { DataTable } from '../components/DataTable';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -58,7 +55,7 @@ export const CoursesPage = () => {
             <div className="flex gap-1">
               <button
                 type="button"
-                className="px-3 py-1 text-xs border-2 border-black bg-nb-mint hover:bg-nb-lemon transition-colors shadow-neo-sm font-medium nb-table-btn-edit"
+                className="px-3 py-1 text-xs border-2 border-black bg-nb-mint hover:bg-nb-lemon transition-all hover:shadow-neo-sm font-medium nb-table-btn-edit dark:border-nb-dark-border"
                 onClick={() => {
                   setEditCourse(row);
                   setShowForm(true);
@@ -68,7 +65,7 @@ export const CoursesPage = () => {
               </button>
               <button
                 type="button"
-                className="px-3 py-1 text-xs border-2 border-black bg-nb-coral hover:bg-red-400 transition-colors shadow-neo-sm disabled:opacity-50 font-medium nb-table-btn-delete"
+                className="px-3 py-1 text-xs border-2 border-black bg-nb-coral hover:bg-nb-lemon transition-all hover:shadow-neo-sm disabled:opacity-50 font-medium nb-table-btn-delete dark:border-nb-dark-border"
                 disabled={deletingId === row._id}
                 onClick={async () => {
                   if (!confirm(`Xóa môn học "${row.name}"?`)) return;
@@ -127,57 +124,15 @@ export const CoursesPage = () => {
           <p className="text-sm opacity-70">Đang tải danh sách môn học…</p>
         ) : data && data.length > 0 ? (
           <>
-            <div className="overflow-x-auto -mx-4 md:mx-0">
-              <div className="min-w-[700px]">
-                <table className="w-full text-sm">
-                  <thead>
-                    {table.getHeaderGroups().map((hg) => (
-                      <tr key={hg.id} className="border-b-3 border-black">
-                        {hg.headers.map((header) => (
-                          <th
-                            key={header.id}
-                            className="text-left px-3 py-3 font-bold bg-nb-lemon"
-                            style={{
-                              width: header.column.columnDef.size
-                                ? `${header.column.columnDef.size}px`
-                                : 'auto',
-                            }}
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext(),
-                                )}
-                          </th>
-                        ))}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody>
-                    {table.getRowModel().rows.map((row, idx) => (
-                      <tr
-                        key={row.id}
-                        className={`border-b-2 border-black hover:bg-nb-sky/30 transition-colors ${
-                          idx % 2 === 0 ? 'bg-white' : 'bg-nb-paper'
-                        }`}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <td key={cell.id} className="px-3 py-3">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div className="mt-6 pt-4 border-t-3 border-black dark:border-[#4a4a4a]">
-              <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-[#4a4a4a] dark:text-nb-dark-text">
+            <DataTable
+              table={table}
+              minWidth="700px"
+              isLoading={false}
+              emptyMessage="Không có môn học nào"
+              showPagination={false}
+            />
+            <div className="mt-6 pt-4 border-t-3 border-black dark:border-nb-dark-border">
+              <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
                 Tổng: <span className="font-bold">{data.length}</span> môn học
               </div>
             </div>

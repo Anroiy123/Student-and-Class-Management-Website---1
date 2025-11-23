@@ -10,13 +10,10 @@ import {
   useDeleteStudent,
   type StudentListItem,
 } from '../lib/students';
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useSearchParams } from 'react-router-dom';
+import { DataTable } from '../components/DataTable';
 import { useForm } from 'react-hook-form';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,6 +27,7 @@ export const StudentsPage = () => {
 
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(initialPageSize);
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
 
   const [filters, setFilters] = useState<
     Partial<Omit<ListStudentsParams, 'page' | 'pageSize'>>
@@ -119,7 +117,7 @@ export const StudentsPage = () => {
           return (
             <div className="group relative">
               <span className="block max-w-[200px] truncate">{email}</span>
-              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded border-2 border-black bg-white px-2 py-1 text-xs shadow-neo-sm whitespace-nowrap">
+              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded border-2 border-black bg-white px-2 py-1 text-xs shadow-neo-sm whitespace-nowrap dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
                 {email}
               </div>
             </div>
@@ -136,11 +134,11 @@ export const StudentsPage = () => {
             <div className="group relative">
               <button
                 type="button"
-                className="text-xs text-black px-2 py-1 border-2 border-black rounded-md bg-nb-sky hover:bg-nb-lemon  transition-colors"
+                className="text-xs text-black px-2 py-1 border-2 border-black rounded-md bg-nb-sky hover:bg-nb-lemon  transition-colors dark:border-nb-dark-border"
               >
                 Chi tiết
               </button>
-              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded border-2 border-black bg-white p-3 text-xs shadow-neo-sm min-w-[250px]">
+              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded border-2 border-black bg-white p-3 text-xs shadow-neo-sm min-w-[250px] dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
                 <div className="space-y-1">
                   <div>
                     <strong>SĐT:</strong> {phone || '-'}
@@ -173,7 +171,7 @@ export const StudentsPage = () => {
           <div className="flex gap-1">
             <button
               type="button"
-              className="px-3 py-1 text-xs border-2 border-black bg-nb-mint hover:bg-nb-lemon transition-colors shadow-neo-sm font-medium nb-table-btn-edit"
+              className="px-3 py-1 text-xs border-2 border-black bg-nb-mint hover:bg-nb-lemon transition-all hover:shadow-neo-sm font-medium nb-table-btn-edit dark:border-nb-dark-border"
               onClick={() => {
                 setEditStudent(info.row.original);
                 setShowForm(true);
@@ -183,7 +181,7 @@ export const StudentsPage = () => {
             </button>
             <button
               type="button"
-              className="px-3 py-1 text-xs border-2 border-black bg-nb-coral hover:bg-red-400 transition-colors shadow-neo-sm disabled:opacity-50 font-medium nb-table-btn-delete"
+              className="px-3 py-1 text-xs border-2 border-black bg-nb-coral hover:bg-nb-lemon transition-all hover:shadow-neo-sm disabled:opacity-50 font-medium nb-table-btn-delete dark:border-nb-dark-border"
               disabled={deletingId === info.row.original._id}
               onClick={async () => {
                 const id = info.row.original._id as string;
@@ -240,188 +238,177 @@ export const StudentsPage = () => {
 
       {/* Filters */}
       <div className="nb-card space-y-4">
-        <h3 className="font-bold text-lg border-b-2 border-black pb-2">
-          Bộ lọc tìm kiếm
-        </h3>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <input
-            className="nb-input"
-            placeholder="MSSV"
-            value={filters.mssv ?? ''}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, mssv: e.target.value }))
-            }
-          />
-          <input
-            className="nb-input"
-            placeholder="Họ tên"
-            value={filters.fullName ?? ''}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, fullName: e.target.value }))
-            }
-          />
-          <input
-            className="nb-input"
-            placeholder="Email"
-            value={filters.email ?? ''}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, email: e.target.value }))
-            }
-          />
-          <input
-            className="nb-input"
-            placeholder="Số điện thoại"
-            value={filters.phone ?? ''}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, phone: e.target.value }))
-            }
-          />
-          <input
-            className="nb-input"
-            placeholder="Địa chỉ"
-            value={filters.address ?? ''}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, address: e.target.value }))
-            }
-          />
-          <select
-            className="nb-input"
-            value={filters.classId ?? ''}
-            onChange={(e) =>
-              setFilters((f) => ({
-                ...f,
-                classId: e.target.value || undefined,
-              }))
-            }
+        <div
+          className="flex items-center justify-between cursor-pointer border-b-2 border-black pb-2 dark:border-nb-dark-border"
+          onClick={() => setIsFilterOpen(!isFilterOpen)}
+        >
+          <h3 className="font-bold text-lg select-none">Bộ lọc tìm kiếm</h3>
+          <button
+            type="button"
+            className="w-10 h-10 flex items-center justify-center border-2 border-black bg-white hover:bg-nb-lemon transition-colors shadow-neo-sm rounded dark:bg-nb-gold dark:text-black dark:border-nb-dark-border dark:hover:bg-nb-gold-hover"
           >
-            <option value="">Tất cả lớp</option>
-            {classesData?.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.code} - {c.name}
-              </option>
-            ))}
-          </select>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`}
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <div className="flex items-center gap-2">
-            <label className="w-24 text-sm opacity-70">Ngày sinh từ</label>
-            <input
-              type="date"
-              className="nb-input"
-              value={filters.dobFrom ?? ''}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, dobFrom: e.target.value }))
-              }
-            />
+        {isFilterOpen && (
+          <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <input
+                className="nb-input"
+                placeholder="MSSV"
+                value={filters.mssv ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, mssv: e.target.value }))
+                }
+              />
+              <input
+                className="nb-input"
+                placeholder="Họ tên"
+                value={filters.fullName ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, fullName: e.target.value }))
+                }
+              />
+              <input
+                className="nb-input"
+                placeholder="Email"
+                value={filters.email ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, email: e.target.value }))
+                }
+              />
+              <input
+                className="nb-input"
+                placeholder="Số điện thoại"
+                value={filters.phone ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, phone: e.target.value }))
+                }
+              />
+              <input
+                className="nb-input"
+                placeholder="Địa chỉ"
+                value={filters.address ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({ ...f, address: e.target.value }))
+                }
+              />
+              <select
+                className="nb-input"
+                value={filters.classId ?? ''}
+                onChange={(e) =>
+                  setFilters((f) => ({
+                    ...f,
+                    classId: e.target.value || undefined,
+                  }))
+                }
+              >
+                <option value="">Tất cả lớp</option>
+                {classesData?.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.code} - {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="flex items-center gap-2">
+                <label className="w-24 text-sm opacity-70">Ngày sinh từ</label>
+                <input
+                  type="date"
+                  className="nb-input"
+                  value={filters.dobFrom ?? ''}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, dobFrom: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="w-24 text-sm opacity-70">Đến</label>
+                <input
+                  type="date"
+                  className="nb-input"
+                  value={filters.dobTo ?? ''}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, dobTo: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  className="nb-btn nb-btn--secondary"
+                  onClick={() => setFilters({})}
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="w-24 text-sm opacity-70">Đến</label>
-            <input
-              type="date"
-              className="nb-input"
-              value={filters.dobTo ?? ''}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, dobTo: e.target.value }))
-              }
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              className="nb-btn nb-btn--secondary"
-              onClick={() => setFilters({})}
-            >
-              Xóa bộ lọc
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="nb-card">
         {isLoading ? (
           <p className="text-sm opacity-70">Đang tải danh sách sinh viên…</p>
         ) : data && data.items.length > 0 ? (
-          <div className="overflow-x-auto -mx-4 md:mx-0">
-            <div className="min-w-[900px]">
-              <table className="w-full text-sm">
-                <thead>
-                  {table.getHeaderGroups().map((hg) => (
-                    <tr key={hg.id} className="border-b-3 border-black">
-                      {hg.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className="text-left px-3 py-3 font-bold bg-nb-lemon"
-                          style={{
-                            width: header.column.columnDef.size
-                              ? `${header.column.columnDef.size}px`
-                              : 'auto',
-                          }}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row, idx) => (
-                    <tr
-                      key={row.id}
-                      className={`border-b-2 border-black hover:bg-nb-sky/30 transition-colors ${
-                        idx % 2 === 0 ? 'bg-white' : 'bg-nb-paper'
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className="px-3 py-3">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-6 pt-4 border-t-3 border-black flex flex-col gap-3 md:flex-row md:items-center md:justify-between dark:border-[#4a4a4a]">
-              <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-[#4a4a4a] dark:text-nb-dark-text">
-                Tổng: <span className="font-bold">{data.total}</span> sinh viên
-              </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Hiển thị:</span>
-                  <select
-                    className="nb-input w-20 text-sm py-1"
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value));
-                      setPage(1);
-                    }}
-                  >
-                    {[10, 20, 50].map((n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-sm opacity-70">/ trang</span>
+          <DataTable
+            table={table}
+            minWidth="900px"
+            isLoading={false}
+            emptyMessage="Không có sinh viên nào phù hợp"
+            showPagination={true}
+            overflowYHidden={true}
+            paginationSlot={
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
+                  Tổng: <span className="font-bold">{data.total}</span> sinh
+                  viên
                 </div>
-                <Pager
-                  page={page}
-                  pageSize={pageSize}
-                  total={data.total}
-                  onChangePage={setPage}
-                />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">Hiển thị:</span>
+                    <select
+                      className="nb-input w-20 text-sm py-1"
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setPage(1);
+                      }}
+                    >
+                      {[10, 20, 50].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="text-sm opacity-70">/ trang</span>
+                  </div>
+                  <Pager
+                    page={page}
+                    pageSize={pageSize}
+                    total={data.total}
+                    onChangePage={setPage}
+                  />
+                </div>
               </div>
-            </div>
-          </div>
+            }
+          />
         ) : (
           <div className="text-center py-12">
             <p className="text-lg font-semibold opacity-70">
