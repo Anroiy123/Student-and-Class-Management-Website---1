@@ -60,7 +60,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      { path: 'reports', element: <ReportsPage /> },
+      {
+        path: 'reports',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}>
+            <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
