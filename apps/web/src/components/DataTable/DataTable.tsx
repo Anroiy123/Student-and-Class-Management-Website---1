@@ -53,7 +53,7 @@ export function DataTable<TData>({
                   {hg.headers.map((header, idx) => (
                     <th
                       key={header.id}
-                      className={`text-left px-3 py-3 font-bold bg-nb-lemon ${
+                      className={`text-left text-nb-paper px-3 py-3 font-bold bg-nb-lilac ${
                         idx === 0 ? 'md:rounded-tl-xl' : ''
                       } ${
                         idx === hg.headers.length - 1 ? 'md:rounded-tr-xl' : ''

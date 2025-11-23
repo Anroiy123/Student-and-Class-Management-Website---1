@@ -2,13 +2,13 @@
 
 **Dựa trên REQUIREMENTS.md - Đồ án Website Quản lý Sinh viên và Lớp học**
 
-**Cập nhật lần cuối: 2025-01-20**
+**Cập nhật lần cuối: 2025-01-23**
 
 ---
 
 ## 📊 Tổng quan tiến độ
 
-### Đã hoàn thành: 3/8 yêu cầu bắt buộc (37.5%)
+### Đã hoàn thành: 4/8 yêu cầu bắt buộc (50%)
 
 ### Đang hoạt động: ✅ Backend API + Frontend UI + Database
 
@@ -18,7 +18,7 @@
 
 ### ✅ Yêu cầu BẮT BUỘC (phải hoàn thành)
 
-#### ✅ HOÀN THÀNH (3/8)
+#### ✅ HOÀN THÀNH (4/8)
 
 - [x] **Auth & Phân quyền**: Admin, Giảng viên, Sinh viên
   - ✅ JWT authentication
@@ -42,21 +42,27 @@
   - ✅ 552 điểm số
   - ✅ 552 đăng ký môn học
 
-#### 🚧 ĐANG PHÁT TRIỂN (5/8)
+#### 🚧 ĐANG PHÁT TRIỂN (4/8)
 
 - [x] **Quản lý sinh viên**: CRUD (họ tên, MSSV, ngày sinh, email, SĐT, **địa chỉ**), tìm kiếm, phân trang
   - ✅ Backend API hoàn chỉnh
   - ✅ Frontend UI với React Table
   - ✅ CRUD operations (Create, Read, Update, Delete)
   - ✅ Pagination
-  - ✅ Search và filter
-  - ⚠️ **LỖI ĐÃ SỬA**: "Cannot access 'deleteMutate' before initialization" - Fixed!
-  - 🔄 **CẦN TEST**: Chức năng thêm/sửa/xóa sinh viên
+  - ✅ Search và filter với FilterSection component
+  - ✅ Single input + dropdown cho search fields (MSSV, Họ tên, Email, SĐT, Địa chỉ)
+  - ✅ Additional filters: Class select, Date range (ngày sinh)
+  - ✅ Debounce 300ms, URL sync
 
-- [ ] **Quản lý lớp & môn**: CRUD lớp học, CRUD môn học, gán sinh viên
+- [x] **Quản lý lớp & môn**: CRUD lớp học, CRUD môn học, gán sinh viên
   - ✅ Backend API có sẵn
   - ✅ Database có 8 lớp và 20 môn học
-  - ❌ Frontend UI chưa hoàn thiện
+  - ✅ Frontend UI hoàn chỉnh với DataTable component
+  - ✅ CRUD operations cho lớp học (ClassesPage)
+  - ✅ CRUD operations cho môn học (CoursesPage)
+  - ✅ Client-side filtering với FilterSection component
+  - ✅ Search fields: Mã lớp, Tên lớp, GVCN (ClassesPage)
+  - ✅ Search fields: Mã môn, Tên môn (CoursesPage)
   - ❌ Chức năng gán sinh viên vào lớp chưa có
 
 - [ ] **Quản lý điểm**: Nhập điểm (chuyên cần, giữa kỳ, cuối kỳ), tính điểm TB môn & TB học kỳ
@@ -103,7 +109,7 @@
 - [x] **Responsive & Dark Mode**: Desktop/mobile, chế độ sáng/tối
   - ✅ Responsive design với Tailwind CSS
   - ✅ Neobrutalism design system
-  - ❌ Dark mode chưa có
+  - ✅ Dark mode đã implement đầy đủ
 
 - [ ] **Phân tích học tập**: Phân loại Giỏi/Khá/Yếu, biểu đồ tiến bộ
   - ❌ Chưa implement
@@ -120,6 +126,63 @@
 3. ✅ **Không thể đăng nhập** - Fixed password reset
 4. ✅ **Dev server không khởi động** - Fixed missing `@vitejs/plugin-react`
 5. ✅ **"Cannot access 'deleteMutate' before initialization"** - Fixed variable hoisting trong StudentsPage
+6. ✅ **ESLint parsing error** - Fixed `tsconfigRootDir` trong `apps/web/eslint.config.js`
+
+---
+
+## 🎯 Refactoring đã hoàn thành (2025-01-23)
+
+### ✅ DataTable Component Consolidation
+
+- ✅ Tạo shared DataTable component với:
+  - Header background: `bg-nb-lilac` (đã update từ `bg-nb-lemon`)
+  - Text color: `text-nb-paper` cho header
+  - Rounded corners ở 4 góc table
+  - Dark mode support đầy đủ
+  - `overflowYHidden` prop cho StudentsPage pagination
+- ✅ Refactor 3 pages sử dụng DataTable:
+  - StudentsPage (với pagination)
+  - ClassesPage (không pagination)
+  - CoursesPage (không pagination)
+- ✅ Giảm ~222 dòng code duplicate
+
+### ✅ FilterSection Component Implementation
+
+- ✅ Tạo reusable FilterSection component với:
+  - Single input + dropdown thay vì nhiều input fields
+  - Smooth animation: `transition-all duration-300 ease-in-out`
+  - Max-height + opacity cho collapse/expand mượt mà
+  - Support `additionalFilters` prop cho custom filters
+  - Dark mode support
+  - `defaultOpen = false` (mặc định đóng)
+- ✅ Refactor StudentsPage:
+  - Thay thế 126 dòng inline filter UI
+  - 5 search fields: MSSV, Họ tên, Email, SĐT, Địa chỉ
+  - Additional filters: Class select, Date range
+  - Debounce 300ms, URL sync
+  - Server-side filtering
+- ✅ Thêm filter vào ClassesPage:
+  - 3 search fields: Mã lớp, Tên lớp, GVCN
+  - Client-side filtering
+  - Hiển thị "Tìm thấy: X / Y lớp học"
+- ✅ Thêm filter vào CoursesPage:
+  - 2 search fields: Mã môn, Tên môn
+  - Client-side filtering
+  - Hiển thị "Tìm thấy: X / Y môn học"
+- ✅ 0 TypeScript errors, 0 ESLint errors
+
+**Files Created:**
+
+- `apps/web/src/components/FilterSection/FilterSection.tsx`
+- `apps/web/src/components/FilterSection/index.ts`
+
+**Files Modified:**
+
+- `apps/web/src/components/DataTable/DataTable.tsx`
+- `apps/web/src/pages/StudentsPage.tsx`
+- `apps/web/src/pages/ClassesPage.tsx`
+- `apps/web/src/pages/CoursesPage.tsx`
+- `apps/web/eslint.config.js`
 
 ---
 
@@ -128,8 +191,8 @@
 ### Ưu tiên cao (Tuần này)
 
 1. ✅ Test chức năng CRUD sinh viên trên UI
-2. ⬜ Hoàn thiện UI quản lý lớp học
-3. ⬜ Hoàn thiện UI quản lý môn học
+2. ✅ Hoàn thiện UI quản lý lớp học
+3. ✅ Hoàn thiện UI quản lý môn học
 4. ⬜ Implement chức năng gán sinh viên vào lớp
 
 ### Ưu tiên trung bình (Tuần sau)

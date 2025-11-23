@@ -14,11 +14,20 @@ import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useSearchParams } from 'react-router-dom';
 import { DataTable } from '../components/DataTable';
+import { FilterSection, type FilterField } from '../components/FilterSection';
 import { useForm } from 'react-hook-form';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 type ClassItem = { _id: string; code: string; name: string };
+
+const STUDENT_SEARCH_FIELDS: FilterField[] = [
+  { value: 'mssv', label: 'MSSV' },
+  { value: 'fullName', label: 'Họ tên' },
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Số điện thoại' },
+  { value: 'address', label: 'Địa chỉ' },
+];
 
 export const StudentsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -27,21 +36,43 @@ export const StudentsPage = () => {
 
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(initialPageSize);
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
 
-  const [filters, setFilters] = useState<
+  // Filter state: selectedField + searchValue + additional filters
+  const [selectedField, setSelectedField] = useState<string>(
+    searchParams.get('selectedField') || 'mssv',
+  );
+  const [searchValue, setSearchValue] = useState<string>(
+    searchParams.get('searchValue') || '',
+  );
+  const [classId, setClassId] = useState<string>(
+    searchParams.get('classId') || '',
+  );
+  const [dobFrom, setDobFrom] = useState<string>(
+    searchParams.get('dobFrom') || '',
+  );
+  const [dobTo, setDobTo] = useState<string>(searchParams.get('dobTo') || '');
+
+  // Build filters object from state
+  const filters = useMemo<
     Partial<Omit<ListStudentsParams, 'page' | 'pageSize'>>
-  >(() => ({
-    q: searchParams.get('q') || undefined,
-    classId: searchParams.get('classId') || undefined,
-    mssv: searchParams.get('mssv') || undefined,
-    fullName: searchParams.get('fullName') || undefined,
-    email: searchParams.get('email') || undefined,
-    phone: searchParams.get('phone') || undefined,
-    address: searchParams.get('address') || undefined,
-    dobFrom: searchParams.get('dobFrom') || undefined,
-    dobTo: searchParams.get('dobTo') || undefined,
-  }));
+  >(() => {
+    const f: Partial<Omit<ListStudentsParams, 'page' | 'pageSize'>> = {};
+
+    if (searchValue) {
+      f[selectedField as keyof typeof f] = searchValue;
+    }
+    if (classId) {
+      f.classId = classId;
+    }
+    if (dobFrom) {
+      f.dobFrom = dobFrom;
+    }
+    if (dobTo) {
+      f.dobTo = dobTo;
+    }
+
+    return f;
+  }, [selectedField, searchValue, classId, dobFrom, dobTo]);
 
   const [debouncedFilters, setDebouncedFilters] = useState(filters);
 
@@ -63,11 +94,22 @@ export const StudentsPage = () => {
     const s = new URLSearchParams();
     s.set('page', String(page));
     s.set('pageSize', String(pageSize));
-    Object.entries(debouncedFilters).forEach(([k, v]) => {
-      if (v) s.set(k, String(v));
-    });
+    s.set('selectedField', selectedField);
+    if (searchValue) s.set('searchValue', searchValue);
+    if (classId) s.set('classId', classId);
+    if (dobFrom) s.set('dobFrom', dobFrom);
+    if (dobTo) s.set('dobTo', dobTo);
     setSearchParams(s, { replace: true });
-  }, [page, pageSize, debouncedFilters, setSearchParams]);
+  }, [
+    page,
+    pageSize,
+    selectedField,
+    searchValue,
+    classId,
+    dobFrom,
+    dobTo,
+    setSearchParams,
+  ]);
 
   const { data: classesData } = useQuery({
     queryKey: ['classes'],
@@ -237,131 +279,58 @@ export const StudentsPage = () => {
       </header>
 
       {/* Filters */}
-      <div className="nb-card space-y-4">
-        <div
-          className="flex items-center justify-between cursor-pointer border-b-2 border-black pb-2 dark:border-nb-dark-border"
-          onClick={() => setIsFilterOpen(!isFilterOpen)}
-        >
-          <h3 className="font-bold text-lg select-none">Bộ lọc tìm kiếm</h3>
-          <button
-            type="button"
-            className="w-10 h-10 flex items-center justify-center border-2 border-black bg-white hover:bg-nb-lemon transition-colors shadow-neo-sm rounded dark:bg-nb-gold dark:text-black dark:border-nb-dark-border dark:hover:bg-nb-gold-hover"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`}
+      <FilterSection
+        searchFields={STUDENT_SEARCH_FIELDS}
+        selectedField={selectedField}
+        searchValue={searchValue}
+        onFieldChange={setSelectedField}
+        onSearchChange={setSearchValue}
+        onClear={() => {
+          setSelectedField('mssv');
+          setSearchValue('');
+          setClassId('');
+          setDobFrom('');
+          setDobTo('');
+        }}
+        additionalFilters={
+          <div className="space-y-3">
+            <select
+              className="nb-input w-full"
+              value={classId}
+              onChange={(e) => setClassId(e.target.value)}
             >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </button>
-        </div>
-
-        {isFilterOpen && (
-          <div className="space-y-4 animate-in slide-in-from-top-2 duration-200">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <input
-                className="nb-input"
-                placeholder="MSSV"
-                value={filters.mssv ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, mssv: e.target.value }))
-                }
-              />
-              <input
-                className="nb-input"
-                placeholder="Họ tên"
-                value={filters.fullName ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, fullName: e.target.value }))
-                }
-              />
-              <input
-                className="nb-input"
-                placeholder="Email"
-                value={filters.email ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, email: e.target.value }))
-                }
-              />
-              <input
-                className="nb-input"
-                placeholder="Số điện thoại"
-                value={filters.phone ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, phone: e.target.value }))
-                }
-              />
-              <input
-                className="nb-input"
-                placeholder="Địa chỉ"
-                value={filters.address ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, address: e.target.value }))
-                }
-              />
-              <select
-                className="nb-input"
-                value={filters.classId ?? ''}
-                onChange={(e) =>
-                  setFilters((f) => ({
-                    ...f,
-                    classId: e.target.value || undefined,
-                  }))
-                }
-              >
-                <option value="">Tất cả lớp</option>
-                {classesData?.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.code} - {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <option value="">Tất cả lớp</option>
+              {classesData?.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.code} - {c.name}
+                </option>
+              ))}
+            </select>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div className="flex items-center gap-2">
-                <label className="w-24 text-sm opacity-70">Ngày sinh từ</label>
+                <label className="w-24 text-sm opacity-70 shrink-0">
+                  Ngày sinh từ
+                </label>
                 <input
                   type="date"
-                  className="nb-input"
-                  value={filters.dobFrom ?? ''}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, dobFrom: e.target.value }))
-                  }
+                  className="nb-input flex-1"
+                  value={dobFrom}
+                  onChange={(e) => setDobFrom(e.target.value)}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="w-24 text-sm opacity-70">Đến</label>
+                <label className="w-16 text-sm opacity-70 shrink-0">Đến</label>
                 <input
                   type="date"
-                  className="nb-input"
-                  value={filters.dobTo ?? ''}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, dobTo: e.target.value }))
-                  }
+                  className="nb-input flex-1"
+                  value={dobTo}
+                  onChange={(e) => setDobTo(e.target.value)}
                 />
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  className="nb-btn nb-btn--secondary"
-                  onClick={() => setFilters({})}
-                >
-                  Xóa bộ lọc
-                </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        }
+      />
 
       <div className="nb-card">
         {isLoading ? (

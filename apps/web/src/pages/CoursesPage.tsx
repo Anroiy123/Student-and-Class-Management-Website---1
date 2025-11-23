@@ -11,8 +11,14 @@ import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useForm } from 'react-hook-form';
 import { DataTable } from '../components/DataTable';
+import { FilterSection, type FilterField } from '../components/FilterSection';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+
+const COURSE_SEARCH_FIELDS: FilterField[] = [
+  { value: 'code', label: 'Mã môn' },
+  { value: 'name', label: 'Tên môn' },
+];
 
 export const CoursesPage = () => {
   const { data, isLoading } = useCoursesQuery();
@@ -21,6 +27,23 @@ export const CoursesPage = () => {
   const [editCourse, setEditCourse] = useState<CourseListItem | null>(null);
   const { mutateAsync: deleteMutate } = useDeleteCourse();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Filter state
+  const [selectedField, setSelectedField] = useState<string>('code');
+  const [searchValue, setSearchValue] = useState<string>('');
+
+  // Client-side filtering
+  const filteredData = useMemo(() => {
+    if (!data || !searchValue) return data;
+
+    return data.filter((item) => {
+      const fieldValue = item[selectedField as keyof CourseListItem];
+      if (fieldValue === null || fieldValue === undefined) return false;
+      return String(fieldValue)
+        .toLowerCase()
+        .includes(searchValue.toLowerCase());
+    });
+  }, [data, selectedField, searchValue]);
 
   const columns = useMemo<ColumnDef<CourseListItem>[]>(
     () => [
@@ -91,7 +114,7 @@ export const CoursesPage = () => {
   );
 
   const table = useReactTable({
-    data: data ?? [],
+    data: filteredData ?? [],
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -119,10 +142,23 @@ export const CoursesPage = () => {
         </div>
       </header>
 
+      {/* Filters */}
+      <FilterSection
+        searchFields={COURSE_SEARCH_FIELDS}
+        selectedField={selectedField}
+        searchValue={searchValue}
+        onFieldChange={setSelectedField}
+        onSearchChange={setSearchValue}
+        onClear={() => {
+          setSelectedField('code');
+          setSearchValue('');
+        }}
+      />
+
       <div className="nb-card">
         {isLoading ? (
           <p className="text-sm opacity-70">Đang tải danh sách môn học…</p>
-        ) : data && data.length > 0 ? (
+        ) : filteredData && filteredData.length > 0 ? (
           <>
             <DataTable
               table={table}
@@ -133,17 +169,32 @@ export const CoursesPage = () => {
             />
             <div className="mt-6 pt-4 border-t-3 border-black dark:border-nb-dark-border">
               <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
-                Tổng: <span className="font-bold">{data.length}</span> môn học
+                {searchValue ? (
+                  <>
+                    Tìm thấy:{' '}
+                    <span className="font-bold">{filteredData.length}</span> /{' '}
+                    {data?.length} môn học
+                  </>
+                ) : (
+                  <>
+                    Tổng: <span className="font-bold">{data?.length}</span> môn
+                    học
+                  </>
+                )}
               </div>
             </div>
           </>
         ) : (
           <div className="text-center py-12">
             <p className="text-lg font-semibold opacity-70">
-              Không có môn học nào
+              {searchValue
+                ? 'Không tìm thấy môn học nào'
+                : 'Không có môn học nào'}
             </p>
             <p className="text-sm opacity-50 mt-2">
-              Thêm môn học mới để bắt đầu
+              {searchValue
+                ? 'Thử tìm kiếm với từ khóa khác'
+                : 'Thêm môn học mới để bắt đầu'}
             </p>
           </div>
         )}
