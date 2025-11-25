@@ -7,6 +7,8 @@ import {
   useDeleteCourse,
   type CourseListItem,
 } from '../lib/courses';
+import { useClassesQuery } from '../lib/classes';
+import { useEnrollmentsQuery } from '../lib/enrollments';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useForm } from 'react-hook-form';
@@ -22,6 +24,8 @@ const COURSE_SEARCH_FIELDS: FilterField[] = [
 
 export const CoursesPage = () => {
   const { data, isLoading } = useCoursesQuery();
+  const { data: classesData } = useClassesQuery();
+  const { data: enrollmentsData } = useEnrollmentsQuery();
 
   const [showForm, setShowForm] = useState(false);
   const [editCourse, setEditCourse] = useState<CourseListItem | null>(null);
@@ -31,19 +35,37 @@ export const CoursesPage = () => {
   // Filter state
   const [selectedField, setSelectedField] = useState<string>('code');
   const [searchValue, setSearchValue] = useState<string>('');
+  const [classId, setClassId] = useState<string>('');
 
   // Client-side filtering
   const filteredData = useMemo(() => {
-    if (!data || !searchValue) return data;
+    if (!data) return data;
 
-    return data.filter((item) => {
-      const fieldValue = item[selectedField as keyof CourseListItem];
-      if (fieldValue === null || fieldValue === undefined) return false;
-      return String(fieldValue)
-        .toLowerCase()
-        .includes(searchValue.toLowerCase());
-    });
-  }, [data, selectedField, searchValue]);
+    let result = data;
+
+    // Filter by classId (via enrollments)
+    if (classId && enrollmentsData) {
+      const courseIdsInClass = enrollmentsData
+        .filter((e) => e.classId?._id === classId)
+        .map((e) => e.courseId?._id)
+        .filter(Boolean);
+      const uniqueCourseIds = [...new Set(courseIdsInClass)];
+      result = result.filter((item) => uniqueCourseIds.includes(item._id));
+    }
+
+    // Filter by search text
+    if (searchValue) {
+      result = result.filter((item) => {
+        const fieldValue = item[selectedField as keyof CourseListItem];
+        if (fieldValue === null || fieldValue === undefined) return false;
+        return String(fieldValue)
+          .toLowerCase()
+          .includes(searchValue.toLowerCase());
+      });
+    }
+
+    return result;
+  }, [data, selectedField, searchValue, classId, enrollmentsData]);
 
   const columns = useMemo<ColumnDef<CourseListItem>[]>(
     () => [
@@ -152,7 +174,29 @@ export const CoursesPage = () => {
         onClear={() => {
           setSelectedField('code');
           setSearchValue('');
+          setClassId('');
         }}
+        additionalFilters={
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Lọc theo lớp học
+              </label>
+              <select
+                className="nb-input w-full"
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+              >
+                <option value="">Tất cả lớp</option>
+                {classesData?.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.code} - {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        }
       />
 
       <div className="nb-card">
@@ -169,7 +213,7 @@ export const CoursesPage = () => {
             />
             <div className="mt-6 pt-4 border-t-3 border-black dark:border-nb-dark-border">
               <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
-                {searchValue ? (
+                {searchValue || classId ? (
                   <>
                     Tìm thấy:{' '}
                     <span className="font-bold">{filteredData.length}</span> /{' '}
@@ -187,13 +231,13 @@ export const CoursesPage = () => {
         ) : (
           <div className="text-center py-12">
             <p className="text-lg font-semibold opacity-70">
-              {searchValue
+              {searchValue || classId
                 ? 'Không tìm thấy môn học nào'
                 : 'Không có môn học nào'}
             </p>
             <p className="text-sm opacity-50 mt-2">
-              {searchValue
-                ? 'Thử tìm kiếm với từ khóa khác'
+              {searchValue || classId
+                ? 'Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc'
                 : 'Thêm môn học mới để bắt đầu'}
             </p>
           </div>

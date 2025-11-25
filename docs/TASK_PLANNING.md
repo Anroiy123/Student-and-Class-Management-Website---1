@@ -63,7 +63,7 @@
   - ✅ Search fields: Mã môn, Tên môn (CoursesPage)
   - ❌ Chức năng gán sinh viên vào lớp chưa có
 
-#### 🚧 ĐANG PHÁT TRIỂN (3/8)
+#### 🚧 ĐANG PHÁT TRIỂN (2/8)
 
 - [x] **Quản lý điểm**: Nhập điểm (chuyên cần, giữa kỳ, cuối kỳ), tính điểm TB môn & TB học kỳ
   - ✅ Backend API hoàn chỉnh với pagination
@@ -85,8 +85,17 @@
   - ✅ Color-coded grades (xanh/xanh dương/vàng/đỏ)
   - ✅ Hover tooltip hiển thị phân loại
 
-- [ ] **Báo cáo**: Xuất Excel/PDF
-  - ❌ Chưa implement
+- [x] **Báo cáo**: Xuất Excel/PDF
+  - ✅ Backend API hoàn chỉnh với Excel/PDF export
+  - ✅ Frontend UI với form filters (lớp, môn, học kỳ, format)
+  - ✅ Endpoint: `GET /api/reports/export?classId=...&courseId=...&semester=...&format=excel|pdf`
+  - ✅ Endpoint: `GET /api/reports/available-courses?classId=...` (lấy môn có điểm theo lớp)
+  - ✅ ExcelJS library cho Excel generation
+  - ✅ PDFKit library cho PDF generation
+  - ✅ Smart filter: khi chọn lớp, dropdown môn chỉ hiển thị môn có điểm
+  - ✅ File download tự động với tên: `bao-cao-diem-{timestamp}.xlsx|pdf`
+  - ✅ Permission check: chỉ ADMIN/TEACHER mới xuất được
+  - ✅ Error handling: hiển thị "Không tìm thấy dữ liệu điểm" nếu không có dữ liệu
 
 - [ ] **Sinh viên role**: Xem thông tin cá nhân và điểm
   - ✅ Role đã được setup
@@ -222,25 +231,76 @@
   - Cột "Môn học" chỉ hiển thị mã, hover để xem full
   - Không cần scroll ngang trên màn hình 1366px
 
+### ✅ Report Export Feature Implementation (2025-01-24)
+
+- ✅ Backend implementation:
+  - Tạo `apps/api/src/controllers/report.controller.ts` với 2 endpoints
+  - Endpoint 1: `GET /api/reports/export` - Xuất Excel/PDF
+    - Query params: `classId`, `courseId`, `semester`, `format` (excel|pdf)
+    - ExcelJS: Tạo file Excel với header, styling, data
+    - PDFKit: Tạo file PDF landscape với bảng dữ liệu
+    - Response: File download với Content-Disposition header
+  - Endpoint 2: `GET /api/reports/available-courses` - Lấy môn có điểm theo lớp
+    - Query param: `classId` (bắt buộc)
+    - Logic: Lọc từ GradeModel → populate courseId → distinct
+    - Response: Array of courses có điểm trong lớp đó
+  - Tạo `apps/api/src/routes/report.routes.ts` với middleware chain:
+    - `requireAuth()` - Yêu cầu đăng nhập
+    - `requireRole('ADMIN', 'TEACHER')` - Chỉ ADMIN/TEACHER
+    - `validateRequest()` - Validate query params
+  - Tạo `apps/api/src/schemas/report.schema.ts` - Zod validation schema
+  - Fix import: Đổi từ `import * as ExcelJS` → `import ExcelJS` (CommonJS)
+  - Fix import: Đổi từ `import * as PDFDocument` → `import PDFDocument` (CommonJS)
+  - Cài đặt dependencies: `exceljs`, `pdfkit`, `@types/pdfkit`
+
+- ✅ Frontend implementation:
+  - Tạo `apps/web/src/lib/reports.ts` - API integration layer
+    - Function `exportReport()` - Gọi API export với params
+    - Function `downloadFile()` - Tạo blob URL và trigger download
+    - Type `ExportReportParams` - TypeScript interface
+  - Tạo `apps/web/src/pages/ReportsPage.tsx` - UI hoàn chỉnh
+    - Form với 4 fields:
+      - Lớp (dropdown, optional)
+      - Môn học (dropdown, optional, smart filter)
+      - Học kỳ (text input, optional)
+      - Format (radio buttons: Excel/PDF)
+    - React Query hooks:
+      - `useQuery` lấy danh sách lớp
+      - `useQuery` lấy danh sách môn (all)
+      - `useQuery` lấy danh sách môn theo lớp (conditional)
+    - Smart filter logic:
+      - Khi chọn lớp → gọi API `/api/reports/available-courses`
+      - Dropdown môn chỉ hiển thị môn có điểm trong lớp đó
+      - Khi bỏ chọn lớp → reset môn, hiển thị tất cả môn
+    - Export handler:
+      - Validate form
+      - Gọi `exportReport()` API
+      - Trigger file download
+      - Error handling: hiển thị toast message
+    - Loading state: Disable button khi đang export
+    - Permission: Route protected với `ProtectedRoute` (ADMIN/TEACHER only)
+  - Cập nhật `apps/web/src/router.tsx`:
+    - Thêm route `/reports` với `ProtectedRoute` wrapper
+    - Allowed roles: `['ADMIN', 'TEACHER']`
+
+- ✅ Bug fixes:
+  - Fix 500 error: Sửa import ExcelJS/PDFKit từ namespace import → default import
+  - Fix smart filter: Khi chọn lớp, reset courseId để tránh lỗi "không có dữ liệu"
+  - Fix UI: Hiển thị hint text "(Chỉ hiển thị môn có điểm)" khi chọn lớp
+
 **Files Created:**
 
-- `apps/web/src/components/FilterSection/FilterSection.tsx`
-- `apps/web/src/components/FilterSection/index.ts`
-- `apps/web/src/components/Pager/Pager.tsx`
-- `apps/web/src/components/Pager/index.ts`
-- `apps/web/src/lib/grades.ts`
+- `apps/api/src/controllers/report.controller.ts`
+- `apps/api/src/routes/report.routes.ts`
+- `apps/api/src/schemas/report.schema.ts`
+- `apps/web/src/lib/reports.ts`
+- `apps/web/src/pages/ReportsPage.tsx`
 
 **Files Modified:**
 
-- `apps/web/src/components/DataTable/DataTable.tsx`
-- `apps/web/src/pages/StudentsPage.tsx`
-- `apps/web/src/pages/ClassesPage.tsx`
-- `apps/web/src/pages/CoursesPage.tsx`
-- `apps/web/src/pages/GradesPage.tsx`
-- `apps/web/src/layouts/AppLayout.tsx`
-- `apps/api/src/controllers/grade.controller.ts`
-- `apps/api/src/schemas/grade.schema.ts`
-- `apps/web/eslint.config.js`
+- `apps/api/src/routes/index.ts` - Thêm report routes
+- `apps/web/src/router.tsx` - Thêm reports route
+- `apps/api/package.json` - Cài đặt exceljs, pdfkit, @types/pdfkit
 
 ---
 

@@ -19,7 +19,7 @@
   html,
   body,
   #root {
-    @apply min-h-screen bg-nb-paper text-nb-ink;
+    @apply min-h-screen bg-nb-background text-nb-ink;
   }
 
   html.dark,
@@ -62,7 +62,7 @@
   }
 
   .nb-btn {
-    @apply inline-flex items-center justify-center gap-2 border-3 border-black px-4 py-2 shadow-neo transition-transform active:translate-x-0 active:translate-y-0 rounded-md;
+    @apply inline-flex items-center justify-center gap-2 border-3 border-black px-4 py-2 hover:shadow-neo-sm active:translate-x-0 active:translate-y-0 rounded-md transition-all;
   }
 
   .dark .nb-btn {

@@ -113,7 +113,7 @@ export function computeGradeClassification(total: number): string {
 
 export function computeSemesterAverage(grades: GradeListItem[]): number {
   if (grades.length === 0) return 0;
-  
+
   let totalWeightedScore = 0;
   let totalCredits = 0;
 
@@ -123,8 +123,8 @@ export function computeSemesterAverage(grades: GradeListItem[]): number {
     totalCredits += credits;
   });
 
-  return totalCredits > 0 
-    ? Number((totalWeightedScore / totalCredits).toFixed(2)) 
+  return totalCredits > 0
+    ? Number((totalWeightedScore / totalCredits).toFixed(2))
     : 0;
 }
 

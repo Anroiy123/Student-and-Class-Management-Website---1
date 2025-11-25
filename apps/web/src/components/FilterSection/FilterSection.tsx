@@ -40,7 +40,7 @@ export function FilterSection({
         <h3 className="font-bold text-lg select-none">{title}</h3>
         <button
           type="button"
-          className="w-10 h-10 flex items-center justify-center border-2 border-black bg-white hover:bg-nb-lemon transition-colors shadow-neo-sm rounded dark:bg-nb-gold dark:text-black dark:border-nb-dark-border dark:hover:bg-nb-gold-hover"
+          className="w-10 h-10 flex items-center justify-center border-2 border-black bg-nb-paper hover:bg-nb-lemon transition-all hover:shadow-neo-sm transition-colors rounded dark:bg-nb-gold dark:text-black dark:border-nb-dark-border dark:hover:bg-nb-gold-hover"
           aria-label={isOpen ? 'Thu gọn bộ lọc' : 'Mở rộng bộ lọc'}
         >
           <svg
@@ -53,7 +53,7 @@ export function FilterSection({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
+            className={` transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : ''}`}
           >
             <path d="m6 9 6 6 6-6" />
           </svg>

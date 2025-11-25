@@ -7,6 +7,7 @@ const config: Config = {
     extend: {
       colors: {
         nb: {
+          background: '#FEEED5',
           ink: '#111111',
           paper: '#F8F7F2',
           lemon: '#FFE76A',
