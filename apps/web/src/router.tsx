@@ -9,6 +9,10 @@ import { ReportsPage } from './pages/ReportsPage';
 import { SignInPage } from './pages/SignInPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
+// Student pages
+import { StudentProfilePage } from './pages/StudentProfilePage';
+import { StudentGradesPage } from './pages/StudentGradesPage';
+import { StudentCoursesPage } from './pages/StudentCoursesPage';
 
 export const router = createBrowserRouter([
   {
@@ -65,6 +69,31 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}>
             <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
+      // Student routes
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'my-grades',
+        element: (
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentGradesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'my-courses',
+        element: (
+          <ProtectedRoute allowedRoles={['STUDENT']}>
+            <StudentCoursesPage />
           </ProtectedRoute>
         ),
       },
