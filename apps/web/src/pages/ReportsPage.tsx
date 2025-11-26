@@ -125,7 +125,7 @@ export const ReportsPage = () => {
               className="nb-input w-full"
               value={courseId}
               onChange={(e) => setCourseId(e.target.value)}
-              disabled={classId && !coursesData}
+              disabled={Boolean(classId && !coursesData)}
             >
               <option value="">
                 {classId ? '-- Tất cả môn có điểm --' : '-- Tất cả môn --'}

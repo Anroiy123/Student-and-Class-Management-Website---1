@@ -21,3 +21,7 @@ apps/api/dist
 .DS_Store
 *.local
 .augment/
+.kiro/
+.claude
+AGENTS.MD
+CLAUDE.md

@@ -1,0 +1,5 @@
+export const DASHBOARD_CONSTANTS = {
+  MAX_ACTIVITIES: 100,
+  DEFAULT_PAGE_SIZE: 10,
+} as const;
+
