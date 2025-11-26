@@ -9,7 +9,10 @@ interface IconProps extends SVGProps<SVGSVGElement> {
     | 'grades'
     | 'reports'
     | 'moon'
-    | 'sun';
+    | 'sun'
+    | 'profile'
+    | 'my-grades'
+    | 'my-courses';
   size?: number;
 }
 
@@ -319,6 +322,127 @@ export const Icon = ({ name, size = 32, className, ...props }: IconProps) => {
           y1="5.64"
           x2="19.78"
           y2="4.22"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+      </svg>
+    ),
+    profile: (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+      >
+        <circle
+          cx="16"
+          cy="10"
+          r="6"
+          fill="#C7B9FF"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <path
+          d="M8 28C8 22 11 19 16 19C21 19 24 22 24 28"
+          fill="#C7B9FF"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <rect
+          x="4"
+          y="4"
+          width="24"
+          height="24"
+          rx="4"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="none"
+        />
+      </svg>
+    ),
+    'my-grades': (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+      >
+        <rect
+          x="4"
+          y="4"
+          width="24"
+          height="24"
+          fill="#B8FFCE"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <text
+          x="16"
+          y="20"
+          textAnchor="middle"
+          fontSize="14"
+          fontWeight="bold"
+          fill="currentColor"
+        >
+          A+
+        </text>
+      </svg>
+    ),
+    'my-courses': (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+      >
+        <rect
+          x="4"
+          y="6"
+          width="18"
+          height="22"
+          fill="#9AD9FF"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <rect
+          x="10"
+          y="4"
+          width="18"
+          height="22"
+          fill="#FFE76A"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <line
+          x1="14"
+          y1="10"
+          x2="24"
+          y2="10"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <line
+          x1="14"
+          y1="15"
+          x2="24"
+          y2="15"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <line
+          x1="14"
+          y1="20"
+          x2="20"
+          y2="20"
           stroke="currentColor"
           strokeWidth="2"
         />
