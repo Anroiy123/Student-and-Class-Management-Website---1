@@ -9,12 +9,22 @@ import { Icon } from '../components/Icon';
 type NavItem = {
   label: string;
   path: string;
-  icon: 'dashboard' | 'students' | 'classes' | 'courses' | 'grades' | 'reports';
+  icon:
+    | 'dashboard'
+    | 'students'
+    | 'classes'
+    | 'courses'
+    | 'grades'
+    | 'reports'
+    | 'profile'
+    | 'my-grades'
+    | 'my-courses';
   roles?: UserRole[];
 };
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/', icon: 'dashboard' },
+  // Admin/Teacher items
   {
     label: 'Quản lý sinh viên',
     path: '/students',
@@ -39,7 +49,31 @@ const NAV_ITEMS: NavItem[] = [
     icon: 'grades',
     roles: ['ADMIN', 'TEACHER'],
   },
-  { label: 'Báo cáo', path: '/reports', icon: 'reports' },
+  {
+    label: 'Báo cáo',
+    path: '/reports',
+    icon: 'reports',
+    roles: ['ADMIN', 'TEACHER'],
+  },
+  // Student items
+  {
+    label: 'Hồ sơ cá nhân',
+    path: '/profile',
+    icon: 'profile',
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Điểm của tôi',
+    path: '/my-grades',
+    icon: 'my-grades',
+    roles: ['STUDENT'],
+  },
+  {
+    label: 'Môn học của tôi',
+    path: '/my-courses',
+    icon: 'my-courses',
+    roles: ['STUDENT'],
+  },
 ];
 
 export const AppLayout = () => {
@@ -225,7 +259,16 @@ const NavItem = ({
   children,
 }: {
   to: string;
-  icon: 'dashboard' | 'students' | 'classes' | 'courses' | 'grades' | 'reports';
+  icon:
+    | 'dashboard'
+    | 'students'
+    | 'classes'
+    | 'courses'
+    | 'grades'
+    | 'reports'
+    | 'profile'
+    | 'my-grades'
+    | 'my-courses';
   isCollapsed: boolean;
   children: ReactNode;
 }) => (
