@@ -7,6 +7,7 @@ import { enrollmentRoutes } from './enrollment.routes';
 import { gradeRoutes } from './grade.routes';
 import { reportRoutes } from './report.routes';
 import { dashboardRoutes } from './dashboard.routes';
+import meRoutes from './me.routes';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/enrollments', enrollmentRoutes);
 router.use('/grades', gradeRoutes);
 router.use('/reports', reportRoutes);
 router.use('/dashboard', dashboardRoutes);
+router.use('/me', meRoutes);
 
 export const apiRouter = router;
