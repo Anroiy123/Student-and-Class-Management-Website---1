@@ -19,6 +19,7 @@ import { Pager } from '../components/Pager';
 import { useForm } from 'react-hook-form';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useUser } from '../lib/authHooks';
 
 type ClassItem = { _id: string; code: string; name: string };
 
@@ -31,6 +32,9 @@ const STUDENT_SEARCH_FIELDS: FilterField[] = [
 ];
 
 export const StudentsPage = () => {
+  const user = useUser();
+  const isAdmin = user?.role === 'ADMIN';
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialPage = Number(searchParams.get('page') ?? 1) || 1;
   const initialPageSize = Number(searchParams.get('pageSize') ?? 10) || 10;
@@ -210,44 +214,47 @@ export const StudentsPage = () => {
       {
         id: 'actions',
         header: 'Thao tác',
-        cell: (info) => (
-          <div className="flex gap-1">
-            <button
-              type="button"
-              className="px-3 py-1 text-xs border-2 border-black bg-nb-mint hover:bg-nb-lemon transition-all hover:shadow-neo-sm font-medium nb-table-btn-edit dark:border-nb-dark-border"
-              onClick={() => {
-                setEditStudent(info.row.original);
-                setShowForm(true);
-              }}
-            >
-              Sửa
-            </button>
-            <button
-              type="button"
-              className="px-3 py-1 text-xs border-2 border-black bg-nb-coral hover:bg-nb-lemon transition-all hover:shadow-neo-sm disabled:opacity-50 font-medium nb-table-btn-delete dark:border-nb-dark-border"
-              disabled={deletingId === info.row.original._id}
-              onClick={async () => {
-                const id = info.row.original._id as string;
-                if (!window.confirm('Bạn có chắc muốn xóa sinh viên này?'))
-                  return;
-                try {
-                  setDeletingId(id);
-                  await deleteMutate(id);
-                } catch {
-                  alert('Xóa thất bại. Vui lòng thử lại.');
-                } finally {
-                  setDeletingId(null);
-                }
-              }}
-            >
-              {deletingId === info.row.original._id ? 'Đang xóa...' : 'Xóa'}
-            </button>
-          </div>
-        ),
+        cell: (info) =>
+          isAdmin ? (
+            <div className="flex gap-1">
+              <button
+                type="button"
+                className="px-3 py-1 text-xs border-2 border-black bg-nb-mint hover:bg-nb-lemon transition-all hover:shadow-neo-sm font-medium nb-table-btn-edit dark:border-nb-dark-border"
+                onClick={() => {
+                  setEditStudent(info.row.original);
+                  setShowForm(true);
+                }}
+              >
+                Sửa
+              </button>
+              <button
+                type="button"
+                className="px-3 py-1 text-xs border-2 border-black bg-nb-coral hover:bg-nb-lemon transition-all hover:shadow-neo-sm disabled:opacity-50 font-medium nb-table-btn-delete dark:border-nb-dark-border"
+                disabled={deletingId === info.row.original._id}
+                onClick={async () => {
+                  const id = info.row.original._id as string;
+                  if (!window.confirm('Bạn có chắc muốn xóa sinh viên này?'))
+                    return;
+                  try {
+                    setDeletingId(id);
+                    await deleteMutate(id);
+                  } catch {
+                    alert('Xóa thất bại. Vui lòng thử lại.');
+                  } finally {
+                    setDeletingId(null);
+                  }
+                }}
+              >
+                {deletingId === info.row.original._id ? 'Đang xóa...' : 'Xóa'}
+              </button>
+            </div>
+          ) : (
+            <span className="text-gray-400">—</span>
+          ),
         size: 120,
       },
     ],
-    [page, pageSize, deleteMutate, deletingId],
+    [page, pageSize, deleteMutate, deletingId, isAdmin],
   );
 
   const table = useReactTable({
@@ -265,18 +272,20 @@ export const StudentsPage = () => {
             Danh sách sinh viên, tìm kiếm, phân trang, thêm/sửa/xóa.
           </p>
         </div>
-        <div className="shrink-0 w-full md:w-auto">
-          <button
-            type="button"
-            className="nb-btn nb-btn--primary w-full md:w-auto"
-            onClick={() => {
-              setEditStudent(null);
-              setShowForm(true);
-            }}
-          >
-            Thêm sinh viên
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="shrink-0 w-full md:w-auto">
+            <button
+              type="button"
+              className="nb-btn nb-btn--primary w-full md:w-auto"
+              onClick={() => {
+                setEditStudent(null);
+                setShowForm(true);
+              }}
+            >
+              Thêm sinh viên
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Filters */}

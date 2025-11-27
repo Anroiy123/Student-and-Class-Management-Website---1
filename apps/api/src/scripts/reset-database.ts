@@ -5,8 +5,8 @@ import { StudentModel } from '../models/student.model.js';
 import { EnrollmentModel } from '../models/enrollment.model.js';
 import { GradeModel } from '../models/grade.model.js';
 import { UserModel } from '../models/user.model.js';
+import { TeacherModel } from '../models/teacher.model.js';
 import { hashPassword } from '../utils/password.js';
-import mongoose from 'mongoose';
 
 async function resetDatabase() {
   try {
@@ -23,6 +23,7 @@ async function resetDatabase() {
       { name: 'Students', model: StudentModel },
       { name: 'Courses', model: CourseModel },
       { name: 'Classes', model: ClassModel },
+      { name: 'Teachers', model: TeacherModel },
       { name: 'Users', model: UserModel },
     ];
 

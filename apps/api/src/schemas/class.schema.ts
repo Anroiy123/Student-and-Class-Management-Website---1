@@ -1,10 +1,10 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const base = z.object({
-  code: z.string().min(1, "Mã lớp không được để trống"),
-  name: z.string().min(1, "Tên lớp không được để trống"),
+  code: z.string().min(1, 'Mã lớp không được để trống'),
+  name: z.string().min(1, 'Tên lớp không được để trống'),
   size: z.number().int().nonnegative().optional(),
-  homeroomTeacher: z.string().optional(),
+  homeroomTeacherId: z.string().optional(),
 });
 
 export const createClassSchema = z.object({

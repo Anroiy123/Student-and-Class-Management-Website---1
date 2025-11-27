@@ -5,7 +5,11 @@ const classSchema = new Schema(
     code: { type: String, required: true, unique: true, trim: true },
     name: { type: String, required: true, trim: true },
     size: { type: Number, default: 0 },
-    homeroomTeacher: { type: String, default: null },
+    homeroomTeacherId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Teacher',
+      default: null,
+    },
   },
   { timestamps: true },
 );

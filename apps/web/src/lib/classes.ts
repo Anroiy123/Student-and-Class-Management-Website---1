@@ -6,12 +6,19 @@ import {
 } from '@tanstack/react-query';
 import { apiClient } from './api';
 
+export type TeacherInfo = {
+  _id: string;
+  employeeId: string;
+  fullName: string;
+  email: string;
+};
+
 export type ClassListItem = {
   _id: string;
   code: string;
   name: string;
   size: number;
-  homeroomTeacher: string | null;
+  homeroomTeacherId: TeacherInfo | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -27,7 +34,7 @@ export type UpsertClassPayload = {
   code: string;
   name: string;
   size?: number;
-  homeroomTeacher?: string;
+  homeroomTeacherId?: string;
 };
 
 export async function createClass(
@@ -95,4 +102,3 @@ export function useDeleteClass() {
     },
   });
 }
-

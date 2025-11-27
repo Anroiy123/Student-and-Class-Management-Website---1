@@ -2,6 +2,10 @@ import type { RequestHandler } from 'express';
 import { GradeModel } from '../models/grade.model';
 import { EnrollmentModel } from '../models/enrollment.model';
 import { asyncHandler } from '../utils/asyncHandler';
+import {
+  getTeacherAccessScope,
+  verifyTeacherEnrollmentAccess,
+} from '../utils/teacherAccess';
 
 const computeTotal = (attendance: number, midterm: number, final: number) =>
   Number((attendance * 0.1 + midterm * 0.3 + final * 0.6).toFixed(2));
@@ -9,6 +13,24 @@ const computeTotal = (attendance: number, midterm: number, final: number) =>
 export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
   const filter: Record<string, unknown> = {};
   const enrollmentMatch: Record<string, unknown> = {};
+
+  // Apply teacher scope filtering
+  if (req.user) {
+    const scope = await getTeacherAccessScope(req.user);
+    if (scope) {
+      // Teacher: filter by their classes or courses
+      if (scope.classIds.length === 0 && scope.courseIds.length === 0) {
+        // Unlinked teacher - return empty
+        return res.json({ items: [], total: 0, page: 1, pageSize: 10 });
+      }
+      // Filter enrollments by classId OR courseId in scope
+      enrollmentMatch.$or = [
+        { classId: { $in: scope.classIds } },
+        { courseId: { $in: scope.courseIds } },
+      ];
+    }
+    // Admin: no filtering (scope is null)
+  }
 
   if (req.query.studentId) {
     enrollmentMatch.studentId = req.query.studentId;
@@ -53,6 +75,14 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
 export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
   const { enrollmentId } = req.params;
   const { attendance, midterm, final } = req.body;
+
+  // Verify teacher has access to this enrollment
+  if (req.user) {
+    const hasAccess = await verifyTeacherEnrollmentAccess(req.user, enrollmentId);
+    if (!hasAccess) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+  }
 
   const enrollment = await EnrollmentModel.findById(enrollmentId);
   if (!enrollment) {

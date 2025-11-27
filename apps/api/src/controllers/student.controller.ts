@@ -3,6 +3,10 @@ import type { FilterQuery } from 'mongoose';
 import { StudentModel } from '../models/student.model';
 import type { Student } from '../models/student.model';
 import { asyncHandler } from '../utils/asyncHandler';
+import {
+  getTeacherAccessScope,
+  verifyTeacherStudentAccess,
+} from '../utils/teacherAccess';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -24,6 +28,20 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
   const dobTo = req.query.dobTo ? String(req.query.dobTo) : undefined;
 
   const filter: FilterQuery<Student> = {};
+
+  // Apply teacher scope filtering
+  if (req.user) {
+    const scope = await getTeacherAccessScope(req.user);
+    if (scope) {
+      // Teacher: filter by their classes
+      if (scope.classIds.length === 0) {
+        // Unlinked teacher - return empty
+        return res.json({ items: [], total: 0, page, pageSize });
+      }
+      filter.classId = { $in: scope.classIds };
+    }
+    // Admin: no filtering (scope is null)
+  }
 
   if (query) {
     const q = new RegExp(escapeRegExp(query), 'i');
@@ -88,6 +106,15 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
 
 export const getStudent: RequestHandler = asyncHandler(async (req, res) => {
   const { id } = req.params;
+
+  // Verify teacher has access to this student
+  if (req.user) {
+    const hasAccess = await verifyTeacherStudentAccess(req.user, id);
+    if (!hasAccess) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+  }
+
   const student = await StudentModel.findById(id).populate('classId');
 
   if (!student) {

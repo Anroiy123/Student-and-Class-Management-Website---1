@@ -7,12 +7,14 @@ import { enrollmentRoutes } from './enrollment.routes';
 import { gradeRoutes } from './grade.routes';
 import { reportRoutes } from './report.routes';
 import { dashboardRoutes } from './dashboard.routes';
+import { teacherRoutes } from './teacher.routes';
 import meRoutes from './me.routes';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/students', studentRoutes);
+router.use('/teachers', teacherRoutes);
 router.use('/classes', classRoutes);
 router.use('/courses', courseRoutes);
 router.use('/enrollments', enrollmentRoutes);

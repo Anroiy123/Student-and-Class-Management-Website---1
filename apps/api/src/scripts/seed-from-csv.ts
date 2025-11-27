@@ -4,8 +4,7 @@ import { CourseModel } from '../models/course.model.js';
 import { StudentModel } from '../models/student.model.js';
 import { EnrollmentModel } from '../models/enrollment.model.js';
 import { GradeModel } from '../models/grade.model.js';
-import { UserModel } from '../models/user.model.js';
-import { hashPassword } from '../utils/password.js';
+import { TeacherModel } from '../models/teacher.model.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {
@@ -20,6 +19,7 @@ import {
   generateStudentsForAllClasses,
   generateRandomGrade,
 } from './helpers/student-generator.js';
+import { generateTeachers } from './helpers/teacher-generator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,19 +52,33 @@ async function seedFromCSV() {
     const uniqueCourses = extractUniqueCourses(filteredCourseRecords);
     console.log(`✅ Found ${uniqueCourses.length} unique courses\n`);
 
+    console.log('👨‍🏫 Generating Teachers...');
+    const generatedTeachers = generateTeachers(20);
+    console.log(`✅ Generated ${generatedTeachers.length} teachers\n`);
+
+    console.log('💾 Seeding Teachers...');
+    const teacherDocuments = await TeacherModel.insertMany(generatedTeachers);
+    console.log(`✅ Inserted ${teacherDocuments.length} teachers\n`);
+
     console.log('🏫 Seeding Classes...');
     const classDocuments = await ClassModel.insertMany(
-      uniqueClassCodes.map((code) => ({
+      uniqueClassCodes.map((code, index) => ({
         code,
         name: generateClassName(code),
         size: 0,
-        homeroomTeacher: null,
+        homeroomTeacherId:
+          teacherDocuments[index % teacherDocuments.length]._id,
       })),
     );
     console.log(`✅ Inserted ${classDocuments.length} classes\n`);
 
     console.log('📚 Seeding Courses...');
-    const courseDocuments = await CourseModel.insertMany(uniqueCourses);
+    const courseDocuments = await CourseModel.insertMany(
+      uniqueCourses.map((course, index) => ({
+        ...course,
+        teacherId: teacherDocuments[index % teacherDocuments.length]._id,
+      })),
+    );
     console.log(`✅ Inserted ${courseDocuments.length} courses\n`);
 
     console.log('👨‍🎓 Generating Students...');
@@ -146,6 +160,7 @@ async function seedFromCSV() {
 
     console.log('🎉 Seed completed successfully!\n');
     console.log('📊 Summary:');
+    console.log(`   - Teachers: ${teacherDocuments.length}`);
     console.log(`   - Classes: ${classDocuments.length}`);
     console.log(`   - Courses: ${courseDocuments.length}`);
     console.log(`   - Students: ${studentDocuments.length}`);

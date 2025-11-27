@@ -7,6 +7,7 @@ import {
   useDeleteClass,
   type ClassListItem,
 } from '../lib/classes';
+import { useTeachers } from '../lib/teachers';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useForm } from 'react-hook-form';
@@ -14,6 +15,7 @@ import { DataTable } from '../components/DataTable';
 import { FilterSection, type FilterField } from '../components/FilterSection';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useUser } from '../lib/authHooks';
 
 const CLASS_SEARCH_FIELDS: FilterField[] = [
   { value: 'code', label: 'Mã lớp' },
@@ -22,6 +24,9 @@ const CLASS_SEARCH_FIELDS: FilterField[] = [
 ];
 
 export const ClassesPage = () => {
+  const user = useUser();
+  const isAdmin = user?.role === 'ADMIN';
+
   const { data, isLoading } = useClassesQuery();
 
   const [showForm, setShowForm] = useState(false);
@@ -71,11 +76,11 @@ export const ClassesPage = () => {
         size: 80,
       },
       {
-        accessorKey: 'homeroomTeacher',
+        accessorKey: 'homeroomTeacherId',
         header: 'GVCN',
         cell: (info) => {
-          const teacher = info.getValue() as string | null;
-          return teacher || '—';
+          const teacher = info.getValue() as ClassListItem['homeroomTeacherId'];
+          return teacher?.fullName || '—';
         },
         size: 200,
       },
@@ -84,6 +89,9 @@ export const ClassesPage = () => {
         header: 'Thao tác',
         cell: (info) => {
           const row = info.row.original;
+          if (!isAdmin) {
+            return <span className="text-gray-400">—</span>;
+          }
           return (
             <div className="flex gap-1">
               <button
@@ -120,7 +128,7 @@ export const ClassesPage = () => {
         size: 120,
       },
     ],
-    [deleteMutate, deletingId],
+    [deleteMutate, deletingId, isAdmin],
   );
 
   const table = useReactTable({
@@ -138,18 +146,20 @@ export const ClassesPage = () => {
             CRUD lớp, sĩ số và gán sinh viên.
           </p>
         </div>
-        <div className="shrink-0 w-full md:w-auto">
-          <button
-            type="button"
-            className="nb-btn nb-btn--primary w-full md:w-auto"
-            onClick={() => {
-              setEditClass(null);
-              setShowForm(true);
-            }}
-          >
-            Thêm lớp học
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="shrink-0 w-full md:w-auto">
+            <button
+              type="button"
+              className="nb-btn nb-btn--primary w-full md:w-auto"
+              onClick={() => {
+                setEditClass(null);
+                setShowForm(true);
+              }}
+            >
+              Thêm lớp học
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Filters */}
@@ -225,7 +235,7 @@ const classFormSchema: ZodType<UpsertClassPayload> = z.object({
   code: z.string().min(1, 'Mã lớp không được để trống'),
   name: z.string().min(1, 'Tên lớp không được để trống'),
   size: z.number().int().nonnegative().optional(),
-  homeroomTeacher: z.string().optional(),
+  homeroomTeacherId: z.string().optional(),
 });
 
 function ClassFormModal({
@@ -240,6 +250,7 @@ function ClassFormModal({
   const isEdit = mode === 'edit';
   const { mutateAsync: createMutate, isPending: isCreating } = useCreateClass();
   const { mutateAsync: updateMutate, isPending: isUpdating } = useUpdateClass();
+  const { data: teachers } = useTeachers();
 
   const {
     register,
@@ -254,13 +265,13 @@ function ClassFormModal({
             code: initial.code,
             name: initial.name,
             size: initial.size,
-            homeroomTeacher: initial.homeroomTeacher ?? '',
+            homeroomTeacherId: initial.homeroomTeacherId?._id ?? '',
           }
         : {
             code: '',
             name: '',
             size: 0,
-            homeroomTeacher: '',
+            homeroomTeacherId: '',
           },
   });
 
@@ -269,7 +280,7 @@ function ClassFormModal({
       code: values.code,
       name: values.name,
       size: values.size,
-      homeroomTeacher: values.homeroomTeacher || undefined,
+      homeroomTeacherId: values.homeroomTeacherId || undefined,
     };
     try {
       if (isEdit && initial) {
@@ -343,14 +354,17 @@ function ClassFormModal({
             )}
           </div>
           <div>
-            <input
-              className="nb-input"
-              placeholder="Giáo viên chủ nhiệm"
-              {...register('homeroomTeacher')}
-            />
-            {errors.homeroomTeacher && (
+            <select className="nb-input" {...register('homeroomTeacherId')}>
+              <option value="">-- Chọn GVCN --</option>
+              {teachers?.map((teacher) => (
+                <option key={teacher._id} value={teacher._id}>
+                  {teacher.fullName} ({teacher.employeeId})
+                </option>
+              ))}
+            </select>
+            {errors.homeroomTeacherId && (
               <p className="mt-1 text-xs text-red-600">
-                {errors.homeroomTeacher.message as string}
+                {errors.homeroomTeacherId.message as string}
               </p>
             )}
           </div>

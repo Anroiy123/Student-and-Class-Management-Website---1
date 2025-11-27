@@ -6,6 +6,7 @@ import { EnrollmentModel } from '../models/enrollment.model';
 import { GradeModel } from '../models/grade.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { DASHBOARD_CONSTANTS } from '../constants/dashboard';
+import { getTeacherAccessScope } from '../utils/teacherAccess';
 
 // Type guards cho populated documents
 type PopulatedStudent = { fullName: string; mssv: string };
@@ -46,11 +47,35 @@ function isPopulatedClass(obj: unknown): obj is PopulatedClass {
 }
 
 // Lấy thống kê tổng quan: số sinh viên, lớp học, môn học
-export const getStats: RequestHandler = asyncHandler(async (_req, res) => {
+export const getStats: RequestHandler = asyncHandler(async (req, res) => {
+  let studentFilter = {};
+  let classFilter = {};
+  let courseFilter = {};
+
+  // Apply teacher scope filtering
+  if (req.user) {
+    const scope = await getTeacherAccessScope(req.user);
+    if (scope) {
+      // Teacher: filter by their scope
+      if (scope.classIds.length === 0 && scope.courseIds.length === 0) {
+        // Unlinked teacher - return zeros
+        return res.json({
+          totalStudents: 0,
+          totalClasses: 0,
+          totalCourses: 0,
+        });
+      }
+      studentFilter = { classId: { $in: scope.classIds } };
+      classFilter = { homeroomTeacherId: scope.teacherId };
+      courseFilter = { teacherId: scope.teacherId };
+    }
+    // Admin: no filtering (scope is null)
+  }
+
   const [totalStudents, totalClasses, totalCourses] = await Promise.all([
-    StudentModel.countDocuments(),
-    ClassModel.countDocuments(),
-    CourseModel.countDocuments(),
+    StudentModel.countDocuments(studentFilter),
+    ClassModel.countDocuments(classFilter),
+    CourseModel.countDocuments(courseFilter),
   ]);
 
   res.json({
@@ -73,10 +98,35 @@ export const getRecentActivities: RequestHandler = asyncHandler(
     const { MAX_ACTIVITIES } = DASHBOARD_CONSTANTS;
     const fetchLimit = Math.ceil(MAX_ACTIVITIES / 3);
 
+    // Apply teacher scope filtering
+    let enrollmentFilter = {};
+    let gradeEnrollmentFilter = {};
+    let studentFilter = {};
+
+    if (req.user) {
+      const scope = await getTeacherAccessScope(req.user);
+      if (scope) {
+        // Teacher: filter by their scope
+        if (scope.classIds.length === 0 && scope.courseIds.length === 0) {
+          // Unlinked teacher - return empty
+          return res.json({ items: [], total: 0, page, pageSize });
+        }
+        enrollmentFilter = {
+          $or: [
+            { classId: { $in: scope.classIds } },
+            { courseId: { $in: scope.courseIds } },
+          ],
+        };
+        gradeEnrollmentFilter = enrollmentFilter;
+        studentFilter = { classId: { $in: scope.classIds } };
+      }
+      // Admin: no filtering (scope is null)
+    }
+
     // Fetch recent activities từ các collections
     const [recentEnrollments, recentGrades, recentStudents] = await Promise.all(
       [
-        EnrollmentModel.find()
+        EnrollmentModel.find(enrollmentFilter)
           .sort({ createdAt: -1 })
           .limit(fetchLimit)
           .populate('studentId', 'mssv fullName')
@@ -87,13 +137,17 @@ export const getRecentActivities: RequestHandler = asyncHandler(
           .limit(fetchLimit)
           .populate({
             path: 'enrollmentId',
+            match:
+              Object.keys(gradeEnrollmentFilter).length > 0
+                ? gradeEnrollmentFilter
+                : undefined,
             populate: [
               { path: 'studentId', select: 'mssv fullName' },
               { path: 'courseId', select: 'code name' },
             ],
           })
           .lean(),
-        StudentModel.find()
+        StudentModel.find(studentFilter)
           .sort({ createdAt: -1 })
           .limit(fetchLimit)
           .populate('classId', 'code name')

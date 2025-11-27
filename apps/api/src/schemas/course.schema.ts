@@ -1,9 +1,10 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const base = z.object({
-  code: z.string().min(1, "Mã môn không được để trống"),
-  name: z.string().min(1, "Tên môn không được để trống"),
+  code: z.string().min(1, 'Mã môn không được để trống'),
+  name: z.string().min(1, 'Tên môn không được để trống'),
   credits: z.number().int().nonnegative(),
+  teacherId: z.string().optional(),
 });
 
 export const createCourseSchema = z.object({

@@ -6,11 +6,19 @@ import {
 } from '@tanstack/react-query';
 import { apiClient } from './api';
 
+export type TeacherInfo = {
+  _id: string;
+  employeeId: string;
+  fullName: string;
+  email: string;
+};
+
 export type CourseListItem = {
   _id: string;
   code: string;
   name: string;
   credits: number;
+  teacherId: TeacherInfo | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -26,6 +34,7 @@ export type UpsertCoursePayload = {
   code: string;
   name: string;
   credits: number;
+  teacherId?: string;
 };
 
 export async function createCourse(
@@ -93,4 +102,3 @@ export function useDeleteCourse() {
     },
   });
 }
-

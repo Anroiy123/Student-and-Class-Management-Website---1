@@ -4,10 +4,28 @@ import { StudentModel } from '../models/student.model';
 import { ClassModel } from '../models/class.model';
 import { CourseModel } from '../models/course.model';
 import { asyncHandler } from '../utils/asyncHandler';
+import { getTeacherAccessScope } from '../utils/teacherAccess';
 
 export const listEnrollments: RequestHandler = asyncHandler(
   async (req, res) => {
     const filter: Record<string, unknown> = {};
+
+    // Apply teacher scope filtering
+    if (req.user) {
+      const scope = await getTeacherAccessScope(req.user);
+      if (scope) {
+        // Teacher: filter by their classes or courses
+        if (scope.classIds.length === 0 && scope.courseIds.length === 0) {
+          // Unlinked teacher - return empty
+          return res.json([]);
+        }
+        filter.$or = [
+          { classId: { $in: scope.classIds } },
+          { courseId: { $in: scope.courseIds } },
+        ];
+      }
+      // Admin: no filtering (scope is null)
+    }
 
     if (req.query.studentId) {
       filter.studentId = req.query.studentId;

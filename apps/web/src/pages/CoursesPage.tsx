@@ -9,6 +9,7 @@ import {
 } from '../lib/courses';
 import { useClassesQuery } from '../lib/classes';
 import { useEnrollmentsQuery } from '../lib/enrollments';
+import { useTeachers } from '../lib/teachers';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useForm } from 'react-hook-form';
@@ -16,6 +17,8 @@ import { DataTable } from '../components/DataTable';
 import { FilterSection, type FilterField } from '../components/FilterSection';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useUser } from '../lib/authHooks';
+import { canModifyCourses } from '../lib/permissions';
 
 const COURSE_SEARCH_FIELDS: FilterField[] = [
   { value: 'code', label: 'Mã môn' },
@@ -23,6 +26,9 @@ const COURSE_SEARCH_FIELDS: FilterField[] = [
 ];
 
 export const CoursesPage = () => {
+  const user = useUser();
+  const canModify = user?.role ? canModifyCourses(user.role) : false;
+
   const { data, isLoading } = useCoursesQuery();
   const { data: classesData } = useClassesQuery();
   const { data: enrollmentsData } = useEnrollmentsQuery();
@@ -92,10 +98,22 @@ export const CoursesPage = () => {
         size: 100,
       },
       {
+        accessorKey: 'teacherId',
+        header: 'Giảng viên',
+        cell: (info) => {
+          const teacher = info.getValue() as CourseListItem['teacherId'];
+          return teacher?.fullName || '—';
+        },
+        size: 200,
+      },
+      {
         id: 'actions',
         header: 'Thao tác',
         cell: (info) => {
           const row = info.row.original;
+          if (!canModify) {
+            return <span className="text-gray-400">—</span>;
+          }
           return (
             <div className="flex gap-1">
               <button
@@ -132,7 +150,7 @@ export const CoursesPage = () => {
         size: 120,
       },
     ],
-    [deleteMutate, deletingId],
+    [deleteMutate, deletingId, canModify],
   );
 
   const table = useReactTable({
@@ -150,18 +168,20 @@ export const CoursesPage = () => {
             CRUD môn học, mã môn và số tín chỉ.
           </p>
         </div>
-        <div className="shrink-0 w-full md:w-auto">
-          <button
-            type="button"
-            className="nb-btn nb-btn--primary w-full md:w-auto"
-            onClick={() => {
-              setEditCourse(null);
-              setShowForm(true);
-            }}
-          >
-            Thêm môn học
-          </button>
-        </div>
+        {canModify && (
+          <div className="shrink-0 w-full md:w-auto">
+            <button
+              type="button"
+              className="nb-btn nb-btn--primary w-full md:w-auto"
+              onClick={() => {
+                setEditCourse(null);
+                setShowForm(true);
+              }}
+            >
+              Thêm môn học
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Filters */}
@@ -259,6 +279,7 @@ const courseFormSchema: ZodType<UpsertCoursePayload> = z.object({
   code: z.string().min(1, 'Mã môn không được để trống'),
   name: z.string().min(1, 'Tên môn không được để trống'),
   credits: z.number().int().nonnegative({ message: 'Số tín chỉ phải >= 0' }),
+  teacherId: z.string().optional(),
 });
 
 function CourseFormModal({
@@ -275,6 +296,7 @@ function CourseFormModal({
     useCreateCourse();
   const { mutateAsync: updateMutate, isPending: isUpdating } =
     useUpdateCourse();
+  const { data: teachers } = useTeachers();
 
   const {
     register,
@@ -289,11 +311,13 @@ function CourseFormModal({
             code: initial.code,
             name: initial.name,
             credits: initial.credits,
+            teacherId: initial.teacherId?._id ?? '',
           }
         : {
             code: '',
             name: '',
             credits: 0,
+            teacherId: '',
           },
   });
 
@@ -302,6 +326,7 @@ function CourseFormModal({
       code: values.code,
       name: values.name,
       credits: values.credits,
+      teacherId: values.teacherId || undefined,
     };
     try {
       if (isEdit && initial) {
@@ -361,7 +386,7 @@ function CourseFormModal({
               </p>
             )}
           </div>
-          <div className="md:col-span-2">
+          <div>
             <input
               type="number"
               className="nb-input"
@@ -371,6 +396,21 @@ function CourseFormModal({
             {errors.credits && (
               <p className="mt-1 text-xs text-red-600">
                 {errors.credits.message as string}
+              </p>
+            )}
+          </div>
+          <div>
+            <select className="nb-input" {...register('teacherId')}>
+              <option value="">-- Chọn giảng viên --</option>
+              {teachers?.map((teacher) => (
+                <option key={teacher._id} value={teacher._id}>
+                  {teacher.fullName} ({teacher.employeeId})
+                </option>
+              ))}
+            </select>
+            {errors.teacherId && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.teacherId.message as string}
               </p>
             )}
           </div>

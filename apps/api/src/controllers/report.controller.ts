@@ -4,6 +4,7 @@ import PDFDocument from 'pdfkit';
 import { GradeModel } from '../models/grade.model';
 import { EnrollmentModel } from '../models/enrollment.model';
 import { asyncHandler } from '../utils/asyncHandler';
+import { getTeacherAccessScope } from '../utils/teacherAccess';
 
 const computeClassification = (total: number): string => {
   if (total >= 8) return 'Giỏi';
@@ -20,14 +21,35 @@ export const getAvailableCourses: RequestHandler = asyncHandler(
       return res.status(400).json({ message: 'classId là bắt buộc' });
     }
 
-    const enrollments = await EnrollmentModel.find({ classId })
+    // Apply teacher scope filtering
+    let enrollmentFilter: any = { classId };
+    if (req.user) {
+      const scope = await getTeacherAccessScope(req.user);
+      if (scope) {
+        // Teacher: filter by their scope
+        if (scope.classIds.length === 0 && scope.courseIds.length === 0) {
+          // Unlinked teacher - return empty
+          return res.json([]);
+        }
+        enrollmentFilter = {
+          classId,
+          $or: [
+            { classId: { $in: scope.classIds } },
+            { courseId: { $in: scope.courseIds } },
+          ],
+        };
+      }
+      // Admin: no filtering (scope is null)
+    }
+
+    const _enrollments = await EnrollmentModel.find(enrollmentFilter)
       .populate('courseId')
       .distinct('courseId');
 
     const gradeEnrollments = await GradeModel.find()
       .populate({
         path: 'enrollmentId',
-        match: { classId },
+        match: enrollmentFilter,
         populate: 'courseId',
       })
       .then((grades) =>
@@ -55,6 +77,23 @@ export const exportReport: RequestHandler = asyncHandler(async (req, res) => {
   if (classId) enrollmentMatch.classId = classId;
   if (courseId) enrollmentMatch.courseId = courseId;
   if (semester) enrollmentMatch.semester = semester;
+
+  // Apply teacher scope filtering
+  if (req.user) {
+    const scope = await getTeacherAccessScope(req.user);
+    if (scope) {
+      // Teacher: filter by their scope
+      if (scope.classIds.length === 0 && scope.courseIds.length === 0) {
+        // Unlinked teacher - return 403
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+      enrollmentMatch.$or = [
+        { classId: { $in: scope.classIds } },
+        { courseId: { $in: scope.courseIds } },
+      ];
+    }
+    // Admin: no filtering (scope is null)
+  }
 
   const grades = await GradeModel.find()
     .populate({
