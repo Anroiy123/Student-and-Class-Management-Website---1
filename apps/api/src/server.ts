@@ -5,6 +5,9 @@ import morgan from 'morgan';
 import { apiRouter } from './routes';
 import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 
+// Import all models to ensure they are registered with Mongoose
+import './models';
+
 export const createServer = () => {
   const app = express();
 

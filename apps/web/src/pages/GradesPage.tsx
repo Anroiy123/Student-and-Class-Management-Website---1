@@ -164,7 +164,9 @@ export const GradesPage = () => {
   });
 
   // Use filtered courses if class is selected, otherwise all courses
-  const availableCourses = classId ? classCoursesData ?? [] : coursesData ?? [];
+  const availableCourses = classId
+    ? (classCoursesData ?? [])
+    : (coursesData ?? []);
 
   // Reset courseId when classId changes
   useEffect(() => {
@@ -200,8 +202,6 @@ export const GradesPage = () => {
 
   // Use data directly from server (search is handled server-side)
   const filteredData = useMemo(() => data?.items ?? [], [data?.items]);
-
-
 
   const columns = useMemo<ColumnDef<GradeListItem>[]>(
     () => [
@@ -290,6 +290,26 @@ export const GradesPage = () => {
           );
         },
         size: 60,
+      },
+      {
+        accessorKey: 'gpa4',
+        header: 'GPA4',
+        cell: (info) => {
+          const gpa4 = info.getValue() as number;
+          return (
+            <span className="font-medium">{gpa4?.toFixed(2) || '0.00'}</span>
+          );
+        },
+        size: 60,
+      },
+      {
+        accessorKey: 'letterGrade',
+        header: 'Chữ',
+        cell: (info) => {
+          const letterGrade = info.getValue() as string;
+          return <span className="font-medium">{letterGrade || 'F'}</span>;
+        },
+        size: 50,
       },
       {
         id: 'actions',
@@ -446,8 +466,6 @@ export const GradesPage = () => {
                 })}
               </select>
             </div>
-
-
           </div>
         }
       />

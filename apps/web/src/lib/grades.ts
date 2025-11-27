@@ -33,6 +33,8 @@ export type GradeListItem = {
   midterm: number;
   final: number;
   total: number;
+  gpa4: number;
+  letterGrade: string;
   computedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -179,4 +181,3 @@ export function computeSemesterAverage(grades: GradeListItem[]): number {
     ? Number((totalWeightedScore / totalCredits).toFixed(2))
     : 0;
 }
-

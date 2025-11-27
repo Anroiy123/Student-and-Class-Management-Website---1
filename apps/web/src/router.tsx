@@ -6,6 +6,7 @@ import { ClassesPage } from './pages/ClassesPage';
 import { CoursesPage } from './pages/CoursesPage';
 import { GradesPage } from './pages/GradesPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { UsersPage } from './pages/UsersPage';
 import { SignInPage } from './pages/SignInPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -69,6 +70,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}>
             <ReportsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'users',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <UsersPage />
           </ProtectedRoute>
         ),
       },

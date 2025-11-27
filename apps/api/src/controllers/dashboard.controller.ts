@@ -1,4 +1,5 @@
 import type { RequestHandler } from 'express';
+import type { Types, PipelineStage } from 'mongoose';
 import { StudentModel } from '../models/student.model';
 import { ClassModel } from '../models/class.model';
 import { CourseModel } from '../models/course.model';
@@ -7,6 +8,42 @@ import { GradeModel } from '../models/grade.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { DASHBOARD_CONSTANTS } from '../constants/dashboard';
 import { getTeacherAccessScope } from '../utils/teacherAccess';
+
+// Types for chart data response
+interface GradeDistribution {
+  excellent: number;
+  good: number;
+  average: number;
+  poor: number;
+  total: number;
+}
+
+interface StudentsByClass {
+  classId: string;
+  className: string;
+  classCode: string;
+  studentCount: number;
+}
+
+interface EnrollmentTrend {
+  month: string;
+  monthLabel: string;
+  count: number;
+}
+
+interface CoursePopularity {
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  enrollmentCount: number;
+}
+
+interface DashboardChartsResponse {
+  gradeDistribution: GradeDistribution;
+  studentsByClass: StudentsByClass[];
+  enrollmentTrend: EnrollmentTrend[];
+  coursePopularity: CoursePopularity[];
+}
 
 // Type guards cho populated documents
 type PopulatedStudent = { fullName: string; mssv: string };
@@ -258,3 +295,271 @@ export const getRecentActivities: RequestHandler = asyncHandler(
     });
   },
 );
+
+// Helper function to format month label in Vietnamese
+function formatMonthLabel(monthStr: string): string {
+  const [year, month] = monthStr.split('-');
+  const monthNum = parseInt(month, 10);
+  return `Tháng ${monthNum}/${year}`;
+}
+
+// Get chart data for dashboard
+export const getChartData: RequestHandler = asyncHandler(async (req, res) => {
+  const limit = Number(req.query.limit ?? 10);
+
+  // Get teacher scope for filtering
+  let teacherScope: {
+    teacherId: Types.ObjectId;
+    classIds: Types.ObjectId[];
+    courseIds: Types.ObjectId[];
+  } | null = null;
+
+  if (req.user) {
+    teacherScope = await getTeacherAccessScope(req.user);
+  }
+
+  // If teacher has no assigned classes/courses, return empty data
+  if (
+    teacherScope &&
+    teacherScope.classIds.length === 0 &&
+    teacherScope.courseIds.length === 0
+  ) {
+    const emptyResponse: DashboardChartsResponse = {
+      gradeDistribution: { excellent: 0, good: 0, average: 0, poor: 0, total: 0 },
+      studentsByClass: [],
+      enrollmentTrend: [],
+      coursePopularity: [],
+    };
+    return res.json(emptyResponse);
+  }
+
+  // Build aggregation pipelines with teacher scope filtering
+  const [gradeDistribution, studentsByClass, enrollmentTrend, coursePopularity] =
+    await Promise.all([
+      getGradeDistribution(teacherScope),
+      getStudentsByClass(teacherScope, limit),
+      getEnrollmentTrend(teacherScope),
+      getCoursePopularity(teacherScope, limit),
+    ]);
+
+  const response: DashboardChartsResponse = {
+    gradeDistribution,
+    studentsByClass,
+    enrollmentTrend,
+    coursePopularity,
+  };
+
+  res.json(response);
+});
+
+// Grade distribution aggregation
+async function getGradeDistribution(
+  scope: { classIds: Types.ObjectId[]; courseIds: Types.ObjectId[] } | null,
+): Promise<GradeDistribution> {
+  const pipeline: PipelineStage[] = [];
+
+  // If teacher scope, filter by enrollments in their classes/courses
+  if (scope) {
+    // First lookup enrollment to filter by scope
+    pipeline.push(
+      {
+        $lookup: {
+          from: 'enrollments',
+          localField: 'enrollmentId',
+          foreignField: '_id',
+          as: 'enrollment',
+        },
+      },
+      { $unwind: '$enrollment' },
+      {
+        $match: {
+          $or: [
+            { 'enrollment.classId': { $in: scope.classIds } },
+            { 'enrollment.courseId': { $in: scope.courseIds } },
+          ],
+        },
+      },
+    );
+  }
+
+  // Filter grades with valid total
+  pipeline.push({ $match: { total: { $ne: null } } });
+
+  // Group and classify grades
+  pipeline.push({
+    $group: {
+      _id: null,
+      excellent: { $sum: { $cond: [{ $gte: ['$total', 8] }, 1, 0] } },
+      good: {
+        $sum: {
+          $cond: [
+            { $and: [{ $gte: ['$total', 6.5] }, { $lt: ['$total', 8] }] },
+            1,
+            0,
+          ],
+        },
+      },
+      average: {
+        $sum: {
+          $cond: [
+            { $and: [{ $gte: ['$total', 5] }, { $lt: ['$total', 6.5] }] },
+            1,
+            0,
+          ],
+        },
+      },
+      poor: { $sum: { $cond: [{ $lt: ['$total', 5] }, 1, 0] } },
+      total: { $sum: 1 },
+    },
+  });
+
+  const result = await GradeModel.aggregate(pipeline);
+
+  if (result.length === 0) {
+    return { excellent: 0, good: 0, average: 0, poor: 0, total: 0 };
+  }
+
+  return {
+    excellent: result[0].excellent,
+    good: result[0].good,
+    average: result[0].average,
+    poor: result[0].poor,
+    total: result[0].total,
+  };
+}
+
+// Students by class aggregation
+async function getStudentsByClass(
+  scope: { classIds: Types.ObjectId[] } | null,
+  limit: number,
+): Promise<StudentsByClass[]> {
+  const pipeline: PipelineStage[] = [];
+
+  // Filter by teacher's classes if scope exists
+  if (scope) {
+    pipeline.push({ $match: { classId: { $in: scope.classIds } } });
+  }
+
+  // Filter students with classId
+  pipeline.push({ $match: { classId: { $ne: null } } });
+
+  // Group by class and count
+  pipeline.push(
+    { $group: { _id: '$classId', count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+  );
+
+  // Only apply limit for admin (scope is null)
+  // Teachers see all their homeroom classes without limit (Requirement 2.2)
+  if (!scope) {
+    pipeline.push({ $limit: limit });
+  }
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'classes',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'class',
+      },
+    },
+    { $unwind: '$class' },
+    {
+      $project: {
+        _id: 0,
+        classId: { $toString: '$_id' },
+        className: '$class.name',
+        classCode: '$class.code',
+        studentCount: '$count',
+      },
+    },
+  );
+
+  return StudentModel.aggregate(pipeline);
+}
+
+// Enrollment trend aggregation (last 6 months)
+async function getEnrollmentTrend(
+  scope: { courseIds: Types.ObjectId[] } | null,
+): Promise<EnrollmentTrend[]> {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const pipeline: PipelineStage[] = [];
+
+  // Filter by date range
+  pipeline.push({ $match: { createdAt: { $gte: sixMonthsAgo } } });
+
+  // Filter by teacher's courses if scope exists
+  if (scope) {
+    pipeline.push({ $match: { courseId: { $in: scope.courseIds } } });
+  }
+
+  // Group by month
+  pipeline.push(
+    {
+      $group: {
+        _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { _id: 1 } },
+    {
+      $project: {
+        _id: 0,
+        month: '$_id',
+        count: 1,
+      },
+    },
+  );
+
+  const result = await EnrollmentModel.aggregate(pipeline);
+
+  // Add Vietnamese month labels
+  return result.map((item) => ({
+    month: item.month,
+    monthLabel: formatMonthLabel(item.month),
+    count: item.count,
+  }));
+}
+
+// Course popularity aggregation
+async function getCoursePopularity(
+  scope: { courseIds: Types.ObjectId[] } | null,
+  limit: number,
+): Promise<CoursePopularity[]> {
+  const pipeline: PipelineStage[] = [];
+
+  // Filter by teacher's courses if scope exists
+  if (scope) {
+    pipeline.push({ $match: { courseId: { $in: scope.courseIds } } });
+  }
+
+  // Group by course and count enrollments
+  pipeline.push(
+    { $group: { _id: '$courseId', count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+    { $limit: limit },
+    {
+      $lookup: {
+        from: 'courses',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'course',
+      },
+    },
+    { $unwind: '$course' },
+    {
+      $project: {
+        _id: 0,
+        courseId: { $toString: '$_id' },
+        courseCode: '$course.code',
+        courseName: '$course.name',
+        enrollmentCount: '$count',
+      },
+    },
+  );
+
+  return EnrollmentModel.aggregate(pipeline);
+}

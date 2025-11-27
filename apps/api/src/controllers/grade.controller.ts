@@ -6,6 +6,7 @@ import {
   getTeacherAccessScope,
   verifyTeacherEnrollmentAccess,
 } from '../utils/teacherAccess';
+import { convertToGPA4, computeLetterGrade } from '../constants/messages';
 
 const computeTotal = (attendance: number, midterm: number, final: number) =>
   Number((attendance * 0.1 + midterm * 0.3 + final * 0.6).toFixed(2));
@@ -173,7 +174,8 @@ export const getGradeStatistics: RequestHandler = asyncHandler(
         const credits = enrollment?.courseId?.credits || 1;
         return {
           weightedSum: {
-            attendance: acc.weightedSum.attendance + (g.attendance || 0) * credits,
+            attendance:
+              acc.weightedSum.attendance + (g.attendance || 0) * credits,
             midterm: acc.weightedSum.midterm + (g.midterm || 0) * credits,
             final: acc.weightedSum.final + (g.final || 0) * credits,
             total: acc.weightedSum.total + (g.total || 0) * credits,
@@ -187,14 +189,17 @@ export const getGradeStatistics: RequestHandler = asyncHandler(
       },
     );
 
-    const averages = totalCredits > 0
-      ? {
-          attendance: Number((weightedSum.attendance / totalCredits).toFixed(2)),
-          midterm: Number((weightedSum.midterm / totalCredits).toFixed(2)),
-          final: Number((weightedSum.final / totalCredits).toFixed(2)),
-          total: Number((weightedSum.total / totalCredits).toFixed(2)),
-        }
-      : { attendance: 0, midterm: 0, final: 0, total: 0 };
+    const averages =
+      totalCredits > 0
+        ? {
+            attendance: Number(
+              (weightedSum.attendance / totalCredits).toFixed(2),
+            ),
+            midterm: Number((weightedSum.midterm / totalCredits).toFixed(2)),
+            final: Number((weightedSum.final / totalCredits).toFixed(2)),
+            total: Number((weightedSum.total / totalCredits).toFixed(2)),
+          }
+        : { attendance: 0, midterm: 0, final: 0, total: 0 };
 
     // Calculate distribution
     const distribution = filteredGrades.reduce(
@@ -226,7 +231,12 @@ export const getGradeStatistics: RequestHandler = asyncHandler(
       };
     });
 
-    res.json({ averages, distribution, totalCount: filteredGrades.length, byCourse });
+    res.json({
+      averages,
+      distribution,
+      totalCount: filteredGrades.length,
+      byCourse,
+    });
   },
 );
 
@@ -236,7 +246,10 @@ export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
 
   // Verify teacher has access to this enrollment
   if (req.user) {
-    const hasAccess = await verifyTeacherEnrollmentAccess(req.user, enrollmentId);
+    const hasAccess = await verifyTeacherEnrollmentAccess(
+      req.user,
+      enrollmentId,
+    );
     if (!hasAccess) {
       return res.status(403).json({ message: 'Forbidden' });
     }
@@ -248,10 +261,20 @@ export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
   }
 
   const total = computeTotal(attendance, midterm, final);
+  const gpa4 = convertToGPA4(total);
+  const letterGrade = computeLetterGrade(total);
 
   const grade = await GradeModel.findOneAndUpdate(
     { enrollmentId },
-    { attendance, midterm, final, total, computedAt: new Date() },
+    {
+      attendance,
+      midterm,
+      final,
+      total,
+      gpa4,
+      letterGrade,
+      computedAt: new Date(),
+    },
     { upsert: true, new: true, setDefaultsOnInsert: true },
   ).populate({
     path: 'enrollmentId',

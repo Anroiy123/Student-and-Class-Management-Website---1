@@ -16,6 +16,7 @@ type NavItem = {
     | 'courses'
     | 'grades'
     | 'reports'
+    | 'users'
     | 'profile'
     | 'my-grades'
     | 'my-courses';
@@ -54,6 +55,12 @@ const NAV_ITEMS: NavItem[] = [
     path: '/reports',
     icon: 'reports',
     roles: ['ADMIN', 'TEACHER'],
+  },
+  {
+    label: 'Quản lý tài khoản',
+    path: '/users',
+    icon: 'users',
+    roles: ['ADMIN'],
   },
   // Student items
   {
@@ -161,9 +168,14 @@ export const AppLayout = () => {
           <div className="mt-auto">
             {user && !isCollapsed && (
               <div className="mb-3 border-3 border-black bg-white p-2 shadow-neo-sm rounded-md dark:border-[#4a4a4a] dark:bg-nb-dark-bg dark:text-nb-dark-text dark:shadow-neo-sm-dark">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex-1">
-                    <p className="text-xs font-semibold">{user.email}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="text-xs font-semibold truncate"
+                      title={user.email}
+                    >
+                      {user.email}
+                    </p>
                     <p className="text-xs opacity-70">
                       {user.role === 'ADMIN' && 'Quản trị viên'}
                       {user.role === 'TEACHER' && 'Giảng viên'}
@@ -173,7 +185,7 @@ export const AppLayout = () => {
                   <button
                     type="button"
                     onClick={toggleTheme}
-                    className="border-2 border-black bg-nb-lemon p-1 shadow-neo-sm hover:scale-110 transition-transform rounded dark:border-[#4a4a4a] dark:bg-nb-gold dark:shadow-neo-sm-dark"
+                    className="flex-shrink-0 border-2 border-black bg-nb-lemon p-1 shadow-neo-sm hover:scale-110 transition-transform rounded dark:border-[#4a4a4a] dark:bg-nb-gold dark:shadow-neo-sm-dark"
                     aria-label="Toggle theme"
                     title={
                       theme === 'light'
@@ -266,6 +278,7 @@ const NavItem = ({
     | 'courses'
     | 'grades'
     | 'reports'
+    | 'users'
     | 'profile'
     | 'my-grades'
     | 'my-courses';

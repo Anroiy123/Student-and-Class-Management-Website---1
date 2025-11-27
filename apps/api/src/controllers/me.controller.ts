@@ -9,6 +9,7 @@ import {
   ME_MESSAGES,
   computeClassification,
   computeGPA,
+  computeGPA4,
 } from '../constants/messages';
 
 // GET /api/me/profile
@@ -26,7 +27,9 @@ export const getMyProfile: RequestHandler = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
   }
 
-  const student = await StudentModel.findById(user.studentId).populate('classId');
+  const student = await StudentModel.findById(user.studentId).populate(
+    'classId',
+  );
   if (!student) {
     return res.status(404).json({ message: ME_MESSAGES.STUDENT_NOT_FOUND });
   }
@@ -49,7 +52,9 @@ export const getMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   const skip = (Number(page) - 1) * Number(pageSize);
 
   // Build enrollment filter
-  const enrollmentFilter: Record<string, unknown> = { studentId: user.studentId };
+  const enrollmentFilter: Record<string, unknown> = {
+    studentId: user.studentId,
+  };
   if (semester) {
     enrollmentFilter.semester = semester;
   }
@@ -62,7 +67,9 @@ export const getMyGrades: RequestHandler = asyncHandler(async (req, res) => {
 
   // Get grades for these enrollments
   const enrollmentIds = enrollments.map((e) => e._id);
-  const grades = await GradeModel.find({ enrollmentId: { $in: enrollmentIds } });
+  const grades = await GradeModel.find({
+    enrollmentId: { $in: enrollmentIds },
+  });
 
   // Map grades by enrollmentId for quick lookup
   const gradeMap = new Map(grades.map((g) => [g.enrollmentId.toString(), g]));
@@ -70,7 +77,11 @@ export const getMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   // Build response items
   const items = enrollments.map((enrollment) => {
     const grade = gradeMap.get(enrollment._id.toString());
-    const course = enrollment.courseId as any;
+    const course = enrollment.courseId as {
+      code?: string;
+      name?: string;
+      credits?: number;
+    };
 
     return {
       _id: enrollment._id,
@@ -82,6 +93,8 @@ export const getMyGrades: RequestHandler = asyncHandler(async (req, res) => {
       midterm: grade?.midterm ?? null,
       final: grade?.final ?? null,
       total: grade?.total ?? null,
+      gpa4: grade?.gpa4 ?? null,
+      letterGrade: grade?.letterGrade ?? null,
       classification: computeClassification(grade?.total ?? null),
     };
   });
@@ -91,6 +104,7 @@ export const getMyGrades: RequestHandler = asyncHandler(async (req, res) => {
     .filter((item) => item.total !== null)
     .map((item) => ({ total: item.total, credits: item.credits }));
   const gpa = computeGPA(gradesForGPA);
+  const gpa4 = computeGPA4(gradesForGPA);
   const totalCredits = items.reduce((sum, item) => sum + item.credits, 0);
 
   // Apply pagination
@@ -102,62 +116,64 @@ export const getMyGrades: RequestHandler = asyncHandler(async (req, res) => {
     page: Number(page),
     pageSize: Number(pageSize),
     gpa,
+    gpa4,
     totalCredits,
   });
 });
 
 // GET /api/me/enrollments
-export const getMyEnrollments: RequestHandler = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
+export const getMyEnrollments: RequestHandler = asyncHandler(
+  async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-  const user = await UserModel.findById(req.user.sub);
-  if (!user || !user.studentId) {
-    return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
-  }
+    const user = await UserModel.findById(req.user.sub);
+    if (!user || !user.studentId) {
+      return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
+    }
 
-  const { semester, page = 1, pageSize = 10 } = req.query;
-  const skip = (Number(page) - 1) * Number(pageSize);
+    const { semester, page = 1, pageSize = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(pageSize);
 
-  const filter: Record<string, unknown> = { studentId: user.studentId };
-  if (semester) {
-    filter.semester = semester;
-  }
+    const filter: Record<string, unknown> = { studentId: user.studentId };
+    if (semester) {
+      filter.semester = semester;
+    }
 
-  const [enrollments, total] = await Promise.all([
-    EnrollmentModel.find(filter)
-      .populate('courseId')
-      .populate('classId')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(pageSize)),
-    EnrollmentModel.countDocuments(filter),
-  ]);
+    const [enrollments, total] = await Promise.all([
+      EnrollmentModel.find(filter)
+        .populate('courseId')
+        .populate('classId')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(pageSize)),
+      EnrollmentModel.countDocuments(filter),
+    ]);
 
-  const items = enrollments.map((enrollment) => {
-    const course = enrollment.courseId as any;
-    const classDoc = enrollment.classId as any;
+    const items = enrollments.map((enrollment) => {
+      const course = enrollment.courseId as any;
+      const classDoc = enrollment.classId as any;
 
-    return {
-      _id: enrollment._id,
-      courseCode: course?.code || 'N/A',
-      courseName: course?.name || 'N/A',
-      credits: course?.credits || 0,
-      className: classDoc?.name || null,
-      classCode: classDoc?.code || null,
-      semester: enrollment.semester,
-    };
-  });
+      return {
+        _id: enrollment._id,
+        courseCode: course?.code || 'N/A',
+        courseName: course?.name || 'N/A',
+        credits: course?.credits || 0,
+        className: classDoc?.name || null,
+        classCode: classDoc?.code || null,
+        semester: enrollment.semester,
+      };
+    });
 
-  res.json({
-    items,
-    total,
-    page: Number(page),
-    pageSize: Number(pageSize),
-  });
-});
-
+    res.json({
+      items,
+      total,
+      page: Number(page),
+      pageSize: Number(pageSize),
+    });
+  },
+);
 
 // GET /api/me/dashboard
 export const getMyDashboard: RequestHandler = asyncHandler(async (req, res) => {
@@ -170,14 +186,17 @@ export const getMyDashboard: RequestHandler = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
   }
 
-  const student = await StudentModel.findById(user.studentId).populate('classId');
+  const student = await StudentModel.findById(user.studentId).populate(
+    'classId',
+  );
   if (!student) {
     return res.status(404).json({ message: ME_MESSAGES.STUDENT_NOT_FOUND });
   }
 
   // Get enrollments
-  const enrollments = await EnrollmentModel.find({ studentId: user.studentId })
-    .populate('courseId');
+  const enrollments = await EnrollmentModel.find({
+    studentId: user.studentId,
+  }).populate('courseId');
 
   // Get grades
   const enrollmentIds = enrollments.map((e) => e._id);
@@ -203,6 +222,7 @@ export const getMyDashboard: RequestHandler = asyncHandler(async (req, res) => {
       return { total: g.total, credits: course?.credits || 0 };
     });
   const gpa = computeGPA(gradesForGPA);
+  const gpa4 = computeGPA4(gradesForGPA);
 
   // Build recent grades
   const recentGrades = grades.map((grade) => {
@@ -230,29 +250,31 @@ export const getMyDashboard: RequestHandler = asyncHandler(async (req, res) => {
       totalEnrollments: enrollments.length,
       totalCredits,
       gpa,
+      gpa4,
     },
     recentGrades,
   });
 });
 
 // GET /api/me/semesters
-export const getAvailableSemesters: RequestHandler = asyncHandler(async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
+export const getAvailableSemesters: RequestHandler = asyncHandler(
+  async (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-  const user = await UserModel.findById(req.user.sub);
-  if (!user || !user.studentId) {
-    return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
-  }
+    const user = await UserModel.findById(req.user.sub);
+    if (!user || !user.studentId) {
+      return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
+    }
 
-  const semesters = await EnrollmentModel.distinct('semester', {
-    studentId: user.studentId,
-  });
+    const semesters = await EnrollmentModel.distinct('semester', {
+      studentId: user.studentId,
+    });
 
-  res.json(semesters.sort());
-});
-
+    res.json(semesters.sort());
+  },
+);
 
 // GET /api/me/grades/export
 export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
@@ -265,7 +287,9 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
   }
 
-  const student = await StudentModel.findById(user.studentId).populate('classId');
+  const student = await StudentModel.findById(user.studentId).populate(
+    'classId',
+  );
   if (!student) {
     return res.status(404).json({ message: ME_MESSAGES.STUDENT_NOT_FOUND });
   }
@@ -280,7 +304,9 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   }
 
   const enrollmentIds = enrollments.map((e) => e._id);
-  const grades = await GradeModel.find({ enrollmentId: { $in: enrollmentIds } });
+  const grades = await GradeModel.find({
+    enrollmentId: { $in: enrollmentIds },
+  });
   const gradeMap = new Map(grades.map((g) => [g.enrollmentId.toString(), g]));
 
   // Build grade items
@@ -319,7 +345,10 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   doc.pipe(res);
 
   // Header
-  doc.fontSize(18).font('Helvetica-Bold').text('BẢNG ĐIỂM SINH VIÊN', { align: 'center' });
+  doc
+    .fontSize(18)
+    .font('Helvetica-Bold')
+    .text('BẢNG ĐIỂM SINH VIÊN', { align: 'center' });
   doc.moveDown();
 
   // Student info
@@ -333,7 +362,18 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   // Table header
   const tableTop = doc.y;
   const colWidths = [40, 60, 150, 40, 50, 40, 40, 40, 40, 60];
-  const headers = ['STT', 'Mã môn', 'Tên môn', 'TC', 'Học kỳ', 'CC', 'GK', 'CK', 'TK', 'Xếp loại'];
+  const headers = [
+    'STT',
+    'Mã môn',
+    'Tên môn',
+    'TC',
+    'Học kỳ',
+    'CC',
+    'GK',
+    'CK',
+    'TK',
+    'Xếp loại',
+  ];
 
   let currentY = tableTop;
   doc.fontSize(9).font('Helvetica-Bold');
@@ -379,9 +419,167 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   // GPA summary
   doc.moveDown(2);
   doc.fontSize(11).font('Helvetica-Bold');
-  doc.text(`Điểm trung bình tích lũy (GPA): ${gpa !== null ? gpa.toFixed(2) : 'Chưa có'}`, {
-    align: 'right',
-  });
+  doc.text(
+    `Điểm trung bình tích lũy (GPA): ${gpa !== null ? gpa.toFixed(2) : 'Chưa có'}`,
+    {
+      align: 'right',
+    },
+  );
 
   doc.end();
+});
+
+// GET /api/me/charts
+export const getMyCharts: RequestHandler = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const user = await UserModel.findById(req.user.sub);
+  if (!user || !user.studentId) {
+    return res.status(404).json({ message: ME_MESSAGES.PROFILE_NOT_LINKED });
+  }
+
+  const { semester } = req.query;
+
+  // Get enrollments with filter
+  const enrollmentFilter: Record<string, unknown> = {
+    studentId: user.studentId,
+  };
+  if (semester) {
+    enrollmentFilter.semester = semester;
+  }
+
+  const enrollments = await EnrollmentModel.find(enrollmentFilter)
+    .populate('courseId')
+    .sort({ semester: 1 });
+
+  const enrollmentIds = enrollments.map((e) => e._id);
+  const grades = await GradeModel.find({
+    enrollmentId: { $in: enrollmentIds },
+  });
+
+  // Map grades by enrollmentId for quick lookup
+  const gradeMap = new Map(grades.map((g) => [g.enrollmentId.toString(), g]));
+
+  // 1. Grade Distribution (Phân bố điểm cá nhân)
+  const gradeDistribution = {
+    excellent: 0,
+    good: 0,
+    average: 0,
+    poor: 0,
+    total: 0,
+  };
+
+  grades.forEach((grade) => {
+    if (grade.total !== null && grade.total !== undefined) {
+      gradeDistribution.total++;
+      if (grade.total >= 8) gradeDistribution.excellent++;
+      else if (grade.total >= 6.5) gradeDistribution.good++;
+      else if (grade.total >= 5) gradeDistribution.average++;
+      else gradeDistribution.poor++;
+    }
+  });
+
+  // 2. Grade By Course (Điểm theo từng môn học)
+  const gradeByCourse = enrollments
+    .map((enrollment) => {
+      const grade = gradeMap.get(enrollment._id.toString());
+      const course = enrollment.courseId as {
+        _id?: unknown;
+        code?: string;
+        name?: string;
+        credits?: number;
+      };
+
+      return {
+        courseId: course?._id?.toString() || '',
+        courseCode: course?.code || 'N/A',
+        courseName: course?.name || 'N/A',
+        credits: course?.credits || 0,
+        total: grade?.total ?? null,
+      };
+    })
+    .filter((item) => item.total !== null);
+
+  // 3. GPA By Semester (GPA theo học kỳ)
+  const semesterMap = new Map<
+    string,
+    { grades: { total: number; credits: number }[]; credits: number }
+  >();
+
+  enrollments.forEach((enrollment) => {
+    const grade = gradeMap.get(enrollment._id.toString());
+    const course = enrollment.courseId as { credits?: number };
+    const sem = enrollment.semester || 'Unknown';
+
+    if (!semesterMap.has(sem)) {
+      semesterMap.set(sem, { grades: [], credits: 0 });
+    }
+
+    const semData = semesterMap.get(sem)!;
+    if (grade?.total !== null && grade?.total !== undefined) {
+      semData.grades.push({
+        total: grade.total,
+        credits: course?.credits || 0,
+      });
+    }
+    semData.credits += course?.credits || 0;
+  });
+
+  const gpaBySemester = Array.from(semesterMap.entries())
+    .map(([semester, data]) => ({
+      semester,
+      gpa: computeGPA(data.grades),
+      gpa4: computeGPA4(data.grades),
+      totalCredits: data.credits,
+    }))
+    .sort((a, b) => a.semester.localeCompare(b.semester));
+
+  // 4. Credits By Semester (Tín chỉ theo học kỳ)
+  const creditsBySemester = gpaBySemester.map((item) => ({
+    semester: item.semester,
+    credits: item.totalCredits,
+  }));
+
+  // 5. Component Comparison (So sánh điểm thành phần)
+  const componentComparison = {
+    attendance: 0,
+    midterm: 0,
+    final: 0,
+    count: 0,
+  };
+
+  grades.forEach((grade) => {
+    if (
+      grade.attendance !== null &&
+      grade.midterm !== null &&
+      grade.final !== null
+    ) {
+      componentComparison.attendance += grade.attendance;
+      componentComparison.midterm += grade.midterm;
+      componentComparison.final += grade.final;
+      componentComparison.count++;
+    }
+  });
+
+  if (componentComparison.count > 0) {
+    componentComparison.attendance = Number(
+      (componentComparison.attendance / componentComparison.count).toFixed(2),
+    );
+    componentComparison.midterm = Number(
+      (componentComparison.midterm / componentComparison.count).toFixed(2),
+    );
+    componentComparison.final = Number(
+      (componentComparison.final / componentComparison.count).toFixed(2),
+    );
+  }
+
+  res.json({
+    gradeDistribution,
+    gradeByCourse,
+    gpaBySemester,
+    creditsBySemester,
+    componentComparison,
+  });
 });

@@ -8,6 +8,7 @@ interface IconProps extends SVGProps<SVGSVGElement> {
     | 'courses'
     | 'grades'
     | 'reports'
+    | 'users'
     | 'moon'
     | 'sun'
     | 'profile'
@@ -223,6 +224,46 @@ export const Icon = ({ name, size = 32, className, ...props }: IconProps) => {
         <rect x="8" y="16" width="4" height="8" fill="currentColor" />
         <rect x="14" y="12" width="4" height="12" fill="currentColor" />
         <rect x="20" y="8" width="4" height="16" fill="currentColor" />
+      </svg>
+    ),
+    users: (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+        {...props}
+      >
+        <circle
+          cx="12"
+          cy="10"
+          r="5"
+          fill="#C7B9FF"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <circle
+          cx="22"
+          cy="10"
+          r="5"
+          fill="#FFE76A"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <path
+          d="M4 28C4 23 7 20 12 20C17 20 20 23 20 28"
+          fill="#C7B9FF"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <path
+          d="M14 28C14 23 17 20 22 20C27 20 30 23 30 28"
+          fill="#FFE76A"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
       </svg>
     ),
     moon: (

@@ -132,6 +132,8 @@ async function generateExcelReport(res: any, grades: any[]) {
     { header: 'Giữa kỳ', key: 'midterm', width: 12 },
     { header: 'Cuối kỳ', key: 'final', width: 12 },
     { header: 'Tổng kết', key: 'total', width: 12 },
+    { header: 'GPA 4.0', key: 'gpa4', width: 10 },
+    { header: 'Điểm chữ', key: 'letterGrade', width: 12 },
     { header: 'Xếp loại', key: 'classification', width: 15 },
   ];
 
@@ -161,6 +163,8 @@ async function generateExcelReport(res: any, grades: any[]) {
       midterm: grade.midterm,
       final: grade.final,
       total: grade.total,
+      gpa4: grade.gpa4 || 0,
+      letterGrade: grade.letterGrade || 'F',
       classification: computeClassification(grade.total),
     });
   });
@@ -216,7 +220,7 @@ async function generatePDFReport(res: any, grades: any[]) {
 
   const tableTop = 120;
   const rowHeight = 25;
-  const colWidths = [40, 80, 150, 80, 120, 70, 60, 60, 60, 60, 80];
+  const colWidths = [30, 60, 120, 60, 100, 60, 40, 40, 40, 40, 40, 40, 70];
   const headers = [
     'STT',
     'MSSV',
@@ -228,6 +232,8 @@ async function generatePDFReport(res: any, grades: any[]) {
     'GK',
     'CK',
     'TK',
+    'GPA4',
+    'Chữ',
     'Xếp loại',
   ];
 
@@ -267,6 +273,8 @@ async function generatePDFReport(res: any, grades: any[]) {
       String(grade.midterm),
       String(grade.final),
       String(grade.total),
+      String(grade.gpa4 || 0),
+      grade.letterGrade || 'F',
       computeClassification(grade.total),
     ];
 

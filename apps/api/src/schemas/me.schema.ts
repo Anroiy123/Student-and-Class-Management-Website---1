@@ -14,5 +14,14 @@ export const getMyEnrollmentsSchema = z.object({
   query: z.object(paginationQuery),
 });
 
+export const getMyChartsSchema = z.object({
+  query: z.object({
+    semester: z.string().optional(),
+  }),
+});
+
 export type GetMyGradesQuery = z.infer<typeof getMyGradesSchema>['query'];
-export type GetMyEnrollmentsQuery = z.infer<typeof getMyEnrollmentsSchema>['query'];
+export type GetMyEnrollmentsQuery = z.infer<
+  typeof getMyEnrollmentsSchema
+>['query'];
+export type GetMyChartsQuery = z.infer<typeof getMyChartsSchema>['query'];

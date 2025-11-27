@@ -28,6 +28,8 @@ export interface MyGradeItem {
   midterm: number | null;
   final: number | null;
   total: number | null;
+  gpa4?: number;
+  letterGrade?: string;
   classification: string;
 }
 
@@ -37,6 +39,7 @@ export interface MyGradesResponse {
   page: number;
   pageSize: number;
   gpa: number | null;
+  gpa4: number | null;
   totalCredits: number;
 }
 
@@ -57,7 +60,6 @@ export interface MyEnrollmentsResponse {
   pageSize: number;
 }
 
-
 export interface MyDashboard {
   profile: {
     fullName: string;
@@ -68,6 +70,7 @@ export interface MyDashboard {
     totalEnrollments: number;
     totalCredits: number;
     gpa: number | null;
+    gpa4: number | null;
   };
   recentGrades: Array<{
     courseCode: string;
@@ -90,6 +93,54 @@ export interface MyEnrollmentsParams {
   pageSize?: number;
 }
 
+// Student Charts Types
+export interface StudentGradeDistribution {
+  excellent: number;
+  good: number;
+  average: number;
+  poor: number;
+  total: number;
+}
+
+export interface StudentGradeByCourseItem {
+  courseId: string;
+  courseCode: string;
+  courseName: string;
+  credits: number;
+  total: number;
+}
+
+export interface StudentGPABySemesterItem {
+  semester: string;
+  gpa: number | null;
+  gpa4: number | null;
+  totalCredits: number;
+}
+
+export interface StudentCreditsBySemesterItem {
+  semester: string;
+  credits: number;
+}
+
+export interface StudentComponentComparison {
+  attendance: number;
+  midterm: number;
+  final: number;
+  count: number;
+}
+
+export interface StudentChartsResponse {
+  gradeDistribution: StudentGradeDistribution;
+  gradeByCourse: StudentGradeByCourseItem[];
+  gpaBySemester: StudentGPABySemesterItem[];
+  creditsBySemester: StudentCreditsBySemesterItem[];
+  componentComparison: StudentComponentComparison;
+}
+
+export interface StudentChartsParams {
+  semester?: string;
+}
+
 // ============ API Functions ============
 
 export async function getMyProfile(): Promise<MyProfile> {
@@ -98,7 +149,7 @@ export async function getMyProfile(): Promise<MyProfile> {
 }
 
 export async function getMyGrades(
-  params: MyGradesParams = {}
+  params: MyGradesParams = {},
 ): Promise<MyGradesResponse> {
   const { data } = await apiClient.get<MyGradesResponse>('/me/grades', {
     params,
@@ -107,11 +158,11 @@ export async function getMyGrades(
 }
 
 export async function getMyEnrollments(
-  params: MyEnrollmentsParams = {}
+  params: MyEnrollmentsParams = {},
 ): Promise<MyEnrollmentsResponse> {
   const { data } = await apiClient.get<MyEnrollmentsResponse>(
     '/me/enrollments',
-    { params }
+    { params },
   );
   return data;
 }
@@ -129,6 +180,15 @@ export async function getMySemesters(): Promise<string[]> {
 export async function exportMyGradesPdf(): Promise<Blob> {
   const { data } = await apiClient.get('/me/grades/export', {
     responseType: 'blob',
+  });
+  return data;
+}
+
+export async function getMyCharts(
+  params: StudentChartsParams = {},
+): Promise<StudentChartsResponse> {
+  const { data } = await apiClient.get<StudentChartsResponse>('/me/charts', {
+    params,
   });
   return data;
 }
@@ -171,6 +231,16 @@ export function useMySemesters() {
     queryKey: ['me', 'semesters'],
     queryFn: getMySemesters,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useMyCharts(params: StudentChartsParams = {}) {
+  return useQuery({
+    queryKey: ['me', 'charts', params],
+    queryFn: () => getMyCharts(params),
+    staleTime: 60000, // Cache for 60 seconds
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 

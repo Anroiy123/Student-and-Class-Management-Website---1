@@ -83,6 +83,24 @@ export const StudentGradesPage = () => {
         },
       },
       {
+        accessorKey: 'gpa4',
+        header: 'GPA 4.0',
+        size: 70,
+        cell: (info) => {
+          const val = info.getValue() as number | null | undefined;
+          return val != null ? val.toFixed(2) : '-';
+        },
+      },
+      {
+        accessorKey: 'letterGrade',
+        header: 'Điểm chữ',
+        size: 80,
+        cell: (info) => {
+          const grade = info.getValue() as string | undefined;
+          return grade || '-';
+        },
+      },
+      {
         accessorKey: 'classification',
         header: 'Xếp loại',
         size: 100,
@@ -99,9 +117,8 @@ export const StudentGradesPage = () => {
         },
       },
     ],
-    [page]
+    [page],
   );
-
 
   const table = useReactTable({
     data: gradesData?.items ?? [],
@@ -125,7 +142,7 @@ export const StudentGradesPage = () => {
       </header>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="nb-card bg-nb-mint">
           <h2 className="text-sm font-semibold">Tổng số môn</h2>
           <p className="mt-2 text-3xl font-extrabold">
@@ -139,13 +156,21 @@ export const StudentGradesPage = () => {
           </p>
         </div>
         <div className="nb-card bg-nb-lilac">
-          <h2 className="text-sm font-semibold">Điểm TB tích lũy (GPA)</h2>
+          <h2 className="text-sm font-semibold">Điểm TB tích lũy (Thang 10)</h2>
           <p className="mt-2 text-3xl font-extrabold">
             {gradesData?.gpa !== null ? gradesData?.gpa.toFixed(2) : 'Chưa có'}
           </p>
           {gpaClassification && (
             <p className="mt-1 text-sm font-medium">{gpaClassification}</p>
           )}
+        </div>
+        <div className="nb-card bg-nb-mint">
+          <h2 className="text-sm font-semibold">GPA (Thang 4.0)</h2>
+          <p className="mt-2 text-3xl font-extrabold">
+            {gradesData?.gpa4 !== null && gradesData?.gpa4 !== undefined
+              ? gradesData?.gpa4.toFixed(2)
+              : 'Chưa có'}
+          </p>
         </div>
       </div>
 

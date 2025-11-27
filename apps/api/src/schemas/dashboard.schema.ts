@@ -7,3 +7,9 @@ export const getRecentActivitiesSchema = z.object({
   }),
 });
 
+export const getChartsSchema = z.object({
+  query: z.object({
+    limit: z.coerce.number().int().min(1).max(50).optional().default(10),
+  }),
+});
+

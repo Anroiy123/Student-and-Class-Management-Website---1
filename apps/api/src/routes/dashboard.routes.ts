@@ -2,8 +2,12 @@ import { Router } from 'express';
 import {
   getStats,
   getRecentActivities,
+  getChartData,
 } from '../controllers/dashboard.controller';
-import { getRecentActivitiesSchema } from '../schemas/dashboard.schema';
+import {
+  getRecentActivitiesSchema,
+  getChartsSchema,
+} from '../schemas/dashboard.schema';
 import { validateRequest } from '../middlewares/validateRequest';
 import { requireAuth, requireRole } from '../middlewares/auth';
 
@@ -17,6 +21,12 @@ router.get(
   requireRole('ADMIN', 'TEACHER'),
   validateRequest(getRecentActivitiesSchema),
   getRecentActivities,
+);
+router.get(
+  '/charts',
+  requireRole('ADMIN', 'TEACHER'),
+  validateRequest(getChartsSchema),
+  getChartData,
 );
 
 export const dashboardRoutes = router;

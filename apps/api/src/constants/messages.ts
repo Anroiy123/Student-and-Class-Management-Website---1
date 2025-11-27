@@ -17,7 +17,8 @@ export const GRADE_CLASSIFICATION = {
 } as const;
 
 export function computeClassification(total: number | null): string {
-  if (total === null || total === undefined) return GRADE_CLASSIFICATION.NO_GRADE;
+  if (total === null || total === undefined)
+    return GRADE_CLASSIFICATION.NO_GRADE;
   if (total >= 8) return GRADE_CLASSIFICATION.EXCELLENT;
   if (total >= 6.5) return GRADE_CLASSIFICATION.GOOD;
   if (total >= 5) return GRADE_CLASSIFICATION.AVERAGE;
@@ -25,9 +26,11 @@ export function computeClassification(total: number | null): string {
 }
 
 export function computeGPA(
-  grades: Array<{ total: number | null; credits: number }>
+  grades: Array<{ total: number | null; credits: number }>,
 ): number | null {
-  const validGrades = grades.filter((g) => g.total !== null && g.total !== undefined);
+  const validGrades = grades.filter(
+    (g) => g.total !== null && g.total !== undefined,
+  );
   if (validGrades.length === 0) return null;
 
   let totalWeightedScore = 0;
@@ -40,5 +43,49 @@ export function computeGPA(
 
   return totalCredits > 0
     ? Number((totalWeightedScore / totalCredits).toFixed(2))
+    : null;
+}
+
+export function convertToGPA4(total10: number): number {
+  if (total10 >= 8.5) return 4.0;
+  if (total10 >= 8.0) return 3.5;
+  if (total10 >= 7.0) return 3.0;
+  if (total10 >= 6.5) return 2.5;
+  if (total10 >= 5.5) return 2.0;
+  if (total10 >= 5.0) return 1.5;
+  if (total10 >= 4.0) return 1.0;
+  return 0;
+}
+
+export function computeLetterGrade(total10: number): string {
+  if (total10 >= 8.5) return 'A';
+  if (total10 >= 8.0) return 'B+';
+  if (total10 >= 7.0) return 'B';
+  if (total10 >= 6.5) return 'C+';
+  if (total10 >= 5.5) return 'C';
+  if (total10 >= 5.0) return 'D+';
+  if (total10 >= 4.0) return 'D';
+  return 'F';
+}
+
+export function computeGPA4(
+  grades: Array<{ total: number | null; credits: number }>,
+): number | null {
+  const validGrades = grades.filter(
+    (g) => g.total !== null && g.total !== undefined,
+  );
+  if (validGrades.length === 0) return null;
+
+  let totalWeightedGPA4 = 0;
+  let totalCredits = 0;
+
+  validGrades.forEach((grade) => {
+    const gpa4 = convertToGPA4(grade.total as number);
+    totalWeightedGPA4 += gpa4 * grade.credits;
+    totalCredits += grade.credits;
+  });
+
+  return totalCredits > 0
+    ? Number((totalWeightedGPA4 / totalCredits).toFixed(2))
     : null;
 }

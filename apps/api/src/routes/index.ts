@@ -8,11 +8,13 @@ import { gradeRoutes } from './grade.routes';
 import { reportRoutes } from './report.routes';
 import { dashboardRoutes } from './dashboard.routes';
 import { teacherRoutes } from './teacher.routes';
+import { userRoutes } from './user.routes';
 import meRoutes from './me.routes';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/students', studentRoutes);
 router.use('/teachers', teacherRoutes);
 router.use('/classes', classRoutes);

@@ -11,6 +11,8 @@ import { useAuth } from '../lib/authHooks';
 import { DataTable } from '../components/DataTable';
 import { Pager } from '../components/Pager';
 import { Link } from 'react-router-dom';
+import { DashboardChartsSection } from '../components/DashboardCharts';
+import { StudentChartsSection } from '../components/DashboardCharts/StudentChartsSection';
 
 // Config cho metric cards (Admin/Teacher)
 const METRIC_CONFIG = [
@@ -60,8 +62,9 @@ const StudentDashboard = () => {
   }
 
   if (error) {
+    const axiosError = error as { response?: { data?: { message?: string } } };
     const errorMessage =
-      (error as any)?.response?.data?.message || 'Không thể tải dữ liệu';
+      axiosError?.response?.data?.message || 'Không thể tải dữ liệu';
     return (
       <section className="space-y-6">
         <header>
@@ -75,7 +78,6 @@ const StudentDashboard = () => {
       </section>
     );
   }
-
 
   const gpaClassification = dashboard?.stats.gpa
     ? getGpaClassification(dashboard.stats.gpa)
@@ -121,6 +123,9 @@ const StudentDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Charts Section */}
+      <StudentChartsSection />
 
       {/* Recent Grades */}
       <div className="nb-card bg-white dark:bg-nb-dark-card">
@@ -174,22 +179,6 @@ const StudentDashboard = () => {
           </p>
         )}
       </div>
-
-      {/* Quick Links */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Link to="/profile" className="nb-card bg-nb-lemon hover:scale-[1.02] transition-transform">
-          <h3 className="font-bold">Hồ sơ cá nhân</h3>
-          <p className="text-sm opacity-70 mt-1">Xem thông tin cá nhân</p>
-        </Link>
-        <Link to="/my-grades" className="nb-card bg-nb-mint hover:scale-[1.02] transition-transform">
-          <h3 className="font-bold">Điểm của tôi</h3>
-          <p className="text-sm opacity-70 mt-1">Xem chi tiết điểm số</p>
-        </Link>
-        <Link to="/my-courses" className="nb-card bg-nb-sky hover:scale-[1.02] transition-transform">
-          <h3 className="font-bold">Môn học của tôi</h3>
-          <p className="text-sm opacity-70 mt-1">Xem môn đã đăng ký</p>
-        </Link>
-      </div>
     </section>
   );
 };
@@ -215,7 +204,6 @@ function getGpaClassification(gpa: number): string {
   if (gpa >= 5) return 'Trung bình';
   return 'Yếu';
 }
-
 
 // ============ Admin/Teacher Dashboard ============
 const AdminDashboard = () => {
@@ -271,7 +259,7 @@ const AdminDashboard = () => {
         size: 180,
       },
     ],
-    [page]
+    [page],
   );
 
   const table = useReactTable({
@@ -310,6 +298,9 @@ const AdminDashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Dashboard Charts Section - Requirements: 1.1, 2.1, 3.1, 4.1 */}
+      <DashboardChartsSection />
 
       {/* Recent Activities Section */}
       <div className="nb-card bg-white dark:bg-nb-dark-card">

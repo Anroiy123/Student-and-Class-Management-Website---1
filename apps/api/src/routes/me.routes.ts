@@ -8,10 +8,12 @@ import {
   getMyDashboard,
   getAvailableSemesters,
   exportMyGrades,
+  getMyCharts,
 } from '../controllers/me.controller';
 import {
   getMyGradesSchema,
   getMyEnrollmentsSchema,
+  getMyChartsSchema,
 } from '../schemas/me.schema';
 
 const router = Router();
@@ -29,7 +31,7 @@ router.get('/grades', validateRequest(getMyGradesSchema), getMyGrades);
 router.get(
   '/enrollments',
   validateRequest(getMyEnrollmentsSchema),
-  getMyEnrollments
+  getMyEnrollments,
 );
 
 // GET /api/me/dashboard - Get student dashboard data
@@ -40,5 +42,8 @@ router.get('/semesters', getAvailableSemesters);
 
 // GET /api/me/grades/export - Export grades to PDF
 router.get('/grades/export', exportMyGrades);
+
+// GET /api/me/charts - Get student charts data
+router.get('/charts', validateRequest(getMyChartsSchema), getMyCharts);
 
 export default router;
