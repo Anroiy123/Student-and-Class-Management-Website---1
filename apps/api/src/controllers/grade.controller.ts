@@ -49,6 +49,10 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
   const pageSize = Number(req.query.pageSize) || 10;
   const skip = (page - 1) * pageSize;
 
+  // Handle search
+  const search = req.query.search as string | undefined;
+  const searchField = (req.query.searchField as string) || 'studentName';
+
   const grades = await GradeModel.find(filter)
     .populate({
       path: 'enrollmentId',
@@ -59,7 +63,25 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
     .sort({ updatedAt: -1 });
 
   // Filter out grades where enrollmentId is null (didn't match the criteria)
-  const filteredGrades = grades.filter((grade) => grade.enrollmentId !== null);
+  let filteredGrades = grades.filter((grade) => grade.enrollmentId !== null);
+
+  // Apply search filter
+  if (search && search.trim()) {
+    const searchLower = search.toLowerCase().trim();
+    filteredGrades = filteredGrades.filter((grade) => {
+      const enrollment = grade.enrollmentId as {
+        studentId?: { mssv?: string; fullName?: string };
+      };
+      const student = enrollment?.studentId;
+      if (!student) return false;
+
+      if (searchField === 'mssv') {
+        return student.mssv?.toLowerCase().includes(searchLower);
+      } else {
+        return student.fullName?.toLowerCase().includes(searchLower);
+      }
+    });
+  }
 
   // Apply pagination
   const paginatedGrades = filteredGrades.slice(skip, skip + pageSize);
@@ -71,6 +93,142 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
     pageSize,
   });
 });
+
+export const getGradeStatistics: RequestHandler = asyncHandler(
+  async (req, res) => {
+    const enrollmentMatch: Record<string, unknown> = {};
+
+    // Apply teacher scope filtering
+    if (req.user) {
+      const scope = await getTeacherAccessScope(req.user);
+      if (scope) {
+        if (scope.classIds.length === 0 && scope.courseIds.length === 0) {
+          return res.json({
+            averages: { attendance: 0, midterm: 0, final: 0, total: 0 },
+            distribution: { excellent: 0, good: 0, average: 0, poor: 0 },
+            totalCount: 0,
+            byCourse: [],
+          });
+        }
+        enrollmentMatch.$or = [
+          { classId: { $in: scope.classIds } },
+          { courseId: { $in: scope.courseIds } },
+        ];
+      }
+    }
+
+    if (req.query.classId) enrollmentMatch.classId = req.query.classId;
+    if (req.query.courseId) enrollmentMatch.courseId = req.query.courseId;
+    if (req.query.semester) enrollmentMatch.semester = req.query.semester;
+
+    // Handle search
+    const search = req.query.search as string | undefined;
+    const searchField = (req.query.searchField as string) || 'studentName';
+
+    // Get all grades with enrollment filter
+    const grades = await GradeModel.find({ total: { $ne: null, $gte: 0 } })
+      .populate({
+        path: 'enrollmentId',
+        match:
+          Object.keys(enrollmentMatch).length > 0 ? enrollmentMatch : undefined,
+        populate: ['studentId', 'courseId'],
+      })
+      .lean();
+
+    let filteredGrades = grades.filter((g) => g.enrollmentId !== null);
+
+    // Apply search filter
+    if (search && search.trim()) {
+      const searchLower = search.toLowerCase().trim();
+      filteredGrades = filteredGrades.filter((grade) => {
+        const enrollment = grade.enrollmentId as {
+          studentId?: { mssv?: string; fullName?: string };
+        };
+        const student = enrollment?.studentId;
+        if (!student) return false;
+
+        if (searchField === 'mssv') {
+          return student.mssv?.toLowerCase().includes(searchLower);
+        } else {
+          return student.fullName?.toLowerCase().includes(searchLower);
+        }
+      });
+    }
+
+    if (filteredGrades.length === 0) {
+      return res.json({
+        averages: { attendance: 0, midterm: 0, final: 0, total: 0 },
+        distribution: { excellent: 0, good: 0, average: 0, poor: 0 },
+        totalCount: 0,
+        byCourse: [],
+      });
+    }
+
+    // Calculate weighted averages (by credits)
+    const { weightedSum, totalCredits } = filteredGrades.reduce(
+      (acc, g) => {
+        const enrollment = g.enrollmentId as {
+          courseId?: { credits?: number };
+        };
+        const credits = enrollment?.courseId?.credits || 1;
+        return {
+          weightedSum: {
+            attendance: acc.weightedSum.attendance + (g.attendance || 0) * credits,
+            midterm: acc.weightedSum.midterm + (g.midterm || 0) * credits,
+            final: acc.weightedSum.final + (g.final || 0) * credits,
+            total: acc.weightedSum.total + (g.total || 0) * credits,
+          },
+          totalCredits: acc.totalCredits + credits,
+        };
+      },
+      {
+        weightedSum: { attendance: 0, midterm: 0, final: 0, total: 0 },
+        totalCredits: 0,
+      },
+    );
+
+    const averages = totalCredits > 0
+      ? {
+          attendance: Number((weightedSum.attendance / totalCredits).toFixed(2)),
+          midterm: Number((weightedSum.midterm / totalCredits).toFixed(2)),
+          final: Number((weightedSum.final / totalCredits).toFixed(2)),
+          total: Number((weightedSum.total / totalCredits).toFixed(2)),
+        }
+      : { attendance: 0, midterm: 0, final: 0, total: 0 };
+
+    // Calculate distribution
+    const distribution = filteredGrades.reduce(
+      (acc, g) => {
+        const total = g.total || 0;
+        if (total >= 8) acc.excellent++;
+        else if (total >= 6.5) acc.good++;
+        else if (total >= 5) acc.average++;
+        else acc.poor++;
+        return acc;
+      },
+      { excellent: 0, good: 0, average: 0, poor: 0 },
+    );
+
+    // Calculate by course (for individual student view)
+    const byCourse = filteredGrades.map((g) => {
+      const enrollment = g.enrollmentId as {
+        courseId?: { _id: string; code: string; name: string };
+      };
+      const course = enrollment?.courseId;
+      return {
+        courseId: course?._id || '',
+        courseCode: course?.code || '',
+        courseName: course?.name || '',
+        attendance: g.attendance || 0,
+        midterm: g.midterm || 0,
+        final: g.final || 0,
+        total: g.total || 0,
+      };
+    });
+
+    res.json({ averages, distribution, totalCount: filteredGrades.length, byCourse });
+  },
+);
 
 export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
   const { enrollmentId } = req.params;

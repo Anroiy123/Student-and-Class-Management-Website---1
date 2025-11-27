@@ -52,6 +52,8 @@ export type ListGradesParams = Partial<{
   courseId: string;
   studentId: string;
   semester: string;
+  search: string;
+  searchField: string;
 }>;
 
 export async function listGrades(
@@ -80,11 +82,15 @@ export async function upsertGrade(
   return data;
 }
 
-export function useGradesQuery(params: ListGradesParams) {
+export function useGradesQuery(
+  params: ListGradesParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: ['grades', params],
     queryFn: () => listGrades(params),
     placeholderData: keepPreviousData,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -101,6 +107,52 @@ export function useUpsertGrade() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['grades'] });
     },
+  });
+}
+
+// Grade Statistics Types
+export type GradeStatistics = {
+  averages: {
+    attendance: number;
+    midterm: number;
+    final: number;
+    total: number;
+  };
+  distribution: {
+    excellent: number;
+    good: number;
+    average: number;
+    poor: number;
+  };
+  totalCount: number;
+  byCourse: Array<{
+    courseId: string;
+    courseCode: string;
+    courseName: string;
+    attendance: number;
+    midterm: number;
+    final: number;
+    total: number;
+  }>;
+};
+
+export async function getGradeStatistics(
+  params: ListGradesParams,
+): Promise<GradeStatistics> {
+  const { data } = await apiClient.get<GradeStatistics>('/grades/statistics', {
+    params,
+  });
+  return data;
+}
+
+export function useGradeStatisticsQuery(
+  params: ListGradesParams,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: ['gradeStatistics', params],
+    queryFn: () => getGradeStatistics(params),
+    enabled: options?.enabled ?? true,
   });
 }
 

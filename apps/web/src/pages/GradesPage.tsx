@@ -2,14 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
 import {
-  ListGradesParams,
   UpsertGradePayload,
   useGradesQuery,
+  useGradeStatisticsQuery,
   useUpsertGrade,
   type GradeListItem,
   computeGradeClassification,
-  computeSemesterAverage,
 } from '../lib/grades';
+import {
+  FilterPromptMessage,
+  GradeStatisticsSection,
+} from '../components/GradeStatistics';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/table-core';
 import { useSearchParams } from 'react-router-dom';
@@ -56,30 +59,52 @@ export const GradesPage = () => {
     searchParams.get('semester') || '',
   );
 
-  const filters = useMemo<
-    Partial<Omit<ListGradesParams, 'page' | 'pageSize'>>
-  >(() => {
-    const f: Partial<Omit<ListGradesParams, 'page' | 'pageSize'>> = {};
-    if (classId) f.classId = classId;
-    if (courseId) f.courseId = courseId;
-    if (semester) f.semester = semester;
-    return f;
-  }, [classId, courseId, semester]);
+  // Applied filters - only updated when user clicks "Áp dụng lọc" button
+  const [appliedFilters, setAppliedFilters] = useState<{
+    classId: string;
+    courseId: string;
+    semester: string;
+  }>({
+    classId: searchParams.get('classId') || '',
+    courseId: searchParams.get('courseId') || '',
+    semester: searchParams.get('semester') || '',
+  });
 
-  const [debouncedFilters, setDebouncedFilters] = useState(filters);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setDebouncedFilters(filters);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(t);
-  }, [filters]);
+  // Track if filters have been applied at least once
+  const [hasAppliedOnce, setHasAppliedOnce] = useState(
+    !!(
+      searchParams.get('classId') ||
+      searchParams.get('courseId') ||
+      searchParams.get('semester')
+    ),
+  );
 
   const params = useMemo(
-    () => ({ page, pageSize, ...debouncedFilters }),
-    [page, pageSize, debouncedFilters],
+    () => ({
+      page,
+      pageSize,
+      classId: appliedFilters.classId || undefined,
+      courseId: appliedFilters.courseId || undefined,
+      semester: appliedFilters.semester || undefined,
+      search: searchValue || undefined,
+      searchField: selectedField,
+    }),
+    [page, pageSize, appliedFilters, searchValue, selectedField],
   );
+
+  // Check if filters have been applied (even if empty - "Tất cả")
+  const hasActiveFilters = hasAppliedOnce;
+
+  // Handler for "Áp dụng lọc" button
+  const handleApplyFilters = () => {
+    setAppliedFilters({
+      classId,
+      courseId,
+      semester,
+    });
+    setHasAppliedOnce(true);
+    setPage(1);
+  };
 
   useEffect(() => {
     const s = new URLSearchParams();
@@ -87,18 +112,16 @@ export const GradesPage = () => {
     s.set('pageSize', String(pageSize));
     s.set('selectedField', selectedField);
     if (searchValue) s.set('searchValue', searchValue);
-    if (classId) s.set('classId', classId);
-    if (courseId) s.set('courseId', courseId);
-    if (semester) s.set('semester', semester);
+    if (appliedFilters.classId) s.set('classId', appliedFilters.classId);
+    if (appliedFilters.courseId) s.set('courseId', appliedFilters.courseId);
+    if (appliedFilters.semester) s.set('semester', appliedFilters.semester);
     setSearchParams(s, { replace: true });
   }, [
     page,
     pageSize,
     selectedField,
     searchValue,
-    classId,
-    courseId,
-    semester,
+    appliedFilters,
     setSearchParams,
   ]);
 
@@ -120,32 +143,65 @@ export const GradesPage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data, isLoading } = useGradesQuery(params);
+  // Get courses filtered by selected class (from enrollments)
+  const { data: classCoursesData } = useQuery({
+    queryKey: ['enrollments', 'courses', classId],
+    queryFn: async () => {
+      if (!classId) return [];
+      const { data } = await apiClient.get<
+        Array<{ courseId: CourseItem; _id: string }>
+      >('/enrollments', {
+        params: { classId },
+      });
+      // Get unique courses
+      const uniqueCourses = Array.from(
+        new Map(data.map((e) => [e.courseId._id, e.courseId])).values(),
+      );
+      return uniqueCourses;
+    },
+    enabled: !!classId,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Use filtered courses if class is selected, otherwise all courses
+  const availableCourses = classId ? classCoursesData ?? [] : coursesData ?? [];
+
+  // Reset courseId when classId changes
+  useEffect(() => {
+    if (classId && courseId) {
+      // Check if current courseId is still valid for the new class
+      const isValidCourse = classCoursesData?.some((c) => c._id === courseId);
+      if (!isValidCourse) {
+        setCourseId('');
+      }
+    }
+  }, [classId, courseId, classCoursesData]);
+
+  const { data, isLoading } = useGradesQuery(params, {
+    enabled: hasActiveFilters,
+  });
+
+  const { data: statisticsData, isLoading: isLoadingStats } =
+    useGradeStatisticsQuery(
+      {
+        classId: appliedFilters.classId || undefined,
+        courseId: appliedFilters.courseId || undefined,
+        semester: appliedFilters.semester || undefined,
+        search: searchValue || undefined,
+        searchField: selectedField,
+      },
+      {
+        enabled: hasActiveFilters,
+      },
+    );
 
   const [showForm, setShowForm] = useState(false);
   const [editGrade, setEditGrade] = useState<GradeListItem | null>(null);
 
-  const filteredData = useMemo(() => {
-    if (!data?.items) return [];
-    if (!searchValue) return data.items;
+  // Use data directly from server (search is handled server-side)
+  const filteredData = useMemo(() => data?.items ?? [], [data?.items]);
 
-    return data.items.filter((item) => {
-      const student = item.enrollmentId.studentId;
-      if (selectedField === 'studentName') {
-        return student.fullName
-          .toLowerCase()
-          .includes(searchValue.toLowerCase());
-      }
-      if (selectedField === 'mssv') {
-        return student.mssv.toLowerCase().includes(searchValue.toLowerCase());
-      }
-      return true;
-    });
-  }, [data?.items, searchValue, selectedField]);
 
-  const semesterAverage = useMemo(() => {
-    return computeSemesterAverage(filteredData);
-  }, [filteredData]);
 
   const columns = useMemo<ColumnDef<GradeListItem>[]>(
     () => [
@@ -277,6 +333,7 @@ export const GradesPage = () => {
       </header>
 
       <FilterSection
+        defaultOpen={true}
         searchFields={GRADE_SEARCH_FIELDS}
         selectedField={selectedField}
         searchValue={searchValue}
@@ -288,7 +345,35 @@ export const GradesPage = () => {
           setClassId('');
           setCourseId('');
           setSemester('');
+          setAppliedFilters({ classId: '', courseId: '', semester: '' });
+          setHasAppliedOnce(false);
         }}
+        customActions={
+          <>
+            <button
+              type="button"
+              className="nb-btn nb-btn--primary"
+              onClick={handleApplyFilters}
+            >
+              Áp dụng lọc
+            </button>
+            <button
+              type="button"
+              className="nb-btn nb-btn--secondary"
+              onClick={() => {
+                setSelectedField('studentName');
+                setSearchValue('');
+                setClassId('');
+                setCourseId('');
+                setSemester('');
+                setAppliedFilters({ classId: '', courseId: '', semester: '' });
+                setHasAppliedOnce(false);
+              }}
+            >
+              Xóa bộ lọc
+            </button>
+          </>
+        }
         additionalFilters={
           <div className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -310,8 +395,10 @@ export const GradesPage = () => {
                 value={courseId}
                 onChange={(e) => setCourseId(e.target.value)}
               >
-                <option value="">-- Tất cả môn học --</option>
-                {(coursesData ?? []).map((c) => (
+                <option value="">
+                  -- {classId ? 'Tất cả môn của lớp' : 'Tất cả môn học'} --
+                </option>
+                {availableCourses.map((c) => (
                   <option key={c._id} value={c._id}>
                     {c.code} - {c.name}
                   </option>
@@ -359,85 +446,77 @@ export const GradesPage = () => {
                 })}
               </select>
             </div>
+
+
           </div>
         }
       />
 
-      {filteredData.length > 0 && (
-        <div className="nb-card">
-          <div className="text-sm">
-            <strong>Điểm TB học kỳ:</strong>{' '}
-            <span
-              className={`font-semibold ${
-                semesterAverage >= 8
-                  ? 'text-green-600 dark:text-green-400'
-                  : semesterAverage >= 6.5
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : semesterAverage >= 5
-                      ? 'text-yellow-600 dark:text-yellow-400'
-                      : 'text-red-600 dark:text-red-400'
-              }`}
-            >
-              {semesterAverage}
-            </span>{' '}
-            ({computeGradeClassification(semesterAverage)})
-          </div>
-        </div>
-      )}
-
-      <div className="nb-card">
-        {isLoading ? (
-          <p className="text-sm opacity-70">Đang tải danh sách điểm…</p>
-        ) : data && data.items.length > 0 ? (
-          <DataTable
-            table={table}
-            minWidth="900px"
-            isLoading={false}
-            emptyMessage="Không có dữ liệu điểm"
-            showPagination={true}
-            overflowYHidden={true}
-            paginationSlot={
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
-                  Tổng: <span className="font-bold">{data.total}</span> điểm
-                </div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium">Hiển thị:</span>
-                    <select
-                      className="nb-input w-20 text-sm py-1"
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(Number(e.target.value));
-                        setPage(1);
-                      }}
-                    >
-                      {[10, 20, 50].map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="text-sm opacity-70">/ trang</span>
+      {!hasActiveFilters ? (
+        <FilterPromptMessage />
+      ) : (
+        <>
+          <div className="nb-card">
+            {isLoading ? (
+              <p className="text-sm opacity-70">Đang tải danh sách điểm…</p>
+            ) : data && data.items.length > 0 ? (
+              <DataTable
+                table={table}
+                minWidth="900px"
+                isLoading={false}
+                emptyMessage="Không có dữ liệu điểm"
+                showPagination={true}
+                overflowYHidden={true}
+                paginationSlot={
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="text-sm font-semibold px-3 py-2 bg-nb-lemon border-2 border-black inline-block rounded dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
+                      Tổng: <span className="font-bold">{data.total}</span> điểm
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">Hiển thị:</span>
+                        <select
+                          className="nb-input w-20 text-sm py-1"
+                          value={pageSize}
+                          onChange={(e) => {
+                            setPageSize(Number(e.target.value));
+                            setPage(1);
+                          }}
+                        >
+                          {[10, 20, 50].map((n) => (
+                            <option key={n} value={n}>
+                              {n}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="text-sm opacity-70">/ trang</span>
+                      </div>
+                      <Pager
+                        page={page}
+                        pageSize={pageSize}
+                        total={data.total}
+                        onChangePage={setPage}
+                      />
+                    </div>
                   </div>
-                  <Pager
-                    page={page}
-                    pageSize={pageSize}
-                    total={data.total}
-                    onChangePage={setPage}
-                  />
-                </div>
+                }
+              />
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-lg font-semibold opacity-70">
+                  Không có dữ liệu điểm cho bộ lọc hiện tại.
+                </p>
               </div>
-            }
-          />
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-lg font-semibold opacity-70">
-              Không có dữ liệu điểm. Vui lòng chọn lớp/môn học.
-            </p>
+            )}
           </div>
-        )}
-      </div>
+
+          <GradeStatisticsSection
+            statistics={statisticsData}
+            isLoading={isLoadingStats}
+            hasSearch={!!searchValue}
+          />
+        </>
+      )}
 
       {showForm && (
         <GradeFormModal

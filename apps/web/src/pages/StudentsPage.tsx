@@ -177,6 +177,7 @@ export const StudentsPage = () => {
         header: 'Liên hệ',
         cell: (info) => {
           const { phone, address } = info.row.original;
+          const isLastRow = info.row.index === (data?.items.length ?? 0) - 1;
           return (
             <div className="group relative">
               <button
@@ -185,7 +186,11 @@ export const StudentsPage = () => {
               >
                 Chi tiết
               </button>
-              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded border-2 border-black bg-white p-3 text-xs shadow-neo-sm min-w-[250px] dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
+              <div
+                className={`invisible group-hover:visible absolute left-0 z-10 rounded border-2 border-black bg-white p-3 text-xs shadow-neo-sm min-w-[250px] dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text ${
+                  isLastRow ? 'bottom-full mb-1' : 'top-full mt-1'
+                }`}
+              >
                 <div className="space-y-1">
                   <div>
                     <strong>SĐT:</strong> {phone || '-'}

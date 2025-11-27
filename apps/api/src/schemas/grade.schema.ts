@@ -19,5 +19,7 @@ export const listGradesSchema = z.object({
     semester: z.string().optional(),
     page: z.string().optional(),
     pageSize: z.string().optional(),
+    search: z.string().optional(),
+    searchField: z.enum(['studentName', 'mssv']).optional(),
   }),
 });

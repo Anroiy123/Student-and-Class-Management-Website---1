@@ -15,6 +15,7 @@ export type FilterSectionProps = {
   onClear: () => void;
   additionalFilters?: React.ReactNode;
   defaultOpen?: boolean;
+  customActions?: React.ReactNode;
 };
 
 export function FilterSection({
@@ -27,6 +28,7 @@ export function FilterSection({
   onClear,
   additionalFilters,
   defaultOpen = false,
+  customActions,
 }: FilterSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -96,15 +98,17 @@ export function FilterSection({
             </div>
           )}
 
-          {/* Clear Button */}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="nb-btn nb-btn--secondary"
-              onClick={onClear}
-            >
-              Xóa bộ lọc
-            </button>
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2">
+            {customActions || (
+              <button
+                type="button"
+                className="nb-btn nb-btn--secondary"
+                onClick={onClear}
+              >
+                Xóa bộ lọc
+              </button>
+            )}
           </div>
         </div>
       </div>
