@@ -10,7 +10,8 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --check \"src/**/*.{ts,tsx}\"",
     "seed:csv": "tsx src/scripts/seed-from-csv.ts",
-    "db:reset": "tsx src/scripts/reset-database.ts"
+    "db:reset": "tsx src/scripts/reset-database.ts",
+    "reverse-names": "tsx src/scripts/reverse-names.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^10.1.0",

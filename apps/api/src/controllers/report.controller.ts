@@ -76,7 +76,11 @@ export const exportReport: RequestHandler = asyncHandler(async (req, res) => {
   const enrollmentMatch: Record<string, unknown> = {};
   if (classId) enrollmentMatch.classId = classId;
   if (courseId) enrollmentMatch.courseId = courseId;
-  if (semester) enrollmentMatch.semester = semester;
+  if (semester) {
+    // Support partial semester matching with escaped regex characters
+    const escapedSemester = (semester as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    enrollmentMatch.semester = { $regex: escapedSemester, $options: 'i' };
+  }
 
   // Apply teacher scope filtering
   if (req.user) {

@@ -43,7 +43,10 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
     enrollmentMatch.courseId = req.query.courseId;
   }
   if (req.query.semester) {
-    enrollmentMatch.semester = req.query.semester;
+    // Support partial semester matching (HK1, 2024, or HK1-2024)
+    // Escape special regex characters to avoid issues with parentheses
+    const escapedSemester = (req.query.semester as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    enrollmentMatch.semester = { $regex: escapedSemester, $options: 'i' };
   }
 
   const page = Number(req.query.page) || 1;
@@ -120,7 +123,12 @@ export const getGradeStatistics: RequestHandler = asyncHandler(
 
     if (req.query.classId) enrollmentMatch.classId = req.query.classId;
     if (req.query.courseId) enrollmentMatch.courseId = req.query.courseId;
-    if (req.query.semester) enrollmentMatch.semester = req.query.semester;
+    if (req.query.semester) {
+      // Support partial semester matching (HK1, 2024, or HK1-2024)
+      // Escape special regex characters to avoid issues with parentheses
+      const escapedSemester = (req.query.semester as string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      enrollmentMatch.semester = { $regex: escapedSemester, $options: 'i' };
+    }
 
     // Handle search
     const search = req.query.search as string | undefined;

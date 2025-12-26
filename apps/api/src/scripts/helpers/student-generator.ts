@@ -1,6 +1,21 @@
 import { faker } from '@faker-js/faker/locale/vi';
 import { getMajorInfo } from './major-mapping.js';
 
+/**
+ * Đảo ngược tên từ format "Tên Họ" (Western) sang "Họ Tên" (Vietnamese)
+ * Ví dụ: "Bích Liên Lâm" -> "Lâm Bích Liên"
+ */
+function reverseToVietnameseName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length <= 1) {
+    return name;
+  }
+  // Lấy từ cuối cùng (họ) và đưa lên đầu
+  const lastName = parts[parts.length - 1];
+  const otherNames = parts.slice(0, -1);
+  return [lastName, ...otherNames].join(' ');
+}
+
 export interface GeneratedStudent {
   mssv: string;
   fullName: string;
@@ -99,7 +114,7 @@ export function generateStudentsForClass(
     const mssv = `N${year}${majorInfo.studentCode}${String(i).padStart(3, '0')}`;
     const gender = Math.random() > 0.5 ? 'male' : 'female';
 
-    const fullName = faker.person.fullName({ sex: gender });
+    const fullName = reverseToVietnameseName(faker.person.fullName({ sex: gender }));
 
     const dob = faker.date.between({
       from: new Date(birthYear, 0, 1),
@@ -185,7 +200,7 @@ function generateStudentsForClassWithStartIndex(
     const mssv = `N${year}${majorInfo.studentCode}${String(studentNumber).padStart(3, '0')}`;
     const gender = Math.random() > 0.5 ? 'male' : 'female';
 
-    const fullName = faker.person.fullName({ sex: gender });
+    const fullName = reverseToVietnameseName(faker.person.fullName({ sex: gender }));
 
     const dob = faker.date.between({
       from: new Date(birthYear, 0, 1),

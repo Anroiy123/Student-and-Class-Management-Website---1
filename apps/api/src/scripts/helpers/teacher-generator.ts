@@ -1,5 +1,20 @@
 import { faker } from '@faker-js/faker/locale/vi';
 
+/**
+ * Đảo ngược tên từ format "Tên Họ" (Western) sang "Họ Tên" (Vietnamese)
+ * Ví dụ: "Bích Liên Lâm" -> "Lâm Bích Liên"
+ */
+function reverseToVietnameseName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length <= 1) {
+    return name;
+  }
+  // Lấy từ cuối cùng (họ) và đưa lên đầu
+  const lastName = parts[parts.length - 1];
+  const otherNames = parts.slice(0, -1);
+  return [lastName, ...otherNames].join(' ');
+}
+
 export interface GeneratedTeacher {
   employeeId: string;
   fullName: string;
@@ -90,7 +105,7 @@ export function generateTeachers(count: number = 20): GeneratedTeacher[] {
   for (let i = 1; i <= count; i++) {
     const employeeId = `GV${String(i).padStart(3, '0')}`;
     const gender = Math.random() > 0.5 ? 'male' : 'female';
-    const fullName = faker.person.fullName({ sex: gender });
+    const fullName = reverseToVietnameseName(faker.person.fullName({ sex: gender }));
 
     // Remove Vietnamese tones for email
     const firstName = fullName.split(' ').pop() || 'teacher';

@@ -43,7 +43,15 @@ export const ClassesPage = () => {
     if (!data || !searchValue) return data;
 
     return data.filter((item) => {
-      const fieldValue = item[selectedField as keyof ClassListItem];
+      let fieldValue: any;
+      
+      // Special handling for teacher search
+      if (selectedField === 'homeroomTeacher') {
+        fieldValue = item.homeroomTeacherId?.fullName || '';
+      } else {
+        fieldValue = item[selectedField as keyof ClassListItem];
+      }
+      
       if (fieldValue === null || fieldValue === undefined) return false;
       return String(fieldValue)
         .toLowerCase()

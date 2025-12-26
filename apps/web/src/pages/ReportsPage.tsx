@@ -32,6 +32,15 @@ export const ReportsPage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: semestersData } = useQuery({
+    queryKey: ['semesters'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<string[]>('/enrollments/semesters');
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: availableCoursesData } = useQuery({
     queryKey: ['available-courses', classId],
     queryFn: async () => {
@@ -142,13 +151,18 @@ export const ReportsPage = () => {
             <label className="block text-sm font-medium mb-2">
               Học kỳ (tùy chọn)
             </label>
-            <input
-              type="text"
+            <select
               className="nb-input w-full"
-              placeholder="VD: HK1 2023-2024"
               value={semester}
               onChange={(e) => setSemester(e.target.value)}
-            />
+            >
+              <option value="">-- Tất cả học kỳ --</option>
+              {semestersData?.map((sem) => (
+                <option key={sem} value={sem}>
+                  {sem}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

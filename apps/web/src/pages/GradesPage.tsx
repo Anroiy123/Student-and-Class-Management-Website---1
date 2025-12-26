@@ -92,19 +92,20 @@ export const GradesPage = () => {
     [page, pageSize, appliedFilters, searchValue, selectedField],
   );
 
+  // Auto-apply filters when classId or courseId changes
+  useEffect(() => {
+    if (classId || courseId) {
+      setAppliedFilters({
+        classId,
+        courseId,
+        semester,
+      });
+      setHasAppliedOnce(true);
+    }
+  }, [classId, courseId, semester]);
+
   // Check if filters have been applied (even if empty - "Tất cả")
   const hasActiveFilters = hasAppliedOnce;
-
-  // Handler for "Áp dụng lọc" button
-  const handleApplyFilters = () => {
-    setAppliedFilters({
-      classId,
-      courseId,
-      semester,
-    });
-    setHasAppliedOnce(true);
-    setPage(1);
-  };
 
   useEffect(() => {
     const s = new URLSearchParams();
@@ -368,32 +369,6 @@ export const GradesPage = () => {
           setAppliedFilters({ classId: '', courseId: '', semester: '' });
           setHasAppliedOnce(false);
         }}
-        customActions={
-          <>
-            <button
-              type="button"
-              className="nb-btn nb-btn--primary"
-              onClick={handleApplyFilters}
-            >
-              Áp dụng lọc
-            </button>
-            <button
-              type="button"
-              className="nb-btn nb-btn--secondary"
-              onClick={() => {
-                setSelectedField('studentName');
-                setSearchValue('');
-                setClassId('');
-                setCourseId('');
-                setSemester('');
-                setAppliedFilters({ classId: '', courseId: '', semester: '' });
-                setHasAppliedOnce(false);
-              }}
-            >
-              Xóa bộ lọc
-            </button>
-          </>
-        }
         additionalFilters={
           <div className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -429,13 +404,25 @@ export const GradesPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <select
                 className="nb-input w-full"
-                value={semester.split('-')[0] || ''}
+                value={(() => {
+                  // Extract semester part (HK1, HK2, HK3) from "HK1 (2024-2025)" or "HK1"
+                  const match = semester.match(/^(HK\d+)/);
+                  return match ? match[1] : '';
+                })()}
                 onChange={(e) => {
                   const semesterNum = e.target.value;
-                  const year = semester.split('-')[1] || '';
-                  setSemester(
-                    semesterNum && year ? `${semesterNum}-${year}` : '',
-                  );
+                  // Extract year part (2024-2025) from "HK1 (2024-2025)" or "2024-2025"
+                  const yearMatch = semester.match(/(\d{4}-\d{4})/);
+                  const year = yearMatch ? yearMatch[1] : '';
+                  if (semesterNum && year) {
+                    setSemester(`${semesterNum} (${year})`);
+                  } else if (semesterNum) {
+                    setSemester(semesterNum);
+                  } else if (year) {
+                    setSemester(year);
+                  } else {
+                    setSemester('');
+                  }
                 }}
               >
                 <option value="">-- Học kỳ --</option>
@@ -446,21 +433,35 @@ export const GradesPage = () => {
 
               <select
                 className="nb-input w-full"
-                value={semester.split('-')[1] || ''}
+                value={(() => {
+                  // Extract year part (2024-2025) from "HK1 (2024-2025)" or "2024-2025"
+                  const match = semester.match(/(\d{4}-\d{4})/);
+                  return match ? match[1] : '';
+                })()}
                 onChange={(e) => {
                   const year = e.target.value;
-                  const semesterNum = semester.split('-')[0] || '';
-                  setSemester(
-                    semesterNum && year ? `${semesterNum}-${year}` : '',
-                  );
+                  // Extract semester part (HK1, HK2, HK3)
+                  const semesterMatch = semester.match(/^(HK\d+)/);
+                  const semesterNum = semesterMatch ? semesterMatch[1] : '';
+                  if (semesterNum && year) {
+                    setSemester(`${semesterNum} (${year})`);
+                  } else if (year) {
+                    setSemester(year);
+                  } else if (semesterNum) {
+                    setSemester(semesterNum);
+                  } else {
+                    setSemester('');
+                  }
                 }}
               >
                 <option value="">-- Năm học --</option>
                 {Array.from({ length: 10 }, (_, i) => {
-                  const year = new Date().getFullYear() - 5 + i;
+                  const startYear = new Date().getFullYear() - 5 + i;
+                  const endYear = startYear + 1;
+                  const academicYear = `${startYear}-${endYear}`;
                   return (
-                    <option key={year} value={year}>
-                      {year}
+                    <option key={academicYear} value={academicYear}>
+                      {academicYear}
                     </option>
                   );
                 })}

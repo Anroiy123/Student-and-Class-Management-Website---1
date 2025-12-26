@@ -17,7 +17,9 @@ export function FilterPromptMessage() {
       </svg>
       <h3 className="text-lg font-bold mb-2">Vui lòng chọn bộ lọc</h3>
       <p className="text-sm opacity-70 max-w-md mx-auto">
-        Chọn lớp, môn học hoặc học kỳ để xem dữ liệu điểm và thống kê
+        Chọn lớp hoặc môn học để xem dữ liệu điểm và thống kê.
+        <br />
+        Học kỳ và năm là tùy chọn (có thể bỏ trống để xem tất cả).
       </p>
     </div>
   );

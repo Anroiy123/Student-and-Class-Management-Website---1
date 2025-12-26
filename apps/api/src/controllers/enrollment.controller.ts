@@ -94,3 +94,18 @@ export const deleteEnrollment: RequestHandler = asyncHandler(
     res.status(204).send();
   },
 );
+
+export const listSemesters: RequestHandler = asyncHandler(
+  async (req, res) => {
+    // Get all distinct semesters from enrollments
+    const semesters = await EnrollmentModel.distinct('semester');
+    
+    // Filter out empty/null values and sort
+    const validSemesters = semesters
+      .filter((s) => s && s.trim())
+      .sort()
+      .reverse(); // Most recent first
+
+    res.json(validSemesters);
+  },
+);

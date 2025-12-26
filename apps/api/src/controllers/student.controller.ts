@@ -87,12 +87,26 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
     }
   }
 
+  // Use aggregation to sort by last name (tên - last word in fullName)
+  const pipeline: any[] = [
+    { $match: filter },
+    {
+      $addFields: {
+        // Extract last word (tên) from fullName for sorting
+        lastName: {
+          $arrayElemAt: [{ $split: ['$fullName', ' '] }, -1],
+        },
+      },
+    },
+    { $sort: { lastName: 1, fullName: 1 } }, // Sort by tên first, then full name
+    { $skip: (page - 1) * pageSize },
+    { $limit: pageSize },
+  ];
+
   const [items, total] = await Promise.all([
-    StudentModel.find(filter)
-      .populate('classId')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * pageSize)
-      .limit(pageSize),
+    StudentModel.aggregate(pipeline).then((docs) =>
+      StudentModel.populate(docs, { path: 'classId' }),
+    ),
     StudentModel.countDocuments(filter),
   ]);
 

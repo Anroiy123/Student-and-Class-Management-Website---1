@@ -3,6 +3,7 @@ import {
   createEnrollment,
   deleteEnrollment,
   listEnrollments,
+  listSemesters,
 } from '../controllers/enrollment.controller';
 import {
   createEnrollmentSchema,
@@ -21,6 +22,11 @@ router.get(
   requireRole('ADMIN', 'TEACHER'),
   validateRequest(listEnrollmentSchema),
   listEnrollments,
+);
+router.get(
+  '/semesters',
+  requireRole('ADMIN', 'TEACHER'),
+  listSemesters,
 );
 router.post(
   '/',
