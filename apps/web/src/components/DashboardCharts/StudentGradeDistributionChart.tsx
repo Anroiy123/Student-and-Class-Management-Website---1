@@ -22,10 +22,10 @@ const GRADE_LABELS: Record<string, string> = {
 };
 
 const COLORS = {
-  excellent: { light: '#8AC186', dark: '#8AC186' },
-  good: { light: '#9AD9FF', dark: '#9AD9FF' },
-  average: { light: '#FFE76A', dark: '#D4AF37' },
-  poor: { light: '#FFACC8', dark: '#FFACC8' },
+  excellent: { light: '#059669', dark: '#34D399' },
+  good: { light: '#0284C7', dark: '#38BDF8' },
+  average: { light: '#D97706', dark: '#FBBF24' },
+  poor: { light: '#DC2626', dark: '#F87171' },
 };
 
 const CHART_HEIGHT_MOBILE = 200;
@@ -68,9 +68,9 @@ export function StudentGradeDistributionChart({ data }: StudentGradeDistribution
 
   if (total === 0) {
     return (
-      <div className="nb-card">
-        <h3 className="font-display font-semibold text-lg mb-4">Phân bố điểm cá nhân</h3>
-        <div className="flex items-center justify-center h-[250px] text-gray-500">
+      <div className="edu-card">
+        <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">Phân bố điểm cá nhân</h3>
+        <div className="flex items-center justify-center h-[250px] text-edu-ink-light dark:text-edu-dark-text-dim">
           Chưa có dữ liệu điểm
         </div>
       </div>
@@ -78,8 +78,8 @@ export function StudentGradeDistributionChart({ data }: StudentGradeDistribution
   }
 
   return (
-    <div className="nb-card">
-      <h3 className="font-display font-semibold text-lg mb-4">Phân bố điểm cá nhân</h3>
+    <div className="edu-card">
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">Phân bố điểm cá nhân</h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <PieChart>
           <Pie
@@ -90,29 +90,33 @@ export function StudentGradeDistributionChart({ data }: StudentGradeDistribution
             outerRadius={80}
             paddingAngle={2}
             dataKey="value"
-            label={({ name, percent }) => `${(name ?? '').split(' ')[0]} ${((percent ?? 0) * 100).toFixed(0)}%`}
+            label={({ name, percent }) => {
+              const label = (name ?? '').split('(')[0].trim();
+              return `${label} ${((percent ?? 0) * 100).toFixed(0)}%`;
+            }}
             labelLine={false}
           >
             {chartData.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={isDark ? entry.darkColor : entry.color}
-                stroke={isDark ? '#393947' : '#111'}
-                strokeWidth={2}
+                stroke="transparent"
+                strokeWidth={0}
               />
             ))}
           </Pie>
           <Tooltip
+            cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const item = payload[0].payload as ChartDataItem;
                 const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
                 return (
                   <div
-                    className={`px-3 py-2 border-2 rounded shadow-neo-sm ${
+                    className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
                       isDark
-                        ? 'bg-nb-dark-section border-nb-dark-border text-nb-dark-text'
-                        : 'bg-white border-black'
+                        ? 'bg-edu-dark-surface border border-edu-dark-border text-edu-dark-text'
+                        : 'bg-white border border-edu-border text-edu-ink'
                     }`}
                   >
                     <p className="font-semibold">{item.name}</p>
@@ -126,7 +130,8 @@ export function StudentGradeDistributionChart({ data }: StudentGradeDistribution
           />
           <Legend
             wrapperStyle={{
-              color: isDark ? '#e5e5e5' : '#111',
+              color: isDark ? '#94A3B8' : '#475569',
+              fontSize: '12px',
             }}
           />
         </PieChart>

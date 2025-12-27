@@ -8,11 +8,14 @@ export interface DataTableProps<TData> {
   showPagination?: boolean;
   paginationSlot?: React.ReactNode;
   overflowYHidden?: boolean;
+  caption?: string;
+  ariaLabel?: string;
 }
 
 /**
  * Reusable DataTable component for rendering TanStack Table instances
- * with consistent Neobrutalism design system styling
+ * with professional design system styling
+ * WCAG 2.1 AA Compliant with proper ARIA attributes
  */
 export function DataTable<TData>({
   table,
@@ -22,17 +25,33 @@ export function DataTable<TData>({
   showPagination = false,
   paginationSlot,
   overflowYHidden = false,
+  caption,
+  ariaLabel = 'Bảng dữ liệu',
 }: DataTableProps<TData>) {
   if (isLoading) {
-    return <p className="text-sm opacity-70">Đang tải dữ liệu…</p>;
+    return (
+      <div 
+        className="flex items-center justify-center gap-3 py-12"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <div className="edu-loading-spinner" aria-hidden="true"></div>
+        <p className="text-sm font-medium text-edu-ink-light dark:text-edu-dark-text-dim">Đang tải dữ liệu…</p>
+      </div>
+    );
   }
 
   const rows = table.getRowModel().rows;
 
   if (rows.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-lg font-semibold opacity-70">{emptyMessage}</p>
+      <div 
+        className="text-center py-12"
+        role="status"
+        aria-live="polite"
+      >
+        <p className="text-sm text-edu-ink-light dark:text-edu-dark-text-dim">{emptyMessage}</p>
       </div>
     );
   }
@@ -40,23 +59,32 @@ export function DataTable<TData>({
   return (
     <>
       <div
-        className={`overflow-x-auto ${overflowYHidden ? 'overflow-y-hidden' : ''} -mx-4 md:mx-0 md:rounded-xl`}
+        className={`overflow-x-auto ${overflowYHidden ? 'overflow-y-hidden' : ''} -mx-4 md:mx-0 rounded-lg border border-edu-border dark:border-edu-dark-border`}
+        role="region"
+        aria-label={ariaLabel}
+        tabIndex={0}
       >
         <div style={{ minWidth }}>
-          <table className="w-full text-sm overflow-hidden md:rounded-xl">
+          <table 
+            className="w-full text-sm"
+            aria-label={ariaLabel}
+          >
+            {caption && (
+              <caption className="sr-only">{caption}</caption>
+            )}
             <thead>
               {table.getHeaderGroups().map((hg) => (
                 <tr
                   key={hg.id}
-                  className="border-b-3 border-black dark:border-nb-dark-border"
                 >
                   {hg.headers.map((header, idx) => (
                     <th
                       key={header.id}
-                      className={`text-left text-nb-paper px-3 py-3 font-bold bg-nb-lilac ${
-                        idx === 0 ? 'md:rounded-tl-xl' : ''
+                      scope="col"
+                      className={`text-left px-4 py-3.5 font-semibold bg-edu-muted dark:bg-edu-dark-muted text-edu-ink-light dark:text-edu-dark-text-dim border-b border-edu-border dark:border-edu-dark-border ${
+                        idx === 0 ? 'rounded-tl-lg' : ''
                       } ${
-                        idx === hg.headers.length - 1 ? 'md:rounded-tr-xl' : ''
+                        idx === hg.headers.length - 1 ? 'rounded-tr-lg' : ''
                       }`}
                       style={{
                         width: header.column.columnDef.size
@@ -81,19 +109,20 @@ export function DataTable<TData>({
                 return (
                   <tr
                     key={row.id}
-                    className={`border-b-2 border-black dark:border-nb-dark-border hover:bg-nb-sky/30 transition-colors ${
-                      rowIdx % 2 === 0 ? 'bg-white' : 'bg-nb-paper'
+                    className={`border-b border-edu-border dark:border-edu-dark-border hover:bg-edu-muted dark:hover:bg-edu-dark-muted transition-colors ${
+                      rowIdx % 2 === 0 ? 'bg-edu-surface dark:bg-edu-dark-surface' : 'bg-edu-muted/50 dark:bg-edu-dark-muted/50'
                     } ${isLastRow ? 'border-b-0' : ''}`}
+                    tabIndex={0}
                   >
                     {row.getVisibleCells().map((cell, cellIdx) => (
                       <td
                         key={cell.id}
-                        className={`px-3 py-3 ${
-                          isLastRow && cellIdx === 0 ? 'md:rounded-bl-xl' : ''
+                        className={`px-4 py-3.5 ${
+                          isLastRow && cellIdx === 0 ? 'rounded-bl-lg' : ''
                         } ${
                           isLastRow &&
                           cellIdx === row.getVisibleCells().length - 1
-                            ? 'md:rounded-br-xl'
+                            ? 'rounded-br-lg'
                             : ''
                         }`}
                       >
@@ -111,9 +140,12 @@ export function DataTable<TData>({
         </div>
       </div>
       {showPagination && paginationSlot && (
-        <div className="mt-6 pt-4 border-t-3 border-black dark:border-nb-dark-border">
+        <nav 
+          className="mt-4 pt-4 border-t border-edu-border dark:border-edu-dark-border"
+          aria-label="Phân trang bảng dữ liệu"
+        >
           {paginationSlot}
-        </div>
+        </nav>
       )}
     </>
   );

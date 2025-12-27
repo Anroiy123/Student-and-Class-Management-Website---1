@@ -1,5 +1,7 @@
 import type { RequestHandler } from 'express';
 import PDFDocument from 'pdfkit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { UserModel } from '../models/user.model';
 import { StudentModel } from '../models/student.model';
 import { EnrollmentModel } from '../models/enrollment.model';
@@ -333,8 +335,18 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
     .map((item) => ({ total: item.total, credits: item.credits }));
   const gpa = computeGPA(gradesForGPA);
 
+  // Register Roboto fonts for Vietnamese support
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const fontPath = path.resolve(__dirname, '../../../fonts');
+
   // Generate PDF
   const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+  // Register fonts
+  doc.registerFont('Roboto', path.join(fontPath, 'Roboto-Regular.ttf'));
+  doc.registerFont('Roboto-Bold', path.join(fontPath, 'Roboto-Bold.ttf'));
+
   const classDoc = student.classId as any;
   const today = new Date().toISOString().split('T')[0];
   const filename = `bang-diem-${student.mssv}-${today}.pdf`;
@@ -347,12 +359,12 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   // Header
   doc
     .fontSize(18)
-    .font('Helvetica-Bold')
+    .font('Roboto-Bold')
     .text('BẢNG ĐIỂM SINH VIÊN', { align: 'center' });
   doc.moveDown();
 
   // Student info
-  doc.fontSize(11).font('Helvetica');
+  doc.fontSize(11).font('Roboto');
   doc.text(`Họ và tên: ${student.fullName}`);
   doc.text(`MSSV: ${student.mssv}`);
   doc.text(`Lớp: ${classDoc?.name || 'Chưa phân lớp'}`);
@@ -361,7 +373,7 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
 
   // Table header
   const tableTop = doc.y;
-  const colWidths = [40, 60, 150, 40, 50, 40, 40, 40, 40, 60];
+  const colWidths = [35, 50, 120, 30, 75, 35, 35, 35, 35, 70];
   const headers = [
     'STT',
     'Mã môn',
@@ -376,11 +388,11 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   ];
 
   let currentY = tableTop;
-  doc.fontSize(9).font('Helvetica-Bold');
+  doc.fontSize(8).font('Roboto-Bold');
 
   headers.forEach((header, i) => {
     const x = 50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-    doc.text(header, x, currentY, { width: colWidths[i], align: 'center' });
+    doc.text(header, x, currentY, { width: colWidths[i], align: 'center', continued: false });
   });
 
   currentY += 20;
@@ -388,7 +400,7 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   currentY += 5;
 
   // Table rows
-  doc.font('Helvetica').fontSize(8);
+  doc.font('Roboto').fontSize(7);
   items.forEach((item, index) => {
     if (currentY > 750) {
       doc.addPage();
@@ -410,7 +422,7 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
 
     rowData.forEach((data, i) => {
       const x = 50 + colWidths.slice(0, i).reduce((a, b) => a + b, 0);
-      doc.text(data, x, currentY, { width: colWidths[i], align: 'center' });
+      doc.text(data, x, currentY, { width: colWidths[i], align: 'center', continued: false });
     });
 
     currentY += 18;
@@ -418,11 +430,13 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
 
   // GPA summary
   doc.moveDown(2);
-  doc.fontSize(11).font('Helvetica-Bold');
+  doc.fontSize(11).font('Roboto-Bold');
   doc.text(
     `Điểm trung bình tích lũy (GPA): ${gpa !== null ? gpa.toFixed(2) : 'Chưa có'}`,
+    50,
+    doc.y,
     {
-      align: 'right',
+      align: 'left',
     },
   );
 

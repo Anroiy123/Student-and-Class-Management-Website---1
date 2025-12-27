@@ -9,16 +9,16 @@ type ChartSkeletonProps = {
 
 export function ChartSkeleton({ height = 250 }: ChartSkeletonProps) {
   return (
-    <div className="nb-card animate-pulse">
-      <div className="h-5 w-32 bg-gray-200 dark:bg-nb-dark-border rounded mb-4" />
+    <div className="edu-card animate-pulse">
+      <div className="h-5 w-32 bg-edu-muted dark:bg-edu-dark-muted rounded mb-4" />
       {/* Responsive height: 200px on mobile (<768px), 250px on desktop */}
       <div
-        className="bg-gray-100 dark:bg-nb-dark-bg rounded flex items-center justify-center h-[200px] md:h-[250px]"
+        className="bg-edu-muted dark:bg-edu-dark-muted rounded-lg flex items-center justify-center h-[200px] md:h-[250px]"
         style={{ minHeight: height }}
       >
         <div className="flex flex-col items-center gap-2">
-          <div className="w-16 h-16 border-4 border-gray-200 dark:border-nb-dark-border border-t-nb-lemon dark:border-t-nb-gold rounded-full animate-spin" />
-          <span className="text-sm text-gray-400 dark:text-nb-dark-text-dim">
+          <div className="w-10 h-10 border-3 border-edu-border dark:border-edu-dark-border border-t-edu-primary dark:border-t-edu-dark-primary rounded-full animate-spin" />
+          <span className="text-sm text-edu-ink-muted dark:text-edu-dark-text-dim">
             Đang tải...
           </span>
         </div>
@@ -37,12 +37,14 @@ export function ChartError({
   message = 'Không thể tải dữ liệu',
 }: ChartErrorProps) {
   return (
-    <div className="nb-card flex flex-col items-center justify-center py-8">
-      <div className="text-nb-coral text-4xl mb-2">⚠️</div>
-      <p className="text-nb-coral dark:text-nb-coral mb-4 font-medium">
+    <div className="edu-card flex flex-col items-center justify-center py-8">
+      <div className="w-12 h-12 rounded-full bg-edu-error-light flex items-center justify-center mb-3">
+        <span className="text-edu-error text-xl">!</span>
+      </div>
+      <p className="text-edu-error mb-4 font-medium text-sm">
         {message}
       </p>
-      <button onClick={onRetry} className="nb-btn nb-btn--secondary">
+      <button onClick={onRetry} className="edu-btn edu-btn--ghost text-sm">
         Thử lại
       </button>
     </div>
@@ -55,9 +57,11 @@ type ChartEmptyProps = {
 
 export function ChartEmpty({ message }: ChartEmptyProps) {
   return (
-    <div className="nb-card flex flex-col items-center justify-center py-8">
-      <div className="text-4xl mb-2 opacity-50">📊</div>
-      <p className="text-sm opacity-70 dark:text-nb-dark-text-dim text-center">
+    <div className="edu-card flex flex-col items-center justify-center py-8">
+      <div className="w-12 h-12 rounded-full bg-edu-muted dark:bg-edu-dark-muted flex items-center justify-center mb-3">
+        <span className="text-edu-ink-muted dark:text-edu-dark-text-dim text-xl">📊</span>
+      </div>
+      <p className="text-sm text-edu-ink-light dark:text-edu-dark-text-dim text-center">
         {message}
       </p>
     </div>

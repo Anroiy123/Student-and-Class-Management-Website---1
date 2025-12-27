@@ -26,11 +26,11 @@ export function StudentGPATrendChart({ data }: StudentGPATrendChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="nb-card">
-        <h3 className="font-display font-semibold text-lg mb-4">
+      <div className="edu-card">
+        <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">
           Xu hướng GPA theo học kỳ
         </h3>
-        <div className="flex items-center justify-center h-[250px] text-gray-500">
+        <div className="flex items-center justify-center h-[250px] text-edu-ink-light dark:text-edu-dark-text-dim">
           Chưa có dữ liệu GPA
         </div>
       </div>
@@ -38,8 +38,8 @@ export function StudentGPATrendChart({ data }: StudentGPATrendChartProps) {
   }
 
   return (
-    <div className="nb-card">
-      <h3 className="font-display font-semibold text-lg mb-4">
+    <div className="edu-card">
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">
         Xu hướng GPA theo học kỳ
       </h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
@@ -49,27 +49,28 @@ export function StudentGPATrendChart({ data }: StudentGPATrendChartProps) {
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#4a4a4a' : '#ddd'}
+            stroke={isDark ? '#334155' : '#E2E8F0'}
           />
           <XAxis
             dataKey="semester"
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
           />
           <YAxis
             domain={[0, 4]}
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
             allowDecimals={true}
           />
           <Tooltip
+            cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const item = payload[0].payload as StudentGPABySemesterItem;
                 return (
                   <div
-                    className={`px-3 py-2 border-2 rounded shadow-neo-sm ${
+                    className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
                       isDark
-                        ? 'bg-nb-dark-section border-nb-dark-border text-nb-dark-text'
-                        : 'bg-white border-black'
+                        ? 'bg-edu-dark-surface border border-edu-dark-border text-edu-dark-text'
+                        : 'bg-white border border-edu-border text-edu-ink'
                     }`}
                   >
                     <p className="font-semibold">{item.semester}</p>
@@ -95,19 +96,19 @@ export function StudentGPATrendChart({ data }: StudentGPATrendChartProps) {
           <Line
             type="monotone"
             dataKey="gpa4"
-            stroke={isDark ? '#D4AF37' : '#7868D8'}
+            stroke={isDark ? '#F59E0B' : '#0D9488'}
             strokeWidth={3}
             dot={{
-              fill: isDark ? '#D4AF37' : '#7868D8',
-              stroke: isDark ? '#393947' : '#111',
-              strokeWidth: 2,
-              r: 5,
+              fill: isDark ? '#F59E0B' : '#0D9488',
+              stroke: "transparent",
+              strokeWidth: 0,
+              r: 4,
             }}
             activeDot={{
-              fill: isDark ? '#e5c350' : '#FFE76A',
-              stroke: isDark ? '#393947' : '#111',
-              strokeWidth: 2,
-              r: 7,
+              fill: isDark ? '#FBBF24' : '#14B8A6',
+              stroke: "transparent",
+              strokeWidth: 0,
+              r: 6,
             }}
           />
         </LineChart>
