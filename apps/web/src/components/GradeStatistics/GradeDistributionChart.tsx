@@ -8,6 +8,7 @@ import {
   Cell,
 } from 'recharts';
 import type { GradeStatistics } from '../../lib/grades';
+import { useTheme } from '../../lib/themeHooks';
 
 interface GradeDistributionChartProps {
   statistics: GradeStatistics;
@@ -33,6 +34,8 @@ export function GradeDistributionChart({
   hasSearch = false,
 }: GradeDistributionChartProps) {
   const { distribution, byCourse } = statistics;
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
 
   // Only show course-by-course chart when searching for specific student
   if (hasSearch && byCourse && byCourse.length > 0) {
@@ -61,15 +64,24 @@ export function GradeDistributionChart({
                 interval={0}
               />
               <Tooltip
+                cursor={false}
                 formatter={(value: number) => [value.toFixed(2), 'Điểm TB']}
                 labelFormatter={(label) => {
                   const course = courseData.find((c) => c.name === label);
                   return course?.fullName || label;
                 }}
                 contentStyle={{
-                  border: '2px solid black',
-                  borderRadius: '4px',
-                  backgroundColor: 'white',
+                  border: isDark ? '1px solid #334155' : '1px solid #E2E8F0',
+                  borderRadius: '8px',
+                  backgroundColor: isDark ? '#1A2332' : 'white',
+                  color: isDark ? '#F1F5F9' : '#0F172A',
+                }}
+                labelStyle={{
+                  color: isDark ? '#F1F5F9' : '#0F172A',
+                  fontWeight: 600,
+                }}
+                itemStyle={{
+                  color: isDark ? '#F1F5F9' : '#0F172A',
                 }}
               />
               <Bar dataKey="total" radius={[0, 4, 4, 0]}>
@@ -133,14 +145,23 @@ export function GradeDistributionChart({
             <XAxis type="number" allowDecimals={false} />
             <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 12 }} />
             <Tooltip
+              cursor={false}
               formatter={(value: number) => [
                 `${value} (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`,
                 'Số lượng',
               ]}
               contentStyle={{
-                border: '2px solid black',
-                borderRadius: '4px',
-                backgroundColor: 'white',
+                border: isDark ? '1px solid #334155' : '1px solid #E2E8F0',
+                borderRadius: '8px',
+                backgroundColor: isDark ? '#1A2332' : 'white',
+                color: isDark ? '#F1F5F9' : '#0F172A',
+              }}
+              labelStyle={{
+                color: isDark ? '#F1F5F9' : '#0F172A',
+                fontWeight: 600,
+              }}
+              itemStyle={{
+                color: isDark ? '#F1F5F9' : '#0F172A',
               }}
             />
             <Bar dataKey="count" radius={[0, 4, 4, 0]}>

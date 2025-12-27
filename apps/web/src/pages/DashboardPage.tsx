@@ -16,9 +16,9 @@ import { StudentChartsSection } from '../components/DashboardCharts/StudentChart
 
 // Config cho metric cards (Admin/Teacher)
 const METRIC_CONFIG = [
-  { key: 'totalStudents', label: 'Sinh viên', bg: 'bg-nb-mint' },
-  { key: 'totalClasses', label: 'Lớp học', bg: 'bg-nb-sky' },
-  { key: 'totalCourses', label: 'Môn học', bg: 'bg-nb-tangerine' },
+  { key: 'totalStudents', label: 'Sinh viên', variant: 'primary' },
+  { key: 'totalClasses', label: 'Lớp học', variant: 'accent' },
+  { key: 'totalCourses', label: 'Môn học', variant: 'secondary' },
 ] as const;
 
 // Map loại activity sang label tiếng Việt
@@ -49,13 +49,16 @@ const StudentDashboard = () => {
   if (isLoading) {
     return (
       <section className="space-y-6">
-        <header>
-          <div className="nb-card--flat">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-          </div>
+        <header className="edu-page-header">
+          <h1 className="edu-page-title">Dashboard</h1>
         </header>
-        <div className="nb-card">
-          <p className="text-center py-8">Đang tải thông tin...</p>
+        <div className="edu-card">
+          <div className="flex items-center justify-center py-12">
+            <div className="edu-loading">
+              <div className="edu-loading-spinner"></div>
+              <span>Đang tải thông tin...</span>
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -67,13 +70,12 @@ const StudentDashboard = () => {
       axiosError?.response?.data?.message || 'Không thể tải dữ liệu';
     return (
       <section className="space-y-6">
-        <header>
-          <div className="nb-card--flat">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-          </div>
+        <header className="edu-page-header">
+          <h1 className="edu-page-title">Dashboard</h1>
         </header>
-        <div className="nb-card bg-nb-coral/20">
-          <p className="text-center py-8 text-nb-coral">{errorMessage}</p>
+        <div className="edu-alert edu-alert--error" role="alert">
+          <span className="text-lg">⚠️</span>
+          <p className="font-medium">{errorMessage}</p>
         </div>
       </section>
     );
@@ -84,86 +86,92 @@ const StudentDashboard = () => {
     : null;
 
   return (
-    <section className="space-y-6">
-      <header>
-        <div className="nb-card--flat">
-          <h1 className="text-2xl font-bold">
-            Xin chào, {dashboard?.profile.fullName}!
-          </h1>
-          <p className="mt-1 text-sm opacity-70">
-            MSSV: {dashboard?.profile.mssv} | Lớp:{' '}
-            {dashboard?.profile.className || 'Chưa phân lớp'}
-          </p>
-        </div>
+    <section className="space-y-6" aria-labelledby="dashboard-title">
+      <header className="edu-page-header">
+        <h1 id="dashboard-title" className="edu-page-title">
+          Xin chào, {dashboard?.profile.fullName}!
+        </h1>
+        <p className="edu-page-subtitle">
+          MSSV: {dashboard?.profile.mssv} • Lớp: {dashboard?.profile.className || 'Chưa phân lớp'}
+        </p>
       </header>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="nb-card bg-nb-mint">
-          <h2 className="text-sm font-semibold">Môn đã đăng ký</h2>
-          <p className="mt-2 text-4xl font-extrabold">
+      <div 
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        role="region"
+        aria-label="Thống kê tổng quan"
+      >
+        <article className="edu-stat-card edu-stat-card--primary">
+          <h2 className="text-sm font-medium opacity-90">Môn đã đăng ký</h2>
+          <p className="mt-2 text-4xl font-bold" aria-label={`${dashboard?.stats.totalEnrollments ?? 0} môn`}>
             {dashboard?.stats.totalEnrollments ?? 0}
           </p>
-        </div>
-        <div className="nb-card bg-nb-sky">
-          <h2 className="text-sm font-semibold">Tổng tín chỉ</h2>
-          <p className="mt-2 text-4xl font-extrabold">
+        </article>
+        <article className="edu-stat-card edu-stat-card--accent">
+          <h2 className="text-sm font-medium opacity-90">Tổng tín chỉ</h2>
+          <p className="mt-2 text-4xl font-bold" aria-label={`${dashboard?.stats.totalCredits ?? 0} tín chỉ`}>
             {dashboard?.stats.totalCredits ?? 0}
           </p>
-        </div>
-        <div className="nb-card bg-nb-lilac">
-          <h2 className="text-sm font-semibold">Điểm TB (GPA)</h2>
-          <p className="mt-2 text-4xl font-extrabold">
+        </article>
+        <article className="edu-stat-card edu-stat-card--secondary">
+          <h2 className="text-sm font-medium opacity-90">Điểm TB (GPA)</h2>
+          <p className="mt-2 text-4xl font-bold">
             {dashboard?.stats.gpa !== null
               ? dashboard?.stats.gpa.toFixed(2)
-              : 'Chưa có'}
+              : '—'}
           </p>
           {gpaClassification && (
-            <p className="mt-1 text-sm font-medium">{gpaClassification}</p>
+            <p className="mt-1 text-sm font-medium opacity-90">{gpaClassification}</p>
           )}
-        </div>
+        </article>
       </div>
 
       {/* Charts Section */}
       <StudentChartsSection />
 
       {/* Recent Grades */}
-      <div className="nb-card bg-white dark:bg-nb-dark-card">
+      <div className="edu-card">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Điểm gần đây</h2>
-          <Link to="/my-grades" className="nb-btn nb-btn--secondary text-sm">
-            Xem tất cả
+          <h2 className="text-lg font-semibold text-edu-ink dark:text-edu-dark-text">Điểm gần đây</h2>
+          <Link 
+            to="/my-grades" 
+            className="edu-btn edu-btn--ghost text-sm"
+            aria-label="Xem tất cả điểm số"
+          >
+            Xem tất cả →
           </Link>
         </div>
 
         {dashboard?.recentGrades && dashboard.recentGrades.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border border-edu-border dark:border-edu-dark-border" role="region" aria-label="Bảng điểm gần đây" tabIndex={0}>
+            <table className="w-full" aria-label="Điểm gần đây">
               <thead>
-                <tr className="border-b-2 border-black dark:border-nb-dark-border">
-                  <th className="text-left py-2 px-3">Môn học</th>
-                  <th className="text-center py-2 px-3">Tín chỉ</th>
-                  <th className="text-center py-2 px-3">Điểm</th>
-                  <th className="text-center py-2 px-3">Xếp loại</th>
+                <tr>
+                  <th scope="col">Môn học</th>
+                  <th scope="col" className="text-center">Tín chỉ</th>
+                  <th scope="col" className="text-center">Điểm</th>
+                  <th scope="col" className="text-center">Xếp loại</th>
                 </tr>
               </thead>
               <tbody>
                 {dashboard.recentGrades.map((grade, index) => (
                   <tr
                     key={index}
-                    className="border-b border-gray-200 dark:border-gray-700"
+                    tabIndex={0}
                   >
-                    <td className="py-2 px-3">
-                      <span className="font-medium">{grade.courseCode}</span> -{' '}
-                      {grade.courseName}
+                    <td>
+                      <span className="font-semibold text-edu-ink dark:text-edu-dark-text">{grade.courseCode}</span>
+                      <span className="text-edu-ink-light dark:text-edu-dark-text-dim"> — {grade.courseName}</span>
                     </td>
-                    <td className="text-center py-2 px-3">{grade.credits}</td>
-                    <td className="text-center py-2 px-3 font-semibold">
-                      {grade.total !== null ? grade.total.toFixed(2) : '-'}
+                    <td className="text-center">{grade.credits}</td>
+                    <td className="text-center font-semibold">
+                      {grade.total !== null ? grade.total.toFixed(2) : '—'}
                     </td>
-                    <td className="text-center py-2 px-3">
+                    <td className="text-center">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded border-2 border-black dark:border-nb-dark-border ${getClassificationColor(grade.classification)}`}
+                        className={`edu-badge ${getClassificationBadge(grade.classification)}`}
+                        role="status"
                       >
                         {grade.classification}
                       </span>
@@ -174,7 +182,7 @@ const StudentDashboard = () => {
             </table>
           </div>
         ) : (
-          <p className="text-center py-4 text-sm opacity-70">
+          <p className="text-center py-8 text-edu-ink-light dark:text-edu-dark-text-dim" role="status">
             Chưa có điểm nào
           </p>
         )}
@@ -183,18 +191,33 @@ const StudentDashboard = () => {
   );
 };
 
+function getClassificationBadge(classification: string): string {
+  switch (classification) {
+    case 'Giỏi':
+      return 'edu-badge--success';
+    case 'Khá':
+      return 'edu-badge--info';
+    case 'Trung bình':
+      return 'edu-badge--warning';
+    case 'Yếu':
+      return 'edu-badge--error';
+    default:
+      return 'edu-badge--primary';
+  }
+}
+
 function getClassificationColor(classification: string): string {
   switch (classification) {
     case 'Giỏi':
-      return 'bg-nb-mint';
+      return 'bg-edu-success-light text-edu-success';
     case 'Khá':
-      return 'bg-nb-sky';
+      return 'bg-edu-info-light text-edu-info';
     case 'Trung bình':
-      return 'bg-nb-tangerine';
+      return 'bg-edu-warning-light text-edu-warning';
     case 'Yếu':
-      return 'bg-nb-coral';
+      return 'bg-edu-error-light text-edu-error';
     default:
-      return 'bg-gray-200 dark:bg-gray-700';
+      return 'bg-edu-muted text-edu-ink-light dark:bg-edu-dark-muted dark:text-edu-dark-text-dim';
   }
 }
 
@@ -237,7 +260,7 @@ const AdminDashboard = () => {
         cell: (info) => {
           const type = info.getValue() as ActivityItem['type'];
           return (
-            <span className="px-2 py-1 text-xs font-medium rounded border-2 border-black dark:border-nb-dark-border bg-nb-lilac">
+            <span className="edu-badge edu-badge--primary">
               {ACTIVITY_TYPE_LABELS[type]}
             </span>
           );
@@ -268,34 +291,42 @@ const AdminDashboard = () => {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const getVariantClass = (variant: string) => {
+    switch (variant) {
+      case 'primary': return 'edu-stat-card--primary';
+      case 'accent': return 'edu-stat-card--accent';
+      case 'secondary': return 'edu-stat-card--secondary';
+      default: return 'edu-stat-card--primary';
+    }
+  };
+
   return (
     <section className="space-y-6">
-      <header>
-        <div className="nb-card--flat">
-          <h1 className="text-2xl font-bold">Tổng quan hệ thống</h1>
-          <p className="mt-1 text-sm opacity-70">
-            Hiển thị số lượng sinh viên, lớp học, môn học và thông tin tóm tắt.
-          </p>
-        </div>
+      <header className="edu-page-header">
+        <h1 className="edu-page-title">Tổng quan hệ thống</h1>
+        <p className="edu-page-subtitle">
+          Quản lý sinh viên, lớp học, môn học và theo dõi hoạt động.
+        </p>
       </header>
 
       {/* Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {METRIC_CONFIG.map(({ key, label, bg }) => (
-          <div key={key} className={'nb-card ' + bg}>
-            <h2 className="text-sm font-semibold">{label}</h2>
+        {METRIC_CONFIG.map(({ key, label, variant }) => (
+          <article key={key} className={`edu-stat-card ${getVariantClass(variant)}`}>
+            <h2 className="text-sm font-medium opacity-90">{label}</h2>
             {statsLoading ? (
-              <p className="mt-2 text-sm opacity-70">Đang tải dữ liệu…</p>
+              <div className="mt-3 flex items-center gap-2">
+                <div className="edu-loading-spinner w-4 h-4 border-white/30 border-t-white"></div>
+                <span className="text-sm opacity-70">Đang tải...</span>
+              </div>
             ) : statsError ? (
-              <p className="mt-2 text-sm text-nb-coral">
-                Không thể tải dữ liệu
-              </p>
+              <p className="mt-2 text-sm opacity-70">Không thể tải</p>
             ) : (
-              <p className="mt-2 text-4xl font-extrabold">
+              <p className="mt-2 text-4xl font-bold">
                 {stats?.[key] ?? 0}
               </p>
             )}
-          </div>
+          </article>
         ))}
       </div>
 
@@ -303,13 +334,14 @@ const AdminDashboard = () => {
       <DashboardChartsSection />
 
       {/* Recent Activities Section */}
-      <div className="nb-card bg-white dark:bg-nb-dark-card">
-        <h2 className="text-xl font-bold mb-4">Hoạt động gần đây</h2>
+      <div className="edu-card">
+        <h2 className="text-lg font-semibold text-edu-ink dark:text-edu-dark-text mb-4">Hoạt động gần đây</h2>
 
         {activitiesError ? (
-          <p className="text-sm text-nb-coral">
-            Không thể tải hoạt động gần đây
-          </p>
+          <div className="edu-alert edu-alert--error">
+            <span>⚠️</span>
+            <p>Không thể tải hoạt động gần đây</p>
+          </div>
         ) : (
           <DataTable
             table={table}

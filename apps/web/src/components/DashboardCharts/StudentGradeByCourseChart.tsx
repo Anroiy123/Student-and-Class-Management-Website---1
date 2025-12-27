@@ -36,9 +36,9 @@ export function StudentGradeByCourseChart({ data }: StudentGradeByCourseChartPro
 
   if (data.length === 0) {
     return (
-      <div className="nb-card">
-        <h3 className="font-display font-semibold text-lg mb-4">Điểm theo môn học</h3>
-        <div className="flex items-center justify-center h-[250px] text-gray-500">
+      <div className="edu-card">
+        <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">Điểm theo môn học</h3>
+        <div className="flex items-center justify-center h-[250px] text-edu-ink-light dark:text-edu-dark-text-dim">
           Chưa có dữ liệu điểm
         </div>
       </div>
@@ -46,8 +46,8 @@ export function StudentGradeByCourseChart({ data }: StudentGradeByCourseChartPro
   }
 
   return (
-    <div className="nb-card">
-      <h3 className="font-display font-semibold text-lg mb-4">Điểm theo môn học</h3>
+    <div className="edu-card">
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">Điểm theo môn học</h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <BarChart
           data={chartData}
@@ -56,32 +56,33 @@ export function StudentGradeByCourseChart({ data }: StudentGradeByCourseChartPro
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#4a4a4a' : '#ddd'}
+            stroke={isDark ? '#334155' : '#E2E8F0'}
             horizontal={true}
             vertical={false}
           />
           <XAxis
             type="number"
             domain={[0, 10]}
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
             allowDecimals={true}
           />
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
             width={55}
           />
           <Tooltip
+            cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const item = payload[0].payload as StudentGradeByCourseItem & { name: string };
                 return (
                   <div
-                    className={`px-3 py-2 border-2 rounded shadow-neo-sm ${
+                    className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
                       isDark
-                        ? 'bg-nb-dark-section border-nb-dark-border text-nb-dark-text'
-                        : 'bg-white border-black'
+                        ? 'bg-edu-dark-surface border border-edu-dark-border text-edu-dark-text'
+                        : 'bg-white border border-edu-border text-edu-ink'
                     }`}
                   >
                     <p className="font-semibold">{item.courseName}</p>
@@ -96,9 +97,9 @@ export function StudentGradeByCourseChart({ data }: StudentGradeByCourseChartPro
           />
           <Bar
             dataKey="total"
-            fill={isDark ? '#9AD9FF' : '#9AD9FF'}
-            stroke={isDark ? '#393947' : '#111'}
-            strokeWidth={2}
+            fill={isDark ? '#60A5FA' : '#0D9488'}
+            stroke="transparent"
+            strokeWidth={0}
             radius={[0, 4, 4, 0]}
           />
         </BarChart>

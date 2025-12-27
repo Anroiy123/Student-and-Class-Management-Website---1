@@ -25,37 +25,73 @@ export function Pager({ page, pageSize, total, onChangePage }: PagerProps) {
     return arr;
   }, [page, totalPages]);
 
+  // Calculate displayed range
+  const startItem = (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, total);
+
   return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        className="nb-btn nb-btn--secondary"
-        disabled={!canPrev}
-        onClick={() => canPrev && onChangePage(page - 1)}
+    <nav 
+      className="flex flex-col sm:flex-row items-center justify-between gap-4"
+      aria-label="Điều hướng phân trang"
+    >
+      {/* Page info for screen readers and visual users */}
+      <div 
+        className="text-sm text-edu-ink-light dark:text-edu-dark-text-dim"
+        aria-live="polite"
+        aria-atomic="true"
       >
-        Trước
-      </button>
-      {pages.map((p) => (
+        Hiển thị <span className="font-medium text-edu-ink dark:text-edu-dark-text">{startItem}-{endItem}</span> trong tổng số <span className="font-medium text-edu-ink dark:text-edu-dark-text">{total}</span> kết quả
+      </div>
+
+      {/* Pagination controls */}
+      <div className="flex items-center gap-1" role="group" aria-label="Các nút phân trang">
         <button
-          key={p}
           type="button"
-          className={
-            p === page ? 'nb-btn nb-btn--primary' : 'nb-btn nb-btn--ghost'
-          }
-          onClick={() => onChangePage(p)}
+          className="edu-btn edu-btn--ghost px-3"
+          disabled={!canPrev}
+          onClick={() => canPrev && onChangePage(page - 1)}
+          aria-label="Trang trước"
+          aria-disabled={!canPrev}
         >
-          {p}
+          <span aria-hidden="true">←</span>
+          <span className="hidden sm:inline"> Trước</span>
         </button>
-      ))}
-      <button
-        type="button"
-        className="nb-btn nb-btn--secondary"
-        disabled={!canNext}
-        onClick={() => canNext && onChangePage(page + 1)}
-      >
-        Sau
-      </button>
-    </div>
+        
+        {pages.map((p) => (
+          <button
+            key={p}
+            type="button"
+            className={
+              p === page 
+                ? 'edu-btn edu-btn--primary px-3.5' 
+                : 'edu-btn edu-btn--ghost px-3.5'
+            }
+            onClick={() => onChangePage(p)}
+            aria-label={`Trang ${p}${p === page ? ', trang hiện tại' : ''}`}
+            aria-current={p === page ? 'page' : undefined}
+          >
+            {p}
+          </button>
+        ))}
+        
+        <button
+          type="button"
+          className="edu-btn edu-btn--ghost px-3"
+          disabled={!canNext}
+          onClick={() => canNext && onChangePage(page + 1)}
+          aria-label="Trang sau"
+          aria-disabled={!canNext}
+        >
+          <span className="hidden sm:inline">Sau </span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      {/* Screen reader announcement */}
+      <span className="sr-only" role="status" aria-live="polite">
+        Đang ở trang {page} trong tổng số {totalPages} trang
+      </span>
+    </nav>
   );
 }
 

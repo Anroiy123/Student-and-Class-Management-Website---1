@@ -27,9 +27,9 @@ export function StudentComponentComparisonChart({ data }: StudentComponentCompar
 
   if (data.count === 0) {
     return (
-      <div className="nb-card">
-        <h3 className="font-display font-semibold text-lg mb-4">So sánh điểm thành phần</h3>
-        <div className="flex items-center justify-center h-[250px] text-gray-500">
+      <div className="edu-card">
+        <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">So sánh điểm thành phần</h3>
+        <div className="flex items-center justify-center h-[250px] text-edu-ink-light dark:text-edu-dark-text-dim">
           Chưa có dữ liệu điểm
         </div>
       </div>
@@ -46,32 +46,33 @@ export function StudentComponentComparisonChart({ data }: StudentComponentCompar
   ];
 
   return (
-    <div className="nb-card">
-      <h3 className="font-display font-semibold text-lg mb-4">So sánh điểm thành phần</h3>
+    <div className="edu-card">
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">So sánh điểm thành phần</h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#4a4a4a' : '#ddd'}
+            stroke={isDark ? '#334155' : '#E2E8F0'}
           />
           <XAxis
             dataKey="name"
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
           />
           <YAxis
             domain={[0, 10]}
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
             allowDecimals={true}
           />
           <Tooltip
+            cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 return (
                   <div
-                    className={`px-3 py-2 border-2 rounded shadow-neo-sm ${
+                    className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
                       isDark
-                        ? 'bg-nb-dark-section border-nb-dark-border text-nb-dark-text'
-                        : 'bg-white border-black'
+                        ? 'bg-edu-dark-surface border border-edu-dark-border text-edu-dark-text'
+                        : 'bg-white border border-edu-border text-edu-ink'
                     }`}
                   >
                     <p className="font-semibold mb-1">Điểm trung bình</p>
@@ -88,28 +89,29 @@ export function StudentComponentComparisonChart({ data }: StudentComponentCompar
           />
           <Legend
             wrapperStyle={{
-              color: isDark ? '#e5e5e5' : '#111',
+              color: isDark ? '#94A3B8' : '#475569',
+              fontSize: '12px',
             }}
           />
           <Bar
             dataKey="Chuyên cần"
-            fill={isDark ? '#8AC186' : '#8AC186'}
-            stroke={isDark ? '#393947' : '#111'}
-            strokeWidth={2}
+            fill={isDark ? '#34D399' : '#059669'}
+            stroke="transparent"
+            strokeWidth={0}
             radius={[4, 4, 0, 0]}
           />
           <Bar
             dataKey="Giữa kỳ"
-            fill={isDark ? '#9AD9FF' : '#9AD9FF'}
-            stroke={isDark ? '#393947' : '#111'}
-            strokeWidth={2}
+            fill={isDark ? '#38BDF8' : '#0284C7'}
+            stroke="transparent"
+            strokeWidth={0}
             radius={[4, 4, 0, 0]}
           />
           <Bar
             dataKey="Cuối kỳ"
-            fill={isDark ? '#D4AF37' : '#FFE76A'}
-            stroke={isDark ? '#393947' : '#111'}
-            strokeWidth={2}
+            fill={isDark ? '#FBBF24' : '#D97706'}
+            stroke="transparent"
+            strokeWidth={0}
             radius={[4, 4, 0, 0]}
           />
         </BarChart>

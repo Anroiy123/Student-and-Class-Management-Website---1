@@ -1,10 +1,17 @@
 import type { RequestHandler } from 'express';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { GradeModel } from '../models/grade.model';
 import { EnrollmentModel } from '../models/enrollment.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getTeacherAccessScope } from '../utils/teacherAccess';
+
+// Get fonts directory path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const FONTS_DIR = path.resolve(__dirname, '../../../fonts');
 
 const computeClassification = (total: number): string => {
   if (total >= 8) return 'Giỏi';
@@ -207,6 +214,10 @@ async function generatePDFReport(res: any, grades: any[]) {
     layout: 'landscape',
   });
 
+  // Register Vietnamese-compatible fonts
+  doc.registerFont('Roboto', path.join(FONTS_DIR, 'Roboto-Regular.ttf'));
+  doc.registerFont('Roboto-Bold', path.join(FONTS_DIR, 'Roboto-Bold.ttf'));
+
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader(
     'Content-Disposition',
@@ -215,12 +226,12 @@ async function generatePDFReport(res: any, grades: any[]) {
 
   doc.pipe(res);
 
-  doc.fontSize(18).font('Helvetica-Bold').text('BÁO CÁO ĐIỂM SINH VIÊN', {
+  doc.fontSize(18).font('Roboto-Bold').text('BÁO CÁO ĐIỂM SINH VIÊN', {
     align: 'center',
   });
   doc.moveDown();
 
-  doc.fontSize(10).font('Helvetica');
+  doc.fontSize(10).font('Roboto');
 
   const tableTop = 120;
   const rowHeight = 25;
@@ -251,7 +262,7 @@ async function generatePDFReport(res: any, grades: any[]) {
     doc
       .fillColor('#000000')
       .fontSize(9)
-      .font('Helvetica-Bold')
+      .font('Roboto-Bold')
       .text(header, x + 5, currentY + 8, {
         width: colWidths[i] - 10,
         align: 'center',
@@ -293,7 +304,7 @@ async function generatePDFReport(res: any, grades: any[]) {
       doc
         .fillColor('#000000')
         .fontSize(8)
-        .font('Helvetica')
+        .font('Roboto')
         .text(data, x + 5, currentY + 8, {
           width: colWidths[i] - 10,
           align: 'center',
