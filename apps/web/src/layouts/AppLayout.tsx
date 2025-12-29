@@ -3,6 +3,7 @@ import { useState, useEffect, type ReactNode, useCallback } from 'react';
 import { clsx } from 'clsx';
 import { useAuth } from '../lib/authHooks';
 import { useTheme } from '../lib/themeHooks';
+import { NotificationBell } from '../components/NotificationBell';
 import type { UserRole } from '../lib/authContext';
 
 type NavItem = {
@@ -43,6 +44,11 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Quản lý tài khoản',
     path: '/users',
     roles: ['ADMIN'],
+  },
+  {
+    label: 'Gửi thông báo',
+    path: '/send-notification',
+    roles: ['ADMIN', 'TEACHER'],
   },
   // Student items
   {
@@ -204,6 +210,7 @@ export const AppLayout = () => {
                         {user.role === 'STUDENT' && 'Sinh viên'}
                       </p>
                     </div>
+                    <NotificationBell isCollapsed={false} />
                   </div>
                   <button
                     type="button"

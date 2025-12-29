@@ -11,6 +11,7 @@ export const listEnrollments: RequestHandler = asyncHandler(
     const filter: Record<string, unknown> = {};
 
     // Apply teacher scope filtering
+    let teacherScope: { classIds: any[]; courseIds: any[] } | null = null;
     if (req.user) {
       const scope = await getTeacherAccessScope(req.user);
       if (scope) {
@@ -19,6 +20,7 @@ export const listEnrollments: RequestHandler = asyncHandler(
           // Unlinked teacher - return empty
           return res.json([]);
         }
+        teacherScope = scope;
         filter.$or = [
           { classId: { $in: scope.classIds } },
           { courseId: { $in: scope.courseIds } },
@@ -32,11 +34,52 @@ export const listEnrollments: RequestHandler = asyncHandler(
     }
 
     if (req.query.classId) {
-      filter.classId = req.query.classId;
+      if (teacherScope) {
+        // For teachers, need to check if classId is in their scope and rebuild the $or
+        const hasClassAccess = teacherScope.classIds.some(
+          (id) => id.toString() === req.query.classId
+        );
+        if (!hasClassAccess) {
+          return res.json([]);
+        }
+        // Rebuild filter to combine scope and specific classId filter
+        filter.$or = [
+          { classId: req.query.classId },
+        ];
+        // Also allow their courses to still be visible with this class
+        if (teacherScope.courseIds.length > 0) {
+          filter.$or.push({ courseId: { $in: teacherScope.courseIds }, classId: req.query.classId });
+        }
+      } else {
+        filter.classId = req.query.classId;
+      }
     }
 
     if (req.query.courseId) {
-      filter.courseId = req.query.courseId;
+      if (teacherScope) {
+        // For teachers, need to check if courseId is in their scope
+        const hasCourseAccess = teacherScope.courseIds.some(
+          (id) => id.toString() === req.query.courseId
+        );
+        if (!hasCourseAccess) {
+          return res.json([]);
+        }
+        // Rebuild filter to combine scope and specific courseId filter
+        if (req.query.classId) {
+          // Both classId and courseId specified - very specific filter
+          filter.$or = [{ classId: req.query.classId, courseId: req.query.courseId }];
+        } else {
+          filter.$or = [
+            { courseId: req.query.courseId },
+          ];
+          // Also allow their classes to still be visible with this course
+          if (teacherScope.classIds.length > 0) {
+            filter.$or.push({ classId: { $in: teacherScope.classIds }, courseId: req.query.courseId });
+          }
+        }
+      } else {
+        filter.courseId = req.query.courseId;
+      }
     }
 
     if (req.query.semester) {

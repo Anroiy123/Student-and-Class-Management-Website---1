@@ -49,6 +49,9 @@ export const GradesPage = () => {
   const [searchValue, setSearchValue] = useState<string>(
     searchParams.get('searchValue') || '',
   );
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState<string>(
+    searchParams.get('searchValue') || '',
+  );
   const [classId, setClassId] = useState<string>(
     searchParams.get('classId') || '',
   );
@@ -86,11 +89,20 @@ export const GradesPage = () => {
       classId: appliedFilters.classId || undefined,
       courseId: appliedFilters.courseId || undefined,
       semester: appliedFilters.semester || undefined,
-      search: searchValue || undefined,
+      search: debouncedSearchValue || undefined,
       searchField: selectedField,
     }),
-    [page, pageSize, appliedFilters, searchValue, selectedField],
+    [page, pageSize, appliedFilters, debouncedSearchValue, selectedField],
   );
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchValue(searchValue);
+    }, 500); // Chờ 500ms sau khi người dùng ngừng gõ
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
 
   // Auto-apply filters when classId or courseId changes
   useEffect(() => {
@@ -104,15 +116,15 @@ export const GradesPage = () => {
     }
   }, [classId, courseId, semester]);
 
-  // Check if filters have been applied (even if empty - "Tất cả")
-  const hasActiveFilters = hasAppliedOnce;
+  // Check if filters have been applied OR if there's a search value
+  const hasActiveFilters = hasAppliedOnce || debouncedSearchValue.trim() !== '';
 
   useEffect(() => {
     const s = new URLSearchParams();
     s.set('page', String(page));
     s.set('pageSize', String(pageSize));
     s.set('selectedField', selectedField);
-    if (searchValue) s.set('searchValue', searchValue);
+    if (debouncedSearchValue) s.set('searchValue', debouncedSearchValue);
     if (appliedFilters.classId) s.set('classId', appliedFilters.classId);
     if (appliedFilters.courseId) s.set('courseId', appliedFilters.courseId);
     if (appliedFilters.semester) s.set('semester', appliedFilters.semester);
@@ -121,7 +133,7 @@ export const GradesPage = () => {
     page,
     pageSize,
     selectedField,
-    searchValue,
+    debouncedSearchValue,
     appliedFilters,
     setSearchParams,
   ]);
@@ -190,7 +202,7 @@ export const GradesPage = () => {
         classId: appliedFilters.classId || undefined,
         courseId: appliedFilters.courseId || undefined,
         semester: appliedFilters.semester || undefined,
-        search: searchValue || undefined,
+        search: debouncedSearchValue || undefined,
         searchField: selectedField,
       },
       {

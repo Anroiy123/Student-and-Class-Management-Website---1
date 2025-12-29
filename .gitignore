@@ -16,6 +16,7 @@ apps/api/dist
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Misc
 .DS_Store

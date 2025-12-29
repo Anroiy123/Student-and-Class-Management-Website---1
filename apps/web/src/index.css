@@ -99,6 +99,27 @@
     color: #0C1222;
   }
 
+  /* Notification Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
   /* Skip Link */
   .skip-link {
     @apply fixed top-0 left-1/2 -translate-x-1/2 z-50;
@@ -149,7 +170,7 @@
      ======================================== */
   .edu-card {
     @apply bg-edu-surface border border-edu-border rounded-lg p-5 md:p-6;
-    @apply shadow-card transition-shadow duration-200;
+    @apply shadow-card transition-all duration-200 ease-in-out;
   }
 
   .edu-card:hover {
@@ -220,8 +241,8 @@
     @apply inline-flex items-center justify-center gap-2;
     @apply px-4 py-2.5 font-medium text-sm;
     @apply rounded-lg border;
-    @apply transition-all duration-150;
-    min-height: 40px;
+    @apply transition-all duration-200 ease-in-out;
+    min-height: 44px; /* Touch-optimized */
   }
 
   .edu-btn:hover {
@@ -229,11 +250,17 @@
   }
 
   .edu-btn:active {
-    @apply transform translate-y-0;
+    @apply transform translate-y-0 scale-95;
   }
 
   .edu-btn:disabled {
     @apply opacity-50 cursor-not-allowed transform-none;
+  }
+
+  /* Touch manipulation for better mobile interaction */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Primary Button */
@@ -312,9 +339,9 @@
     @apply w-full bg-edu-surface border border-edu-border;
     @apply px-4 py-2.5 text-sm text-edu-ink;
     @apply rounded-lg shadow-inner-soft;
-    @apply transition-all duration-150;
+    @apply transition-all duration-200 ease-in-out;
     @apply placeholder:text-edu-ink-muted;
-    min-height: 42px;
+    min-height: 44px; /* Touch-optimized */
   }
 
   .edu-input:focus {

@@ -131,6 +131,14 @@ export const StudentsPage = () => {
   const [editStudent, setEditStudent] = useState<StudentListItem | null>(null);
   const { mutateAsync: deleteMutate } = useDeleteStudent();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    imported: number;
+    failed: number;
+    errors?: string[];
+  } | null>(null);
 
   const columns = useMemo<ColumnDef<StudentListItem>[]>(
     () => [
@@ -268,26 +276,107 @@ export const StudentsPage = () => {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      
+      const response = await fetch(`${API_BASE_URL}/students/template/excel`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể tải file mẫu');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mau-danh-sach-sinh-vien.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error: any) {
+      alert(error.message || 'Không thể tải file mẫu. Vui lòng thử lại.');
+    }
+  };
+
+  const handleImportExcel = async () => {
+    if (!importFile) {
+      alert('Vui lòng chọn file Excel');
+      return;
+    }
+
+    setImporting(true);
+    setImportResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', importFile);
+
+      const token = localStorage.getItem('accessToken');
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
+      const response = await fetch(`${API_BASE_URL}/students/import/excel`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Import thất bại');
+      }
+
+      setImportResult(result);
+
+      // Refetch students list
+      if (result.imported > 0) {
+        window.location.reload();
+      }
+    } catch (error: any) {
+      alert(error.message || 'Import thất bại. Vui lòng thử lại.');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
-    <section className="space-y-6">
-      <header className="flex flex-col md:flex-row items-start justify-between gap-4">
-        <div className="nb-card--flat w-full">
-          <h1 className="text-2xl md:text-3xl font-bold">Quản lý sinh viên</h1>
-          <p className="mt-1 text-sm opacity-70">
+    <section className="space-y-4 sm:space-y-6 transition-all duration-200">
+      <header className="flex flex-col lg:flex-row items-start justify-between gap-3 sm:gap-4">
+        <div className="nb-card--flat w-full transition-all duration-200">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold transition-all duration-200">Quản lý sinh viên</h1>
+          <p className="mt-1 text-xs sm:text-sm opacity-70">
             Danh sách sinh viên, tìm kiếm, phân trang, thêm/sửa/xóa.
           </p>
         </div>
         {isAdmin && (
-          <div className="shrink-0 w-full md:w-auto">
+          <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row lg:flex-col gap-2 transition-all duration-200">
             <button
               type="button"
-              className="nb-btn nb-btn--primary w-full md:w-auto"
+              className="nb-btn nb-btn--primary w-full sm:min-w-[160px] min-h-[44px] touch-manipulation transition-all duration-200"
               onClick={() => {
                 setEditStudent(null);
                 setShowForm(true);
               }}
             >
-              Thêm sinh viên
+              <span className="text-sm sm:text-base">Thêm sinh viên</span>
+            </button>
+            <button
+              type="button"
+              className="nb-btn nb-btn--accent w-full sm:min-w-[160px] min-h-[44px] touch-manipulation transition-all duration-200"
+              onClick={() => setShowImportModal(true)}
+            >
+              <span className="text-sm sm:text-base"> Import Excel</span>
             </button>
           </div>
         )}
@@ -321,23 +410,23 @@ export const StudentsPage = () => {
                 </option>
               ))}
             </select>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="flex items-center gap-2">
-                <label className="w-24 text-sm opacity-70 shrink-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 transition-all duration-200">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <label className="text-xs sm:text-sm opacity-70 sm:w-24 shrink-0">
                   Ngày sinh từ
                 </label>
                 <input
                   type="date"
-                  className="nb-input flex-1"
+                  className="nb-input w-full sm:flex-1 min-h-[44px] touch-manipulation transition-all duration-200"
                   value={dobFrom}
                   onChange={(e) => setDobFrom(e.target.value)}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <label className="w-16 text-sm opacity-70 shrink-0">Đến</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <label className="text-xs sm:text-sm opacity-70 sm:w-16 shrink-0">Đến</label>
                 <input
                   type="date"
-                  className="nb-input flex-1"
+                  className="nb-input w-full sm:flex-1 min-h-[44px] touch-manipulation transition-all duration-200"
                   value={dobTo}
                   onChange={(e) => setDobTo(e.target.value)}
                 />
@@ -412,6 +501,104 @@ export const StudentsPage = () => {
           initial={editStudent}
           onClose={() => setShowForm(false)}
         />
+      )}
+
+      {/* Import Excel Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 transition-all duration-200">
+          <div className="nb-card w-full max-w-2xl max-h-[95vh] overflow-y-auto transition-all duration-200">
+            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Import sinh viên từ Excel</h2>
+
+            <div className="space-y-3 sm:space-y-4">
+              {/* Download template */}
+              <div className="p-3 sm:p-4 bg-edu-muted dark:bg-edu-dark-muted rounded-lg transition-all duration-200">
+                <h3 className="text-sm sm:text-base font-semibold mb-2">Tải file mẫu</h3>
+                <p className="text-xs sm:text-sm opacity-70 mb-3">
+                  Tải file Excel mẫu, điền thông tin sinh viên theo đúng định dạng
+                </p>
+                <button
+                  type="button"
+                  className="nb-btn nb-btn--secondary w-full sm:w-auto min-h-[44px] touch-manipulation transition-all duration-200"
+                  onClick={handleDownloadTemplate}
+                >
+                  <span className="text-sm sm:text-base">Tải file mẫu Excel</span>
+                </button>
+              </div>
+
+              {/* Upload file */}
+              <div className="p-3 sm:p-4 border-2 border-dashed border-edu-border dark:border-edu-dark-border rounded-lg transition-all duration-200">
+                <h3 className="text-sm sm:text-base font-semibold mb-2"> Upload file Excel</h3>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImportFile(file);
+                      setImportResult(null);
+                    }
+                  }}
+                  className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-edu-primary file:text-white hover:file:bg-edu-primary-hover"
+                />
+                {importFile && (
+                  <p className="mt-2 text-sm text-edu-accent dark:text-edu-dark-accent">
+                    Đã chọn: {importFile.name}
+                  </p>
+                )}
+              </div>
+
+              {/* Import result */}
+              {importResult && (
+                <div className="p-4 bg-edu-success-light dark:bg-edu-dark-muted rounded-lg">
+                  <h3 className="font-semibold text-edu-success dark:text-edu-dark-accent mb-2">
+                    Kết quả import
+                  </h3>
+                  <ul className="text-sm space-y-1">
+                    <li>Import thành công: {importResult.imported} sinh viên</li>
+                    <li>Import thất bại: {importResult.failed}</li>
+                  </ul>
+                  {importResult.errors && importResult.errors.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-sm font-semibold mb-1">Lỗi chi tiết:</p>
+                      <ul className="text-xs space-y-1 max-h-40 overflow-y-auto">
+                        {importResult.errors.map((err, idx) => (
+                          <li key={idx} className="text-edu-error dark:text-red-400">
+                            • {err}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row justify-end gap-2 pt-3 sm:pt-4 border-t border-edu-border dark:border-edu-dark-border transition-all duration-200">
+                <button
+                  type="button"
+                  className="nb-btn nb-btn--ghost w-full sm:w-auto min-h-[44px] touch-manipulation order-2 sm:order-1 transition-all duration-200"
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportFile(null);
+                    setImportResult(null);
+                  }}
+                >
+                  Đóng
+                </button>
+                {importFile && !importResult && (
+                  <button
+                    type="button"
+                    className="nb-btn nb-btn--primary w-full sm:w-auto min-h-[44px] touch-manipulation order-1 sm:order-2 transition-all duration-200"
+                    onClick={handleImportExcel}
+                    disabled={importing}
+                  >
+                    <span className="text-sm sm:text-base">{importing ? 'Đang import...' : 'Import'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
@@ -506,24 +693,24 @@ function StudentFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="nb-card w-full max-w-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4 transition-all duration-200">
+      <div className="nb-card w-full max-w-2xl max-h-[95vh] overflow-y-auto transition-all duration-200">
+        <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold">
             {isEdit ? 'Sửa sinh viên' : 'Thêm sinh viên'}
           </h2>
-          <button className="nb-btn nb-btn--ghost" onClick={onClose}>
+          <button className="nb-btn nb-btn--ghost min-h-[44px] w-full sm:w-auto touch-manipulation" onClick={onClose}>
             Đóng
           </button>
         </div>
 
         <form
-          className="grid grid-cols-1 gap-3 md:grid-cols-2"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 transition-all duration-200"
           onSubmit={handleSubmit(onSubmit)}
         >
           <div>
             <input
-              className="nb-input"
+              className="nb-input min-h-[44px] touch-manipulation transition-all duration-200"
               placeholder="MSSV"
               {...register('mssv')}
             />
@@ -535,7 +722,7 @@ function StudentFormModal({
           </div>
           <div>
             <input
-              className="nb-input"
+              className="nb-input min-h-[44px] touch-manipulation transition-all duration-200"
               placeholder="Họ tên"
               {...register('fullName')}
             />
@@ -548,7 +735,7 @@ function StudentFormModal({
           <div>
             <input
               type="date"
-              className="nb-input"
+              className="nb-input min-h-[44px] touch-manipulation transition-all duration-200"
               placeholder="Ngày sinh"
               {...register('dob')}
             />
@@ -559,7 +746,7 @@ function StudentFormModal({
             )}
           </div>
           <div>
-            <select className="nb-input" {...register('classId')}>
+            <select className="nb-input min-h-[44px] touch-manipulation transition-all duration-200" {...register('classId')}>
               <option value="">Chưa chọn lớp</option>
               {classes.map((c) => (
                 <option key={c._id} value={c._id}>
@@ -570,8 +757,9 @@ function StudentFormModal({
           </div>
           <div>
             <input
-              className="nb-input"
+              className="nb-input min-h-[44px] touch-manipulation transition-all duration-200"
               placeholder="Email"
+              type="email"
               {...register('email')}
             />
             {errors.email && (
@@ -582,8 +770,9 @@ function StudentFormModal({
           </div>
           <div>
             <input
-              className="nb-input"
+              className="nb-input min-h-[44px] touch-manipulation transition-all duration-200"
               placeholder="Số điện thoại"
+              type="tel"
               {...register('phone')}
             />
             {errors.phone && (
@@ -592,9 +781,9 @@ function StudentFormModal({
               </p>
             )}
           </div>
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2">
             <input
-              className="nb-input"
+              className="nb-input min-h-[44px] touch-manipulation transition-all duration-200"
               placeholder="Địa chỉ"
               {...register('address')}
             />
@@ -605,17 +794,17 @@ function StudentFormModal({
             )}
           </div>
 
-          <div className="md:col-span-2 mt-2 flex justify-end gap-2">
+          <div className="sm:col-span-2 mt-2 flex flex-col sm:flex-row justify-end gap-2">
             <button
               type="button"
-              className="nb-btn nb-btn--ghost"
+              className="nb-btn nb-btn--ghost min-h-[44px] w-full sm:w-auto touch-manipulation order-2 sm:order-1 transition-all duration-200"
               onClick={onClose}
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="nb-btn nb-btn--primary"
+              className="nb-btn nb-btn--primary min-h-[44px] w-full sm:w-auto touch-manipulation order-1 sm:order-2 transition-all duration-200"
               disabled={isCreating || isUpdating}
             >
               {isEdit ? 'Lưu thay đổi' : 'Thêm mới'}
