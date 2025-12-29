@@ -12,7 +12,8 @@
     "resolveJsonModule": true,
     "declaration": false,
     "noImplicitAny": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts", "src/scripts/**"]
