@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import type { FilterQuery } from 'mongoose';
+import { Types, type FilterQuery } from 'mongoose';
 import { StudentModel } from '../models/student.model';
 import type { Student } from '../models/student.model';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -49,7 +49,7 @@ export const listStudents: RequestHandler = asyncHandler(async (req, res) => {
   }
 
   if (classId) {
-    filter.classId = classId as unknown as FilterQuery<Student>['classId'];
+    filter.classId = new Types.ObjectId(classId);
   }
 
   if (mssv) {
