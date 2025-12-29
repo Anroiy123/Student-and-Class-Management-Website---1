@@ -1,12 +1,10 @@
 services:
-  # 1. Backend API (Node.js)
+  # Backend API (Node.js)
   - type: web
     name: student-management-api
-    env: node                     # Sửa runtime -> env
-    region: singapore             # Backend được phép chọn vùng
+    env: node
+    region: singapore
     plan: free
-    # LƯU Ý: Chỉ dùng 'apps/api' nếu bạn tổ chức code dạng monorepo.
-    # Nếu code backend nằm ngay thư mục gốc, hãy sửa thành: npm install && npm run build
     buildCommand: cd apps/api && npm install && npm run build
     startCommand: cd apps/api && npm start
     envVars:
@@ -22,15 +20,11 @@ services:
         sync: false
     healthCheckPath: /health
 
-  # 2. Frontend React App (Static Site)
-  - type: static                  # Sửa web -> static
-    name: student-management-web
-    env: static                   # Sửa runtime -> env
-    # Đã xóa dòng 'plan: free' (Static site không cần dòng này)
-    
-    # LƯU Ý: Kiểm tra lại đường dẫn thư mục code của bạn
+# Frontend React App (Static Site)
+staticSites:
+  - name: student-management-web
     buildCommand: cd apps/web && npm install && npm run build
-    staticPublishPath: apps/web/dist
+    publishPath: apps/web/dist
     envVars:
       - key: VITE_API_URL
         sync: false
