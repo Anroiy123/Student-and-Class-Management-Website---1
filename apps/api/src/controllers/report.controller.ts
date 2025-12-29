@@ -2,15 +2,12 @@ import type { RequestHandler } from 'express';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { GradeModel } from '../models/grade.model';
 import { EnrollmentModel } from '../models/enrollment.model';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getTeacherAccessScope } from '../utils/teacherAccess';
 
 // Get fonts directory path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const FONTS_DIR = path.resolve(__dirname, '../../../fonts');
 
 const computeClassification = (total: number): string => {

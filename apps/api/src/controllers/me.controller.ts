@@ -336,8 +336,6 @@ export const exportMyGrades: RequestHandler = asyncHandler(async (req, res) => {
   const gpa = computeGPA(gradesForGPA);
 
   // Register Roboto fonts for Vietnamese support
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
   const fontPath = path.resolve(__dirname, '../../../fonts');
 
   // Generate PDF

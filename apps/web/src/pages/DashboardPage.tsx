@@ -206,21 +206,6 @@ function getClassificationBadge(classification: string): string {
   }
 }
 
-function getClassificationColor(classification: string): string {
-  switch (classification) {
-    case 'Giỏi':
-      return 'bg-edu-success-light text-edu-success';
-    case 'Khá':
-      return 'bg-edu-info-light text-edu-info';
-    case 'Trung bình':
-      return 'bg-edu-warning-light text-edu-warning';
-    case 'Yếu':
-      return 'bg-edu-error-light text-edu-error';
-    default:
-      return 'bg-edu-muted text-edu-ink-light dark:bg-edu-dark-muted dark:text-edu-dark-text-dim';
-  }
-}
-
 function getGpaClassification(gpa: number): string {
   if (gpa >= 8) return 'Giỏi';
   if (gpa >= 6.5) return 'Khá';
