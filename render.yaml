@@ -24,7 +24,6 @@ services:
   - type: web
     name: student-management-web
     runtime: static
-    region: singapore
     plan: free
     buildCommand: cd apps/web && npm install && npm run build
     staticPublishPath: apps/web/dist
