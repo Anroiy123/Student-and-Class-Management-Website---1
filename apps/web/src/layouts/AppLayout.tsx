@@ -73,6 +73,7 @@ export const AppLayout = () => {
   const { theme, toggleTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showCollapseButton, setShowCollapseButton] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Load collapse state from localStorage on mount
   useEffect(() => {
@@ -137,10 +138,26 @@ export const AppLayout = () => {
       </a>
 
       <div className="min-h-screen flex bg-edu-background dark:bg-edu-dark-bg">
+        {/* Mobile Overlay */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Sidebar */}
         <aside
           className={clsx(
-            'sticky top-0 h-screen edu-sidebar transition-all duration-300 relative flex-shrink-0',
-            isCollapsed ? 'w-20 min-w-20' : 'w-64 min-w-64',
+            'h-screen edu-sidebar transition-all duration-300 flex-shrink-0',
+            // Desktop - sticky sidebar
+            'lg:sticky lg:top-0 lg:block',
+            isCollapsed ? 'lg:w-20 lg:min-w-20' : 'lg:w-64 lg:min-w-64',
+            // Mobile - fixed overlay
+            isMobileMenuOpen 
+              ? 'fixed inset-y-0 left-0 w-64 min-w-64 z-50' 
+              : 'hidden lg:block',
           )}
           onMouseEnter={() => setShowCollapseButton(true)}
           onMouseLeave={() => setShowCollapseButton(false)}
@@ -264,13 +281,14 @@ export const AppLayout = () => {
               </button>
             </div>
           </div>
-          {/* Collapse/Expand Button */}
+          {/* Collapse/Expand Button - Desktop only */}
           <button
             type="button"
             onClick={toggleCollapse}
             className={clsx(
               'absolute -right-3 top-2/3 -translate-y-1/2 w-6 h-12 bg-edu-primary dark:bg-edu-dark-surface border border-edu-border dark:border-edu-dark-border rounded-r-lg shadow-card flex items-center justify-center transition-all',
               'hover:bg-edu-primary-light dark:hover:bg-edu-dark-muted',
+              'hidden lg:flex',
               showCollapseButton ? 'opacity-100' : 'opacity-0 focus:opacity-100',
             )}
             aria-label={isCollapsed ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'}
@@ -280,14 +298,47 @@ export const AppLayout = () => {
             <span className="text-xs font-bold text-white dark:text-edu-dark-text" aria-hidden="true">{isCollapsed ? '›' : '‹'}</span>
           </button>
         </aside>
+
+        {/* Main Content */}
         <main 
           id="main-content" 
-          className="flex-1 px-6 py-6 lg:px-8 bg-edu-background dark:bg-edu-dark-bg"
+          className="flex-1 flex flex-col bg-edu-background dark:bg-edu-dark-bg"
           role="main"
           tabIndex={-1}
           aria-label="Nội dung chính"
         >
-          <Outlet />
+          {/* Mobile Header */}
+          <header className="lg:hidden sticky top-0 z-30 bg-edu-primary dark:bg-edu-dark-surface border-b border-edu-border dark:border-edu-dark-border px-4 py-3 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Mở menu"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div className="font-display text-lg font-bold text-white">
+              Edu<span className="text-emerald-300">Manager</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <NotificationBell isCollapsed={false} />
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+                aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+              >
+                {theme === 'dark' ? '☀️' : '🌙'}
+              </button>
+            </div>
+          </header>
+
+          {/* Page Content */}
+          <div className="flex-1 px-4 py-4 lg:px-8 lg:py-6">
+            <Outlet />
+          </div>
         </main>
       </div>
     </>

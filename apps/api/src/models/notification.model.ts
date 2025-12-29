@@ -10,7 +10,7 @@ const notificationSchema = new Schema(
     },
     type: {
       type: String,
-      enum: ['grade_added', 'grade_updated', 'info_updated'],
+      enum: ['grade_added', 'grade_updated', 'info_updated', 'general', 'announcement'],
       required: true,
     },
     title: {
@@ -20,6 +20,12 @@ const notificationSchema = new Schema(
     message: {
       type: String,
       required: true,
+    },
+    // Phân loại thông báo
+    category: {
+      type: String,
+      enum: ['academic', 'administrative', 'event', 'urgent', 'general'],
+      default: 'general',
     },
     relatedId: {
       type: Schema.Types.ObjectId,

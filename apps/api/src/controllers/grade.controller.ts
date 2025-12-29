@@ -14,7 +14,7 @@ const computeTotal = (attendance: number, midterm: number, final: number) =>
 
 export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
   const filter: Record<string, unknown> = {};
-  const enrollmentMatch: Record<string, unknown> = {};
+  const enrollmentMatch: Record<string, any> = {};
 
   // Apply teacher scope filtering
   let teacherScope: { classIds: any[]; courseIds: any[] } | null = null;
@@ -49,7 +49,7 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
         return res.json({ items: [], total: 0, page: 1, pageSize: 10 });
       }
       // Rebuild the $or to include the specific classId filter
-      enrollmentMatch.$or = [
+      (enrollmentMatch as any).$or = [
         { classId: req.query.classId },
       ];
       if (teacherScope.courseIds.length > 0) {
@@ -71,9 +71,9 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
       // Rebuild the $or to include the specific courseId filter
       if (req.query.classId) {
         // Both filters applied
-        enrollmentMatch.$or = [{ classId: req.query.classId, courseId: req.query.courseId }];
+        (enrollmentMatch as any).$or = [{ classId: req.query.classId, courseId: req.query.courseId }];
       } else {
-        enrollmentMatch.$or = [
+        (enrollmentMatch as any).$or = [
           { courseId: req.query.courseId },
         ];
         if (teacherScope.classIds.length > 0) {
@@ -347,7 +347,7 @@ export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
   // Send notification to student
   if (req.user && grade) {
     // Create notification asynchronously (don't wait)
-    createGradeNotification(grade, isUpdate).catch((err) =>
+    createGradeNotification(grade as any, isUpdate).catch((err) =>
       console.error('Failed to create notification:', err),
     );
   }

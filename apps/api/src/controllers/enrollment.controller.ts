@@ -8,7 +8,7 @@ import { getTeacherAccessScope } from '../utils/teacherAccess';
 
 export const listEnrollments: RequestHandler = asyncHandler(
   async (req, res) => {
-    const filter: Record<string, unknown> = {};
+    const filter: Record<string, any> = {};
 
     // Apply teacher scope filtering
     let teacherScope: { classIds: any[]; courseIds: any[] } | null = null;
@@ -43,7 +43,7 @@ export const listEnrollments: RequestHandler = asyncHandler(
           return res.json([]);
         }
         // Rebuild filter to combine scope and specific classId filter
-        filter.$or = [
+        (filter as any).$or = [
           { classId: req.query.classId },
         ];
         // Also allow their courses to still be visible with this class
@@ -67,9 +67,9 @@ export const listEnrollments: RequestHandler = asyncHandler(
         // Rebuild filter to combine scope and specific courseId filter
         if (req.query.classId) {
           // Both classId and courseId specified - very specific filter
-          filter.$or = [{ classId: req.query.classId, courseId: req.query.courseId }];
+          (filter as any).$or = [{ classId: req.query.classId, courseId: req.query.courseId }];
         } else {
-          filter.$or = [
+          (filter as any).$or = [
             { courseId: req.query.courseId },
           ];
           // Also allow their classes to still be visible with this course

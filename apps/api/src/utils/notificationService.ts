@@ -5,12 +5,13 @@ import type { Types } from 'mongoose';
 
 interface CreateNotificationParams {
   userId: Types.ObjectId | string;
-  type: 'grade_added' | 'grade_updated' | 'info_updated';
+  type: 'grade_added' | 'grade_updated' | 'info_updated' | 'general' | 'announcement';
   title: string;
   message: string;
   relatedId?: Types.ObjectId | string;
   relatedType?: 'grade' | 'student' | 'enrollment';
   metadata?: Record<string, unknown>;
+  category?: 'academic' | 'administrative' | 'event' | 'urgent' | 'general';
 }
 
 // Tạo thông báo

@@ -237,7 +237,7 @@ export const importStudentsExcel: RequestHandler = asyncHandler(
 
     const ExcelJS = (await import('exceljs')).default;
     const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(req.file.buffer);
+    await workbook.xlsx.load(req.file.buffer as any);
 
     const worksheet = workbook.worksheets[0];
     if (!worksheet) {

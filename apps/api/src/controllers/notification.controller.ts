@@ -16,7 +16,7 @@ export const createNotificationHandler: RequestHandler = asyncHandler(
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { recipientType, recipientIds, recipientRole, title, message } = req.body;
+    const { recipientType, recipientIds, recipientRole, title, message, category } = req.body;
 
     // Kiểm tra quyền: Giảng viên chỉ có thể gửi cho sinh viên
     if (req.user.role === 'TEACHER' && recipientRole === 'TEACHER') {
@@ -54,9 +54,10 @@ export const createNotificationHandler: RequestHandler = asyncHandler(
       userIds.map((userId) =>
         createNotification({
           userId,
-          type: 'info_updated',
+          type: 'general',
           title,
           message,
+          category: category || 'general',
           metadata: {
             senderId: req.user!._id,
             senderRole: req.user!.role,

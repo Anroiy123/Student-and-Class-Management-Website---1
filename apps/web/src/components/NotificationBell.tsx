@@ -97,10 +97,11 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
     deleteNotificationMutation.mutate(notificationId);
   };
 
-  const getNotificationIcon = (type: Notification['type']) => {
-    switch (type) {
+  const getNotificationIcon = (notification: Notification) => {
+    let icon;
+    switch (notification.type) {
       case 'grade_added':
-        return (
+        icon = (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -116,8 +117,9 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
             />
           </svg>
         );
+        break;
       case 'grade_updated':
-        return (
+        icon = (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -133,8 +135,12 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
             />
           </svg>
         );
+        break;
       case 'info_updated':
-        return (
+      case 'general':
+      case 'announcement':
+      default:
+        icon = (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -150,24 +156,10 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
             />
           </svg>
         );
-      default:
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-6 h-6 text-gray-500"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46"
-            />
-          </svg>
-        );
+        break;
     }
+
+    return icon;
   };
 
   const formatTime = (dateString: string) => {
@@ -273,20 +265,39 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        {getNotificationIcon(notification.type)}
+                        {getNotificationIcon(notification)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4
-                            className={clsx(
-                              'text-sm font-semibold',
-                              !notification.isRead
-                                ? 'text-edu-primary dark:text-edu-dark-accent'
-                                : 'text-edu-ink dark:text-edu-dark-text',
-                            )}
-                          >
-                            {notification.title}
-                          </h4>
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4
+                                className={clsx(
+                                  'text-sm font-semibold',
+                                  !notification.isRead
+                                    ? 'text-edu-primary dark:text-edu-dark-accent'
+                                    : 'text-edu-ink dark:text-edu-dark-text',
+                                )}
+                              >
+                                {notification.title}
+                              </h4>
+                              {/* Category badge */}
+                              {notification.category && notification.category !== 'general' && (
+                                <span className={clsx(
+                                  'text-xs px-2 py-0.5 rounded-full',
+                                  notification.category === 'academic' && 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                                  notification.category === 'administrative' && 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                                  notification.category === 'event' && 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                                  notification.category === 'urgent' && 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                )}>
+                                  {notification.category === 'academic' && 'Học tập'}
+                                  {notification.category === 'administrative' && 'Hành chính'}
+                                  {notification.category === 'event' && 'Sự kiện'}
+                                  {notification.category === 'urgent' && 'Khẩn cấp'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                           <button
                             type="button"
                             onClick={(e) => handleDelete(notification._id, e)}

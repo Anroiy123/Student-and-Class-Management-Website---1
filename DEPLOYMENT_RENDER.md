@@ -1,18 +1,14 @@
-# Hướng dẫn Deploy Full-stack lên Render
+# Hướng dẫn Deploy: Backend (Render) + Frontend (Vercel)
 
 ## Tổng quan
 
-Deploy cả Frontend và Backend lên **Render** (all-in-one solution).
-
-- **Frontend (React)**: Static Site trên Render
-- **Backend (API)**: Web Service trên Render
+- **Backend (API)**: Deploy lên Render Web Service
+- **Frontend (React)**: Deploy lên Vercel (CDN nhanh, performance tốt)
 - **Database**: MongoDB Atlas (free tier)
 
 ---
 
-## Phương án 1: Deploy với render.yaml (Recommended)
-
-### Bước 1: Chuẩn bị MongoDB Atlas
+## Bước 1: Chuẩn bị MongoDB Atlas
 
 1. ✅ Đã có cluster: `cluster0.oee9kli.mongodb.net`
 2. Tạo Database User:
@@ -31,185 +27,211 @@ Deploy cả Frontend và Backend lên **Render** (all-in-one solution).
    mongodb+srv://admin_user:MyPass123@cluster0.oee9kli.mongodb.net/?appName=Cluster0
    ```
 
-### Bước 2: Push code lên GitHub
+---
+
+## Bước 2: Push code lên GitHub
 
 ```bash
 git add .
-git commit -m "Ready for Render deployment"
+git commit -m "Ready for deployment"
 git push origin main
 ```
 
-### Bước 3: Deploy từ render.yaml
+---
+
+## Bước 3: Deploy Backend lên Render
+
+### 3.1 Tạo Web Service từ Blueprint
 
 1. Đăng nhập https://render.com (dùng GitHub)
 2. Dashboard → **New** → **Blueprint**
 3. Connect repository
-4. **Blueprint Name**: Đặt tên cho nhóm services, ví dụ:
-   - `student-management-system`
-   - `student-class-management`
-   - `do-an-web`
-   
-   (Tên này chỉ để quản lý, không ảnh hưởng đến URL)
-   
-5. Render sẽ tự detect `render.yaml` và tạo 2 services:
+4. **Blueprint Name**: `student-management-system` (hoặc tên bạn thích)
+5. Render sẽ tự detect `render.yaml` và tạo service:
    - `student-management-api` (Backend)
-   - `student-management-web` (Frontend)
 
-### Bước 4: Cấu hình Environment Variables
+### 3.2 Cấu hình Environment Variables
 
-**Cho Backend API:**
-- `MONGODB_URI`: Paste connection string từ Atlas
-- `JWT_SECRET`: Random string dài (ví dụ: `mySuperSecretKey12345!@#$%`)
-- `CLIENT_URL`: Sẽ cập nhật sau khi frontend deploy xong
+Sau khi Blueprint tạo xong, vào service `student-management-api`:
 
-**Cho Frontend Web:**
-- `VITE_API_URL`: Sẽ cập nhật sau khi backend deploy xong
+1. **Environment** tab → Thêm giá trị:
+   - `MONGODB_URI`: `mongodb+srv://admin_user:MyPass123@cluster0.oee9kli.mongodb.net/?appName=Cluster0`
+   - `JWT_SECRET`: Random string (tự sinh hoặc để Render auto-generate)
+   - `CLIENT_URL`: Để trống tạm (sẽ điền sau khi Vercel deploy xong)
 
-### Bước 5: Kết nối 2 services
+2. Click **Save Changes** → Service sẽ tự redeploy
 
-1. Đợi Backend deploy xong → Copy URL (dạng `https://student-management-api.onrender.com`)
-2. Vào Frontend service → Environment → Thêm:
-   ```
-   VITE_API_URL=https://student-management-api.onrender.com/api
-   ```
-3. Quay lại Backend service → Environment → Cập nhật:
-   ```
-   CLIENT_URL=https://student-management-web.onrender.com
-   ```
-4. Cả 2 services sẽ tự động redeploy
+### 3.3 Đợi deploy xong
 
-### Bước 6: Kiểm tra
+- Xem **Logs** để theo dõi
+- Khi thấy "Connected to MongoDB" → Thành công!
+- **Copy URL** của service (ví dụ: `https://student-management-api.onrender.com`)
 
-- Backend: `https://student-management-api.onrender.com/health`
-- Frontend: `https://student-management-web.onrender.com`
+### 3.4 Kiểm tra API
+
+Truy cập: `https://student-management-api.onrender.com/health`
+
+Nếu thấy:
+```json
+{"status":"ok","timestamp":"..."}
+```
+→ Backend đã chạy! ✅
 
 ---
 
-## Phương án 2: Tạo services thủ công
+## Bước 4: Deploy Frontend lên Vercel
 
-### Backend API
+### 4.1 Đăng nhập Vercel
 
-1. New → **Web Service**
-2. Connect repository
-3. Cấu hình:
-   ```
-   Name: student-management-api
-   Region: Singapore
-   Branch: main
-   Build Command: cd apps/api && npm install && npm run build
-   Start Command: cd apps/api && npm start
-   ```
-4. Environment Variables:
-   ```
-   NODE_ENV=production
-   PORT=10000
-   MONGODB_URI=<Atlas connection string>
-   JWT_SECRET=<random secret>
-   CLIENT_URL=<sẽ điền sau>
-   ```
+1. Truy cập https://vercel.com
+2. Sign up / Login với **GitHub account**
 
-### Frontend Static Site
+### 4.2 Import Project
 
-1. New → **Static Site**
-2. Connect repository
-3. Cấu hình:
+1. Dashboard → **Add New** → **Project**
+2. Import GitHub repository: `Student-and-Class-Management-Website---1`
+3. Vercel tự detect `vercel.json` và hiển thị:
    ```
-   Name: student-management-web
-   Region: Singapore
-   Branch: main
-   Build Command: cd apps/web && npm install && npm run build
-   Publish Directory: apps/web/dist
+   Framework Preset: Other
+   Build Command: cd apps/web && npm run build
+   Output Directory: apps/web/dist
+   Install Command: npm install
    ```
-4. Environment Variables:
-   ```
-   VITE_API_URL=<Backend URL>/api
-   ```
+4. **Không cần sửa gì** (đã config trong vercel.json)
 
-5. Advanced → Rewrites:
-   ```
-   Source: /*
-   Destination: /index.html
-   ```
+### 4.3 Thêm Environment Variables
+
+Trong **Configure Project** → **Environment Variables**:
+
+```
+VITE_API_URL=https://student-management-api.onrender.com/api
+```
+
+⚠️ **Chú ý:**
+- Thay `student-management-api.onrender.com` bằng URL Render thực tế
+- Phải có `/api` ở cuối
+
+### 4.4 Deploy
+
+1. Click **Deploy**
+2. Đợi 2-3 phút
+3. Vercel sẽ cung cấp URL production (ví dụ: `https://student-management-web.vercel.app`)
 
 ---
 
-## So sánh: Render vs Vercel+Render
+## Bước 5: Cập nhật CORS
 
-| Tiêu chí | Render Only | Vercel + Render |
-|----------|-------------|-----------------|
-| **Setup** | Đơn giản hơn, 1 platform | 2 platforms riêng |
-| **Performance (Frontend)** | Tốt | Xuất sắc (Vercel CDN) |
-| **Auto-deploy** | ✅ Cả 2 | ✅ Cả 2 |
-| **Free tier** | 750h/service/tháng | Render 750h, Vercel 100GB |
-| **Custom domain** | ✅ Free SSL | ✅ Free SSL |
-| **Recommended for** | Small projects, demos | Production apps |
+1. Quay lại **Render Dashboard**
+2. Vào service `student-management-api`
+3. **Environment** → Sửa `CLIENT_URL`:
+   ```
+   CLIENT_URL=https://student-management-web.vercel.app
+   ```
+4. Click **Save Changes** → Backend sẽ tự redeploy
+
+---
+
+## Bước 6: Kiểm tra toàn bộ hệ thống
+
+1. Truy cập URL Vercel: `https://student-management-web.vercel.app`
+2. Thử đăng ký tài khoản mới
+3. Đăng nhập và test các chức năng
+
+**Nếu gặp lỗi:**
+- F12 → Console → Xem lỗi chi tiết
+- Kiểm tra `VITE_API_URL` trên Vercel
+- Kiểm tra `CLIENT_URL` trên Render
 
 ---
 
 ## Troubleshooting
 
-### Build failed - "Cannot find module"
-```bash
-# Đảm bảo dependencies đầy đủ
-cd apps/api && npm install
-cd apps/web && npm install
-git add package-lock.json
-git commit -m "Add lock files"
-git push
-```
-
-### Static site shows blank page
-- Kiểm tra Console (F12) → Có lỗi API URL không?
-- Kiểm tra `VITE_API_URL` đã đúng chưa
-- Đảm bảo có trailing `/api`
-
 ### CORS errors
-- Cập nhật `CLIENT_URL` trên Backend
-- URL phải chính xác, không trailing slash
+- Kiểm tra `CLIENT_URL` không có trailing slash `/`
+- URL phải chính xác: `https://your-app.vercel.app`
 - Redeploy backend sau khi đổi
 
-### API cold start (15-30s)
-- Render free tier sleep sau 15 phút inactive
-- Request đầu tiên sẽ chậm (wake up)
-- Giải pháp: Upgrade plan hoặc dùng cron job ping mỗi 10 phút
+### API trả về 503/504
+- Render free tier đang wake up (đợi 30-60s)
+
+### Build failed trên Render
+- Xem Logs chi tiết
+- Kiểm tra `MONGODB_URI` đã đúng chưa
+- Kiểm tra dependencies đủ chưa
+
+### Build failed trên Vercel
+- Kiểm tra `VITE_API_URL` đã set chưa
+- Xem Build Logs để biết lỗi cụ thể
+
+### Frontend blank page
+- F12 → Network tab
+- Kiểm tra API calls có đúng URL không
+- Kiểm tra `VITE_API_URL` có `/api` ở cuối
 
 ---
 
-## Tips
+## Các bước nâng cao
 
-### Tự động ping để tránh sleep
-Dùng service miễn phí như https://cron-job.org:
-```
-URL: https://student-management-api.onrender.com/health
-Interval: Every 10 minutes
-```
+### Auto-deploy
+- ✅ Push code → GitHub
+- ✅ Render tự build backend
+- ✅ Vercel tự build frontend
 
-### View logs real-time
-- Dashboard → Service → **Logs** tab
-- Hoặc dùng CLI: `render logs -f <service-id>`
+### Custom Domain
 
-### Rollback deployment
-- Dashboard → Service → **Events** → Click deployment → **Rollback**
+**Vercel:**
+1. Settings → Domains → Add Domain
+2. Cập nhật DNS records theo hướng dẫn
+
+**Render:**
+1. Settings → Custom Domain
+2. Add CNAME record
+
+### Tránh cold start (Render)
+
+Dùng cron job ping mỗi 10 phút:
+- Service: https://cron-job.org (miễn phí)
+- URL: `https://student-management-api.onrender.com/health`
+- Interval: `*/10 * * * *` (every 10 minutes)
 
 ---
 
 ## Kết quả cuối cùng
 
-✅ **Frontend**: `https://student-management-web.onrender.com`  
+✅ **Frontend**: `https://student-management-web.vercel.app`  
 ✅ **Backend**: `https://student-management-api.onrender.com`  
 ✅ **Database**: MongoDB Atlas  
 ✅ **Auto SSL**: Free HTTPS  
-✅ **Auto Deploy**: Push to GitHub → Auto build  
+✅ **Auto Deploy**: Push → Auto build  
+✅ **Performance**: Excellent (Vercel CDN)
 
 **Total cost**: $0/tháng (Free tier)
+
+---
+
+## So sánh với deploy cả 2 lên Render
+
+| Tiêu chí | Vercel + Render | Render Only |
+|----------|-----------------|-------------|
+| **Setup** | 2 platforms | 1 platform |
+| **Performance (Frontend)** | ⭐ Xuất sắc (CDN toàn cầu) | ✅ Tốt |
+| **Free tier** | Render 750h, Vercel 100GB | Render 750h×2 services |
+| **Auto-deploy** | ✅ Cả 2 | ✅ Cả 2 |
+| **Recommended** | ✅ Production apps | Small demos |
 
 ---
 
 ## Next steps
 
 1. **Seed data**: Import CSV vào MongoDB Atlas
-2. **Custom domain**: Settings → Add domain
-3. **Monitor**: Setup alerts cho downtime
-4. **Backup**: MongoDB Atlas tự động backup
+2. **Monitor**: Setup uptime monitoring
+3. **Backup**: MongoDB Atlas auto-backup
+4. **Analytics**: Vercel Analytics (free)
 
-Xem thêm: https://render.com/docs
+---
+
+## Tài liệu tham khảo
+
+- Render: https://render.com/docs
+- Vercel: https://vercel.com/docs
+- MongoDB Atlas: https://docs.atlas.mongodb.com

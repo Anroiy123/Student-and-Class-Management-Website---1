@@ -6,8 +6,9 @@ import {
 } from '@tanstack/react-query';
 import { apiClient } from './api';
 
-export type NotificationType = 'grade_added' | 'grade_updated' | 'info_updated';
+export type NotificationType = 'grade_added' | 'grade_updated' | 'info_updated' | 'general' | 'announcement';
 export type RelatedType = 'grade' | 'student' | 'enrollment';
+export type NotificationCategory = 'academic' | 'administrative' | 'event' | 'urgent' | 'general';
 
 export type Notification = {
   _id: string;
@@ -19,6 +20,7 @@ export type Notification = {
   relatedType?: RelatedType;
   isRead: boolean;
   metadata?: Record<string, unknown>;
+  category?: NotificationCategory;
   createdAt: string;
   updatedAt: string;
 };
@@ -42,6 +44,7 @@ export type CreateNotificationPayload = {
   recipientRole?: 'STUDENT' | 'TEACHER';
   title: string;
   message: string;
+  category?: NotificationCategory;
 };
 
 // API Functions

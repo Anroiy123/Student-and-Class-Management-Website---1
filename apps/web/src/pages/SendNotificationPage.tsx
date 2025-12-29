@@ -12,6 +12,7 @@ export default function SendNotificationPage() {
   );
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [category, setCategory] = useState<'academic' | 'administrative' | 'event' | 'urgent' | 'general'>('general');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +23,13 @@ export default function SendNotificationPage() {
         recipientRole: recipientType === 'role' ? recipientRole : undefined,
         title,
         message,
+        category,
       });
 
       alert(`${result.message}`);
       setTitle('');
       setMessage('');
+      setCategory('general');
     } catch (error: any) {
       alert(`Lỗi: ${error.response?.data?.message || error.message}`);
     }
@@ -93,6 +96,32 @@ export default function SendNotificationPage() {
             )}
           </div>
         )}
+
+        {/* Category */}
+        <div>
+          <label className="block text-sm font-semibold mb-2">
+            Phân loại <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as typeof category)}
+            className="nb-input"
+            required
+          >
+            <option value="general">Chung</option>
+            <option value="academic">Học tập</option>
+            <option value="administrative">Hành chính</option>
+            <option value="event">Sự kiện</option>
+            <option value="urgent">Khẩn cấp</option>
+          </select>
+          <p className="text-xs text-edu-ink-light dark:text-edu-dark-muted mt-1">
+            {category === 'general' && 'Thông báo chung'}
+            {category === 'academic' && 'Liên quan đến học tập'}
+            {category === 'administrative' && 'Thủ tục hành chính'}
+            {category === 'event' && 'Sự kiện, hoạt động'}
+            {category === 'urgent' && 'Yêu cầu chú ý ngay'}
+          </p>
+        </div>
 
         {/* Title */}
         <div>
