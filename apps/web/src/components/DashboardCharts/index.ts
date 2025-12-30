@@ -4,3 +4,10 @@ export { StudentsByClassChart } from './StudentsByClassChart';
 export { EnrollmentTrendChart } from './EnrollmentTrendChart';
 export { CoursePopularityChart } from './CoursePopularityChart';
 export { DashboardChartsSection } from './DashboardChartsSection';
+export {
+  getChartConfig,
+  getDynamicChartHeight,
+  abbreviateLabel,
+  formatPercent,
+  type ResponsiveChartConfig,
+} from './ChartConfig';

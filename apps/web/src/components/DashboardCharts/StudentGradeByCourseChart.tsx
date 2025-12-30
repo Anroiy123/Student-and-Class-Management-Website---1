@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import type { StudentGradeByCourseItem } from '../../lib/me';
 import { useTheme } from '../../lib/themeHooks';
-import { useIsMobile } from '../../lib/useIsMobile';
+import { useBreakpoint } from '../../lib/responsive';
 
 type StudentGradeByCourseChartProps = {
   data: StudentGradeByCourseItem[];
@@ -23,7 +23,7 @@ const HEIGHT_PER_ITEM_DESKTOP = 35;
 export function StudentGradeByCourseChart({ data }: StudentGradeByCourseChartProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const isMobile = useIsMobile();
+  const { isMobile } = useBreakpoint();
 
   const chartData = data.map((item) => ({
     ...item,

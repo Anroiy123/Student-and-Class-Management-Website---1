@@ -1,0 +1,23 @@
+services:
+  # Backend API (Node.js)
+  - type: web
+    name: student-management-api
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm install --include=dev && npm run build --workspace=api
+    startCommand: cd apps/api && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
+    healthCheckPath: /health
+
+# Frontend: Tạo thủ công trên Render Dashboard hoặc deploy lên Vercel

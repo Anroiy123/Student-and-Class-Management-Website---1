@@ -112,10 +112,16 @@ export const exportReport: RequestHandler = asyncHandler(async (req, res) => {
       match:
         Object.keys(enrollmentMatch).length > 0 ? enrollmentMatch : undefined,
       populate: ['studentId', 'classId', 'courseId'],
-    })
-    .sort({ updatedAt: -1 });
+    });
 
   const filteredGrades = grades.filter((grade) => grade.enrollmentId !== null);
+
+  // Sort by MSSV ascending
+  filteredGrades.sort((a, b) => {
+    const mssvA = (a.enrollmentId as any)?.studentId?.mssv || '';
+    const mssvB = (b.enrollmentId as any)?.studentId?.mssv || '';
+    return mssvA.localeCompare(mssvB);
+  });
 
   if (filteredGrades.length === 0) {
     return res.status(404).json({ message: 'Không tìm thấy dữ liệu điểm' });

@@ -13,6 +13,7 @@ import type { ColumnDef } from '@tanstack/table-core';
 import { useForm } from 'react-hook-form';
 import { DataTable } from '../components/DataTable';
 import { FilterSection, type FilterField } from '../components/FilterSection';
+import { ResponsiveModal } from '../components/Modal';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useUser } from '../lib/authHooks';
@@ -146,25 +147,25 @@ export const ClassesPage = () => {
   });
 
   return (
-    <section className="space-y-6">
-      <header className="flex flex-col md:flex-row items-start justify-between gap-4">
-        <div className="nb-card--flat w-full">
-          <h1 className="text-2xl md:text-3xl font-bold">Quản lý lớp học</h1>
-          <p className="mt-1 text-sm opacity-70">
+    <section className="space-y-4 sm:space-y-6 transition-all duration-200 overflow-x-hidden max-w-full">
+      <header className="flex flex-col lg:flex-row items-start justify-between gap-3 sm:gap-4">
+        <div className="nb-card--flat w-full transition-all duration-200">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold transition-all duration-200">Quản lý lớp học</h1>
+          <p className="mt-1 text-xs sm:text-sm opacity-70">
             CRUD lớp, sĩ số và gán sinh viên.
           </p>
         </div>
         {isAdmin && (
-          <div className="shrink-0 w-full md:w-auto">
+          <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row lg:flex-col gap-2 transition-all duration-200">
             <button
               type="button"
-              className="nb-btn nb-btn--primary w-full md:w-auto"
+              className="nb-btn nb-btn--primary w-full sm:min-w-[160px] min-h-[44px] touch-manipulation transition-all duration-200"
               onClick={() => {
                 setEditClass(null);
                 setShowForm(true);
               }}
             >
-              Thêm lớp học
+              <span className="text-sm sm:text-base">Thêm lớp học</span>
             </button>
           </div>
         )}
@@ -309,92 +310,89 @@ function ClassFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="nb-card w-full max-w-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            {isEdit ? 'Sửa lớp học' : 'Thêm lớp học'}
-          </h2>
-          <button className="nb-btn nb-btn--ghost" onClick={onClose}>
-            Đóng
+    <ResponsiveModal
+      isOpen={true}
+      onClose={onClose}
+      title={isEdit ? 'Sửa lớp học' : 'Thêm lớp học'}
+      size="lg"
+      footer={
+        <div className="flex flex-col sm:flex-row gap-2 w-full justify-end">
+          <button
+            type="button"
+            className="nb-btn nb-btn--ghost min-h-[44px] w-full sm:w-auto touch-manipulation order-2 sm:order-1"
+            onClick={onClose}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            form="class-form"
+            className="nb-btn nb-btn--primary min-h-[44px] w-full sm:w-auto touch-manipulation order-1 sm:order-2"
+            disabled={isCreating || isUpdating}
+          >
+            {isEdit ? 'Lưu thay đổi' : 'Thêm mới'}
           </button>
         </div>
-
-        <form
-          className="grid grid-cols-1 gap-3 md:grid-cols-2"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <div>
-            <input
-              className="nb-input"
-              placeholder="Mã lớp"
-              {...register('code')}
-            />
-            {errors.code && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.code.message as string}
-              </p>
-            )}
-          </div>
-          <div>
-            <input
-              className="nb-input"
-              placeholder="Tên lớp"
-              {...register('name')}
-            />
-            {errors.name && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.name.message as string}
-              </p>
-            )}
-          </div>
-          <div>
-            <input
-              type="number"
-              className="nb-input"
-              placeholder="Sĩ số"
-              {...register('size', { valueAsNumber: true })}
-            />
-            {errors.size && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.size.message as string}
-              </p>
-            )}
-          </div>
-          <div>
-            <select className="nb-input" {...register('homeroomTeacherId')}>
-              <option value="">-- Chọn GVCN --</option>
-              {teachers?.map((teacher) => (
-                <option key={teacher._id} value={teacher._id}>
-                  {teacher.fullName} ({teacher.employeeId})
-                </option>
-              ))}
-            </select>
-            {errors.homeroomTeacherId && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.homeroomTeacherId.message as string}
-              </p>
-            )}
-          </div>
-
-          <div className="md:col-span-2 mt-2 flex justify-end gap-2">
-            <button
-              type="button"
-              className="nb-btn nb-btn--ghost"
-              onClick={onClose}
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="nb-btn nb-btn--primary"
-              disabled={isCreating || isUpdating}
-            >
-              {isEdit ? 'Lưu thay đổi' : 'Thêm mới'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      }
+    >
+      <form
+        id="class-form"
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <div>
+          <input
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Mã lớp"
+            {...register('code')}
+          />
+          {errors.code && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.code.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <input
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Tên lớp"
+            {...register('name')}
+          />
+          {errors.name && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.name.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <input
+            type="number"
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Sĩ số"
+            {...register('size', { valueAsNumber: true })}
+          />
+          {errors.size && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.size.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <select className="nb-input min-h-[44px] touch-manipulation" {...register('homeroomTeacherId')}>
+            <option value="">-- Chọn GVCN --</option>
+            {teachers?.map((teacher) => (
+              <option key={teacher._id} value={teacher._id}>
+                {teacher.fullName} ({teacher.employeeId})
+              </option>
+            ))}
+          </select>
+          {errors.homeroomTeacherId && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.homeroomTeacherId.message as string}
+            </p>
+          )}
+        </div>
+      </form>
+    </ResponsiveModal>
   );
 }

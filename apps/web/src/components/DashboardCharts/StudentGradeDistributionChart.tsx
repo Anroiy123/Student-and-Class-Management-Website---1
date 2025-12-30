@@ -1,7 +1,7 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import type { StudentGradeDistribution } from '../../lib/me';
 import { useTheme } from '../../lib/themeHooks';
-import { useIsMobile } from '../../lib/useIsMobile';
+import { useBreakpoint, CHART_HEIGHT } from '../../lib/responsive';
 
 type StudentGradeDistributionChartProps = {
   data: StudentGradeDistribution;
@@ -28,14 +28,11 @@ const COLORS = {
   poor: { light: '#DC2626', dark: '#F87171' },
 };
 
-const CHART_HEIGHT_MOBILE = 200;
-const CHART_HEIGHT_DESKTOP = 250;
-
 export function StudentGradeDistributionChart({ data }: StudentGradeDistributionChartProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const isMobile = useIsMobile();
-  const chartHeight = isMobile ? CHART_HEIGHT_MOBILE : CHART_HEIGHT_DESKTOP;
+  const { isMobile } = useBreakpoint();
+  const chartHeight = isMobile ? CHART_HEIGHT.MOBILE : CHART_HEIGHT.DESKTOP;
 
   const chartData: ChartDataItem[] = [
     {

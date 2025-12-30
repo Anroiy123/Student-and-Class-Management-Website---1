@@ -19,6 +19,7 @@ import { useSearchParams } from 'react-router-dom';
 import { DataTable } from '../components/DataTable';
 import { FilterSection, type FilterField } from '../components/FilterSection';
 import { Pager } from '../components/Pager';
+import { ResponsiveModal } from '../components/Modal';
 import { useForm } from 'react-hook-form';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,6 +50,9 @@ export const GradesPage = () => {
   const [searchValue, setSearchValue] = useState<string>(
     searchParams.get('searchValue') || '',
   );
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState<string>(
+    searchParams.get('searchValue') || '',
+  );
   const [classId, setClassId] = useState<string>(
     searchParams.get('classId') || '',
   );
@@ -75,8 +79,7 @@ export const GradesPage = () => {
     !!(
       searchParams.get('classId') ||
       searchParams.get('courseId') ||
-      searchParams.get('semester') ||
-      searchParams.get('searchValue')
+      searchParams.get('semester')
     ),
   );
 
@@ -87,19 +90,26 @@ export const GradesPage = () => {
       classId: appliedFilters.classId || undefined,
       courseId: appliedFilters.courseId || undefined,
       semester: appliedFilters.semester || undefined,
-      search: searchValue || undefined,
+      search: debouncedSearchValue || undefined,
       searchField: selectedField,
     }),
-    [page, pageSize, appliedFilters, searchValue, selectedField],
+    [page, pageSize, appliedFilters, debouncedSearchValue, selectedField],
   );
 
-  // Auto-apply filters when classId or courseId changes
-  // Special values: "" = not selected, "__all__" = all items
+  // Debounce search input
   useEffect(() => {
-    // Only apply when user has made a selection (not empty string)
+    const timer = setTimeout(() => {
+      setDebouncedSearchValue(searchValue);
+    }, 500); // Chờ 500ms sau khi người dùng ngừng gõ
+
+    return () => clearTimeout(timer);
+  }, [searchValue]);
+
+  // Auto-apply filters when classId or courseId changes
+  // __all__ means "all items", empty string means "not selected yet"
+  useEffect(() => {
     if (classId || courseId) {
       setAppliedFilters({
-        // Convert "__all__" to empty string for API (means no filter)
         classId: classId === '__all__' ? '' : classId,
         courseId: courseId === '__all__' ? '' : courseId,
         semester,
@@ -108,17 +118,15 @@ export const GradesPage = () => {
     }
   }, [classId, courseId, semester]);
 
-  // Check if filters have been applied OR search value is entered
-  // This allows global search without requiring class/course selection
-  // User must select something (including "All") to trigger data load
-  const hasActiveFilters = hasAppliedOnce || !!searchValue.trim();
+  // Check if filters have been applied OR if there's a search value
+  const hasActiveFilters = hasAppliedOnce || debouncedSearchValue.trim() !== '';
 
   useEffect(() => {
     const s = new URLSearchParams();
     s.set('page', String(page));
     s.set('pageSize', String(pageSize));
     s.set('selectedField', selectedField);
-    if (searchValue) s.set('searchValue', searchValue);
+    if (debouncedSearchValue) s.set('searchValue', debouncedSearchValue);
     if (appliedFilters.classId) s.set('classId', appliedFilters.classId);
     if (appliedFilters.courseId) s.set('courseId', appliedFilters.courseId);
     if (appliedFilters.semester) s.set('semester', appliedFilters.semester);
@@ -127,7 +135,7 @@ export const GradesPage = () => {
     page,
     pageSize,
     selectedField,
-    searchValue,
+    debouncedSearchValue,
     appliedFilters,
     setSearchParams,
   ]);
@@ -170,10 +178,11 @@ export const GradesPage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Use filtered courses if class is selected, otherwise all courses
-  const availableCourses = classId && classId !== '__all__'
-    ? (classCoursesData ?? [])
-    : (coursesData ?? []);
+  // Use filtered courses if a specific class is selected, otherwise all courses
+  const availableCourses =
+    classId && classId !== '__all__'
+      ? (classCoursesData ?? [])
+      : (coursesData ?? []);
 
   // Reset courseId when classId changes
   useEffect(() => {
@@ -196,7 +205,7 @@ export const GradesPage = () => {
         classId: appliedFilters.classId || undefined,
         courseId: appliedFilters.courseId || undefined,
         semester: appliedFilters.semester || undefined,
-        search: searchValue || undefined,
+        search: debouncedSearchValue || undefined,
         searchField: selectedField,
       },
       {
@@ -349,7 +358,7 @@ export const GradesPage = () => {
   });
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 overflow-x-hidden max-w-full">
       <header className="flex flex-col md:flex-row items-start justify-between gap-4">
         <div className="nb-card--flat w-full">
           <h1 className="text-2xl md:text-3xl font-bold">Quản lý điểm</h1>
@@ -616,100 +625,98 @@ function GradeFormModal({
   const course = initial.enrollmentId.courseId;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="nb-card w-full max-w-lg">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Nhập điểm</h2>
-          <button className="nb-btn nb-btn--ghost" onClick={onClose}>
-            Đóng
+    <ResponsiveModal
+      isOpen={true}
+      onClose={onClose}
+      title="Nhập điểm"
+      size="md"
+      footer={
+        <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <button
+            type="submit"
+            form="grade-form"
+            className="nb-btn nb-btn--primary flex-1 min-h-[44px] touch-manipulation order-1 sm:order-2"
+            disabled={isPending}
+          >
+            {isPending ? 'Đang lưu...' : 'Lưu điểm'}
+          </button>
+          <button
+            type="button"
+            className="nb-btn nb-btn--ghost min-h-[44px] touch-manipulation order-2 sm:order-1"
+            onClick={onClose}
+          >
+            Hủy
           </button>
         </div>
+      }
+    >
+      <div className="mb-4 p-3 bg-nb-sky dark:bg-nb-dark-section border-2 border-black dark:border-nb-dark-border rounded-md">
+        <p className="text-sm">
+          <strong>Sinh viên:</strong> {student.fullName} ({student.mssv})
+        </p>
+        <p className="text-sm">
+          <strong>Môn học:</strong> {course.code} - {course.name}
+        </p>
+        <p className="text-sm">
+          <strong>Học kỳ:</strong> {initial.enrollmentId.semester}
+        </p>
+      </div>
 
-        <div className="mb-4 p-3 bg-nb-sky dark:bg-nb-dark-section border-2 border-black dark:border-nb-dark-border rounded-md">
-          <p className="text-sm">
-            <strong>Sinh viên:</strong> {student.fullName} ({student.mssv})
-          </p>
-          <p className="text-sm">
-            <strong>Môn học:</strong> {course.code} - {course.name}
-          </p>
-          <p className="text-sm">
-            <strong>Học kỳ:</strong> {initial.enrollmentId.semester}
-          </p>
+      <form id="grade-form" className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Điểm chuyên cần (0-10)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            className="nb-input w-full min-h-[44px] touch-manipulation"
+            placeholder="0.00"
+            {...register('attendance', { valueAsNumber: true })}
+          />
+          {errors.attendance && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.attendance.message as string}
+            </p>
+          )}
         </div>
 
-        <form className="space-y-3" onSubmit={handleSubmit(onSubmit)}>
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Điểm chuyên cần (0-10)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              className="nb-input w-full"
-              placeholder="0.00"
-              {...register('attendance', { valueAsNumber: true })}
-            />
-            {errors.attendance && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.attendance.message as string}
-              </p>
-            )}
-          </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Điểm giữa kỳ (0-10)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            className="nb-input w-full min-h-[44px] touch-manipulation"
+            placeholder="0.00"
+            {...register('midterm', { valueAsNumber: true })}
+          />
+          {errors.midterm && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.midterm.message as string}
+            </p>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Điểm giữa kỳ (0-10)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              className="nb-input w-full"
-              placeholder="0.00"
-              {...register('midterm', { valueAsNumber: true })}
-            />
-            {errors.midterm && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.midterm.message as string}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Điểm cuối kỳ (0-10)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              className="nb-input w-full"
-              placeholder="0.00"
-              {...register('final', { valueAsNumber: true })}
-            />
-            {errors.final && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.final.message as string}
-              </p>
-            )}
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button
-              type="submit"
-              className="nb-btn nb-btn--primary flex-1"
-              disabled={isPending}
-            >
-              {isPending ? 'Đang lưu...' : 'Lưu điểm'}
-            </button>
-            <button
-              type="button"
-              className="nb-btn nb-btn--secondary"
-              onClick={onClose}
-            >
-              Hủy
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Điểm cuối kỳ (0-10)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            className="nb-input w-full min-h-[44px] touch-manipulation"
+            placeholder="0.00"
+            {...register('final', { valueAsNumber: true })}
+          />
+          {errors.final && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.final.message as string}
+            </p>
+          )}
+        </div>
+      </form>
+    </ResponsiveModal>
   );
 }

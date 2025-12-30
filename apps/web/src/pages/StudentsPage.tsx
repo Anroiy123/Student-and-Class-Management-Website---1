@@ -16,6 +16,7 @@ import { useSearchParams } from 'react-router-dom';
 import { DataTable } from '../components/DataTable';
 import { FilterSection, type FilterField } from '../components/FilterSection';
 import { Pager } from '../components/Pager';
+import { ResponsiveModal } from '../components/Modal';
 import { useForm } from 'react-hook-form';
 import { z, type ZodType } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -131,6 +132,14 @@ export const StudentsPage = () => {
   const [editStudent, setEditStudent] = useState<StudentListItem | null>(null);
   const { mutateAsync: deleteMutate } = useDeleteStudent();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    imported: number;
+    failed: number;
+    errors?: string[];
+  } | null>(null);
 
   const columns = useMemo<ColumnDef<StudentListItem>[]>(
     () => [
@@ -268,26 +277,107 @@ export const StudentsPage = () => {
     getCoreRowModel: getCoreRowModel(),
   });
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      
+      const response = await fetch(`${API_BASE_URL}/students/template/excel`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể tải file mẫu');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mau-danh-sach-sinh-vien.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error: any) {
+      alert(error.message || 'Không thể tải file mẫu. Vui lòng thử lại.');
+    }
+  };
+
+  const handleImportExcel = async () => {
+    if (!importFile) {
+      alert('Vui lòng chọn file Excel');
+      return;
+    }
+
+    setImporting(true);
+    setImportResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', importFile);
+
+      const token = localStorage.getItem('accessToken');
+      const API_BASE_URL =
+        import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
+      const response = await fetch(`${API_BASE_URL}/students/import/excel`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Import thất bại');
+      }
+
+      setImportResult(result);
+
+      // Refetch students list
+      if (result.imported > 0) {
+        window.location.reload();
+      }
+    } catch (error: any) {
+      alert(error.message || 'Import thất bại. Vui lòng thử lại.');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
-    <section className="space-y-6">
-      <header className="flex flex-col md:flex-row items-start justify-between gap-4">
-        <div className="nb-card--flat w-full">
-          <h1 className="text-2xl md:text-3xl font-bold">Quản lý sinh viên</h1>
-          <p className="mt-1 text-sm opacity-70">
+    <section className="space-y-4 sm:space-y-6 transition-all duration-200 overflow-x-hidden max-w-full">
+      <header className="flex flex-col lg:flex-row items-start justify-between gap-3 sm:gap-4">
+        <div className="nb-card--flat w-full transition-all duration-200">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold transition-all duration-200">Quản lý sinh viên</h1>
+          <p className="mt-1 text-xs sm:text-sm opacity-70">
             Danh sách sinh viên, tìm kiếm, phân trang, thêm/sửa/xóa.
           </p>
         </div>
         {isAdmin && (
-          <div className="shrink-0 w-full md:w-auto">
+          <div className="shrink-0 w-full sm:w-auto flex flex-col sm:flex-row lg:flex-col gap-2 transition-all duration-200">
             <button
               type="button"
-              className="nb-btn nb-btn--primary w-full md:w-auto"
+              className="nb-btn nb-btn--primary w-full sm:min-w-[160px] min-h-[44px] touch-manipulation transition-all duration-200"
               onClick={() => {
                 setEditStudent(null);
                 setShowForm(true);
               }}
             >
-              Thêm sinh viên
+              <span className="text-sm sm:text-base">Thêm sinh viên</span>
+            </button>
+            <button
+              type="button"
+              className="nb-btn nb-btn--accent w-full sm:min-w-[160px] min-h-[44px] touch-manipulation transition-all duration-200"
+              onClick={() => setShowImportModal(true)}
+            >
+              <span className="text-sm sm:text-base"> Import Excel</span>
             </button>
           </div>
         )}
@@ -321,23 +411,23 @@ export const StudentsPage = () => {
                 </option>
               ))}
             </select>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="flex items-center gap-2">
-                <label className="w-24 text-sm opacity-70 shrink-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 transition-all duration-200">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <label className="text-xs sm:text-sm opacity-70 sm:w-24 shrink-0">
                   Ngày sinh từ
                 </label>
                 <input
                   type="date"
-                  className="nb-input flex-1"
+                  className="nb-input w-full sm:flex-1 min-h-[44px] touch-manipulation transition-all duration-200"
                   value={dobFrom}
                   onChange={(e) => setDobFrom(e.target.value)}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <label className="w-16 text-sm opacity-70 shrink-0">Đến</label>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <label className="text-xs sm:text-sm opacity-70 sm:w-16 shrink-0">Đến</label>
                 <input
                   type="date"
-                  className="nb-input flex-1"
+                  className="nb-input w-full sm:flex-1 min-h-[44px] touch-manipulation transition-all duration-200"
                   value={dobTo}
                   onChange={(e) => setDobTo(e.target.value)}
                 />
@@ -412,6 +502,109 @@ export const StudentsPage = () => {
           initial={editStudent}
           onClose={() => setShowForm(false)}
         />
+      )}
+
+      {/* Import Excel Modal */}
+      {showImportModal && (
+        <ResponsiveModal
+          isOpen={true}
+          onClose={() => {
+            setShowImportModal(false);
+            setImportFile(null);
+            setImportResult(null);
+          }}
+          title="Import sinh viên từ Excel"
+          size="lg"
+          footer={
+            <div className="flex flex-col sm:flex-row justify-end gap-2 w-full">
+              <button
+                type="button"
+                className="nb-btn nb-btn--ghost w-full sm:w-auto min-h-[44px] touch-manipulation order-2 sm:order-1"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportFile(null);
+                  setImportResult(null);
+                }}
+              >
+                Đóng
+              </button>
+              {importFile && !importResult && (
+                <button
+                  type="button"
+                  className="nb-btn nb-btn--primary w-full sm:w-auto min-h-[44px] touch-manipulation order-1 sm:order-2"
+                  onClick={handleImportExcel}
+                  disabled={importing}
+                >
+                  <span className="text-sm sm:text-base">{importing ? 'Đang import...' : 'Import'}</span>
+                </button>
+              )}
+            </div>
+          }
+        >
+          <div className="space-y-3 sm:space-y-4">
+            {/* Download template */}
+            <div className="p-3 sm:p-4 bg-edu-muted dark:bg-edu-dark-muted rounded-lg">
+              <h3 className="text-sm sm:text-base font-semibold mb-2">Tải file mẫu</h3>
+              <p className="text-xs sm:text-sm opacity-70 mb-3">
+                Tải file Excel mẫu, điền thông tin sinh viên theo đúng định dạng
+              </p>
+              <button
+                type="button"
+                className="nb-btn nb-btn--secondary w-full sm:w-auto min-h-[44px] touch-manipulation"
+                onClick={handleDownloadTemplate}
+              >
+                <span className="text-sm sm:text-base">Tải file mẫu Excel</span>
+              </button>
+            </div>
+
+            {/* Upload file */}
+            <div className="p-3 sm:p-4 border-2 border-dashed border-edu-border dark:border-edu-dark-border rounded-lg">
+              <h3 className="text-sm sm:text-base font-semibold mb-2">Upload file Excel</h3>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setImportFile(file);
+                    setImportResult(null);
+                  }
+                }}
+                className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-edu-primary file:text-white hover:file:bg-edu-primary-hover min-h-[44px]"
+              />
+              {importFile && (
+                <p className="mt-2 text-sm text-edu-accent dark:text-edu-dark-accent">
+                  Đã chọn: {importFile.name}
+                </p>
+              )}
+            </div>
+
+            {/* Import result */}
+            {importResult && (
+              <div className="p-4 bg-edu-success-light dark:bg-edu-dark-muted rounded-lg">
+                <h3 className="font-semibold text-edu-success dark:text-edu-dark-accent mb-2">
+                  Kết quả import
+                </h3>
+                <ul className="text-sm space-y-1">
+                  <li>Import thành công: {importResult.imported} sinh viên</li>
+                  <li>Import thất bại: {importResult.failed}</li>
+                </ul>
+                {importResult.errors && importResult.errors.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm font-semibold mb-1">Lỗi chi tiết:</p>
+                    <ul className="text-xs space-y-1 max-h-40 overflow-y-auto">
+                      {importResult.errors.map((err, idx) => (
+                        <li key={idx} className="text-edu-error dark:text-red-400">
+                          • {err}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </ResponsiveModal>
       )}
     </section>
   );
@@ -506,123 +699,122 @@ function StudentFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="nb-card w-full max-w-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">
-            {isEdit ? 'Sửa sinh viên' : 'Thêm sinh viên'}
-          </h2>
-          <button className="nb-btn nb-btn--ghost" onClick={onClose}>
-            Đóng
+    <ResponsiveModal
+      isOpen={true}
+      onClose={onClose}
+      title={isEdit ? 'Sửa sinh viên' : 'Thêm sinh viên'}
+      size="lg"
+      footer={
+        <div className="flex flex-col sm:flex-row gap-2 w-full justify-end">
+          <button
+            type="button"
+            className="nb-btn nb-btn--ghost min-h-[44px] w-full sm:w-auto touch-manipulation order-2 sm:order-1"
+            onClick={onClose}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            form="student-form"
+            className="nb-btn nb-btn--primary min-h-[44px] w-full sm:w-auto touch-manipulation order-1 sm:order-2"
+            disabled={isCreating || isUpdating}
+          >
+            {isEdit ? 'Lưu thay đổi' : 'Thêm mới'}
           </button>
         </div>
-
-        <form
-          className="grid grid-cols-1 gap-3 md:grid-cols-2"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <div>
-            <input
-              className="nb-input"
-              placeholder="MSSV"
-              {...register('mssv')}
-            />
-            {errors.mssv && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.mssv.message as string}
-              </p>
-            )}
-          </div>
-          <div>
-            <input
-              className="nb-input"
-              placeholder="Họ tên"
-              {...register('fullName')}
-            />
-            {errors.fullName && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.fullName.message as string}
-              </p>
-            )}
-          </div>
-          <div>
-            <input
-              type="date"
-              className="nb-input"
-              placeholder="Ngày sinh"
-              {...register('dob')}
-            />
-            {errors.dob && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.dob.message as string}
-              </p>
-            )}
-          </div>
-          <div>
-            <select className="nb-input" {...register('classId')}>
-              <option value="">Chưa chọn lớp</option>
-              {classes.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.code} - {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <input
-              className="nb-input"
-              placeholder="Email"
-              {...register('email')}
-            />
-            {errors.email && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.email.message as string}
-              </p>
-            )}
-          </div>
-          <div>
-            <input
-              className="nb-input"
-              placeholder="Số điện thoại"
-              {...register('phone')}
-            />
-            {errors.phone && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.phone.message as string}
-              </p>
-            )}
-          </div>
-          <div className="md:col-span-2">
-            <input
-              className="nb-input"
-              placeholder="Địa chỉ"
-              {...register('address')}
-            />
-            {errors.address && (
-              <p className="mt-1 text-xs text-red-600">
-                {errors.address.message as string}
-              </p>
-            )}
-          </div>
-
-          <div className="md:col-span-2 mt-2 flex justify-end gap-2">
-            <button
-              type="button"
-              className="nb-btn nb-btn--ghost"
-              onClick={onClose}
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              className="nb-btn nb-btn--primary"
-              disabled={isCreating || isUpdating}
-            >
-              {isEdit ? 'Lưu thay đổi' : 'Thêm mới'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      }
+    >
+      <form
+        id="student-form"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <div>
+          <input
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="MSSV"
+            {...register('mssv')}
+          />
+          {errors.mssv && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.mssv.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <input
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Họ tên"
+            {...register('fullName')}
+          />
+          {errors.fullName && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.fullName.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <input
+            type="date"
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Ngày sinh"
+            {...register('dob')}
+          />
+          {errors.dob && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.dob.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <select className="nb-input min-h-[44px] touch-manipulation" {...register('classId')}>
+            <option value="">Chưa chọn lớp</option>
+            {classes.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.code} - {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <input
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Email"
+            type="email"
+            {...register('email')}
+          />
+          {errors.email && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.email.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <input
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Số điện thoại"
+            type="tel"
+            {...register('phone')}
+          />
+          {errors.phone && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.phone.message as string}
+            </p>
+          )}
+        </div>
+        <div className="sm:col-span-2">
+          <input
+            className="nb-input min-h-[44px] touch-manipulation"
+            placeholder="Địa chỉ"
+            {...register('address')}
+          />
+          {errors.address && (
+            <p className="mt-1 text-xs text-red-600">
+              {errors.address.message as string}
+            </p>
+          )}
+        </div>
+      </form>
+    </ResponsiveModal>
   );
 }

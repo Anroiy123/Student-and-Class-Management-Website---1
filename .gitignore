@@ -16,6 +16,7 @@ apps/api/dist
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Misc
 .DS_Store
@@ -25,3 +26,5 @@ apps/api/dist
 .claude
 AGENTS.MD
 CLAUDE.md
+
+docs/report.md

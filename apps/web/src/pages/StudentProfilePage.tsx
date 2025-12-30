@@ -5,7 +5,7 @@ export const StudentProfilePage = () => {
 
   if (isLoading) {
     return (
-      <section className="space-y-6">
+      <section className="space-y-6 overflow-x-hidden max-w-full">
         <header>
           <div className="nb-card--flat">
             <h1 className="text-2xl font-bold">Hồ sơ cá nhân</h1>
@@ -26,7 +26,7 @@ export const StudentProfilePage = () => {
       (error as any)?.response?.data?.message ||
       'Không thể tải thông tin hồ sơ';
     return (
-      <section className="space-y-6">
+      <section className="space-y-6 overflow-x-hidden max-w-full">
         <header>
           <div className="nb-card--flat">
             <h1 className="text-2xl font-bold">Hồ sơ cá nhân</h1>
@@ -43,7 +43,7 @@ export const StudentProfilePage = () => {
 
   if (!profile) {
     return (
-      <section className="space-y-6">
+      <section className="space-y-6 overflow-x-hidden max-w-full">
         <header>
           <div className="nb-card--flat">
             <h1 className="text-2xl font-bold">Hồ sơ cá nhân</h1>
@@ -62,7 +62,7 @@ export const StudentProfilePage = () => {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 overflow-x-hidden max-w-full">
       <header>
         <div className="nb-card--flat">
           <h1 className="text-2xl font-bold">Hồ sơ cá nhân</h1>

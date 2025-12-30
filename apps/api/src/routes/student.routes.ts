@@ -1,10 +1,13 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   listStudents,
   getStudent,
   createStudent,
   updateStudent,
   deleteStudent,
+  importStudentsExcel,
+  downloadTemplate,
 } from '../controllers/student.controller';
 import {
   createStudentSchema,
@@ -16,6 +19,7 @@ import { validateRequest } from '../middlewares/validateRequest';
 import { requireAuth, requireRole } from '../middlewares/auth';
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.use(requireAuth());
 
@@ -49,5 +53,12 @@ router.delete(
   validateRequest(getStudentSchema),
   deleteStudent,
 );
+router.post(
+  '/import/excel',
+  requireRole('ADMIN'),
+  upload.single('file'),
+  importStudentsExcel,
+);
+router.get('/template/excel', requireRole('ADMIN'), downloadTemplate);
 
 export const studentRoutes = router;

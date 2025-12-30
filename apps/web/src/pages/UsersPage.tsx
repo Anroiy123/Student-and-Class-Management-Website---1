@@ -365,7 +365,7 @@ export const UsersPage = () => {
   });
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 overflow-x-hidden max-w-full">
       <header className="nb-card--flat">
         <h1 className="text-2xl md:text-3xl font-bold">Quản lý tài khoản</h1>
         <p className="mt-1 text-sm opacity-70">

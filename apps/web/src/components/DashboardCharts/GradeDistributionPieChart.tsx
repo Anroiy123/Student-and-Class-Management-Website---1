@@ -2,10 +2,18 @@
  * Grade Distribution Pie Chart Component
  * Requirements: 1.1, 1.2, 1.3, 7.1, 7.2, 7.3, 7.4
  */
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 import type { GradeDistribution } from '../../lib/dashboard';
 import { useTheme } from '../../lib/themeHooks';
-import { useIsMobile } from '../../lib/useIsMobile';
+import { useBreakpoint } from '../../lib/responsive';
+import { getChartConfig, abbreviateLabel, formatPercent } from './ChartConfig';
 
 type GradeDistributionPieChartProps = {
   data: GradeDistribution;
@@ -13,16 +21,17 @@ type GradeDistributionPieChartProps = {
 
 type ChartDataItem = {
   name: string;
+  shortName: string;
   value: number;
   color: string;
   darkColor: string;
 };
 
-const GRADE_LABELS: Record<string, string> = {
-  excellent: 'Giỏi (≥8)',
-  good: 'Khá (≥6.5)',
-  average: 'Trung bình (≥5)',
-  poor: 'Yếu (<5)',
+const GRADE_LABELS: Record<string, { full: string; short: string }> = {
+  excellent: { full: 'Giỏi (≥8)', short: 'Giỏi' },
+  good: { full: 'Khá (≥6.5)', short: 'Khá' },
+  average: { full: 'Trung bình (≥5)', short: 'TB' },
+  poor: { full: 'Yếu (<5)', short: 'Yếu' },
 };
 
 const COLORS = {
@@ -32,65 +41,83 @@ const COLORS = {
   poor: { light: '#DC2626', dark: '#F87171' }, // red
 };
 
-// Chart height constants for responsive design (Requirements: 7.1, 7.2)
-const CHART_HEIGHT_MOBILE = 200;
-const CHART_HEIGHT_DESKTOP = 250;
-
-export function GradeDistributionPieChart({ data }: GradeDistributionPieChartProps) {
+export function GradeDistributionPieChart({
+  data,
+}: GradeDistributionPieChartProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const isMobile = useIsMobile();
-  const chartHeight = isMobile ? CHART_HEIGHT_MOBILE : CHART_HEIGHT_DESKTOP;
+  const { breakpoint, isMobile } = useBreakpoint();
 
   const chartData: ChartDataItem[] = [
     {
-      name: GRADE_LABELS.excellent,
+      name: GRADE_LABELS.excellent.full,
+      shortName: GRADE_LABELS.excellent.short,
       value: data.excellent,
       color: COLORS.excellent.light,
       darkColor: COLORS.excellent.dark,
     },
     {
-      name: GRADE_LABELS.good,
+      name: GRADE_LABELS.good.full,
+      shortName: GRADE_LABELS.good.short,
       value: data.good,
       color: COLORS.good.light,
       darkColor: COLORS.good.dark,
     },
     {
-      name: GRADE_LABELS.average,
+      name: GRADE_LABELS.average.full,
+      shortName: GRADE_LABELS.average.short,
       value: data.average,
       color: COLORS.average.light,
       darkColor: COLORS.average.dark,
     },
     {
-      name: GRADE_LABELS.poor,
+      name: GRADE_LABELS.poor.full,
+      shortName: GRADE_LABELS.poor.short,
       value: data.poor,
       color: COLORS.poor.light,
       darkColor: COLORS.poor.dark,
     },
   ].filter((item) => item.value > 0);
 
-  const total = data.total || chartData.reduce((sum, item) => sum + item.value, 0);
+  const total =
+    data.total || chartData.reduce((sum, item) => sum + item.value, 0);
+
+  // Get responsive config
+  const config = getChartConfig(breakpoint, { segmentCount: chartData.length });
+
+  // Adjust pie radius for mobile
+  const innerRadius = isMobile ? 40 : 50;
+  const outerRadius = isMobile ? 65 : 80;
 
   return (
     <div className="edu-card">
-      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">Phân bố điểm số</h3>
-      <ResponsiveContainer width="100%" height={chartHeight}>
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">
+        Phân bố điểm số
+      </h3>
+      <ResponsiveContainer width="100%" height={config.height}>
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
-            cy="50%"
-            innerRadius={50}
-            outerRadius={80}
+            cy={isMobile ? '45%' : '50%'}
+            innerRadius={innerRadius}
+            outerRadius={outerRadius}
             paddingAngle={2}
             dataKey="value"
-            label={({ name, percent }) => {
-              const label = (name ?? '').split(' ')[0];
-              // Fix "Trung" to show as "Trung bình"
-              const displayLabel = label === 'Trung' ? 'Trung bình' : label;
-              return `${displayLabel} ${((percent ?? 0) * 100).toFixed(0)}%`;
-            }}
-            labelLine={false}
+            label={
+              config.showInlineLabels
+                ? ({ name, percent }) => {
+                    // Extract short name from the data
+                    const item = chartData.find((d) => d.name === name);
+                    const label = abbreviateLabel(
+                      item?.shortName ?? String(name),
+                      breakpoint
+                    );
+                    return `${label} ${formatPercent(percent ?? 0, breakpoint)}`;
+                  }
+                : false
+            }
+            labelLine={config.showInlineLabels}
           >
             {chartData.map((entry, index) => (
               <Cell
@@ -105,7 +132,8 @@ export function GradeDistributionPieChart({ data }: GradeDistributionPieChartPro
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const item = payload[0].payload as ChartDataItem;
-                const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
+                const percentage =
+                  total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
                 return (
                   <div
                     className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
@@ -124,9 +152,18 @@ export function GradeDistributionPieChart({ data }: GradeDistributionPieChartPro
             }}
           />
           <Legend
+            layout={isMobile ? 'horizontal' : 'vertical'}
+            verticalAlign={isMobile ? 'bottom' : 'middle'}
+            align={isMobile ? 'center' : 'right'}
             wrapperStyle={{
               color: isDark ? '#94A3B8' : '#475569',
-              fontSize: '12px',
+              fontSize: `${config.fontSize.legend}px`,
+              paddingTop: isMobile ? '10px' : '0',
+            }}
+            formatter={(value: string) => {
+              // Show short name on mobile
+              const item = chartData.find((d) => d.name === value);
+              return isMobile ? item?.shortName ?? value : value;
             }}
           />
         </PieChart>

@@ -10,6 +10,7 @@ import { dashboardRoutes } from './dashboard.routes';
 import { teacherRoutes } from './teacher.routes';
 import { userRoutes } from './user.routes';
 import meRoutes from './me.routes';
+import notificationRoutes from './notification.routes';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use('/grades', gradeRoutes);
 router.use('/reports', reportRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/me', meRoutes);
+router.use('/notifications', notificationRoutes);
 
 export const apiRouter = router;

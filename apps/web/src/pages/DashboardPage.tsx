@@ -48,7 +48,7 @@ const StudentDashboard = () => {
 
   if (isLoading) {
     return (
-      <section className="space-y-6">
+      <section className="space-y-6 overflow-x-hidden max-w-full">
         <header className="edu-page-header">
           <h1 className="edu-page-title">Dashboard</h1>
         </header>
@@ -69,7 +69,7 @@ const StudentDashboard = () => {
     const errorMessage =
       axiosError?.response?.data?.message || 'Không thể tải dữ liệu';
     return (
-      <section className="space-y-6">
+      <section className="space-y-6 overflow-x-hidden max-w-full">
         <header className="edu-page-header">
           <h1 className="edu-page-title">Dashboard</h1>
         </header>
@@ -86,7 +86,7 @@ const StudentDashboard = () => {
     : null;
 
   return (
-    <section className="space-y-6" aria-labelledby="dashboard-title">
+    <section className="space-y-6 overflow-x-hidden max-w-full" aria-labelledby="dashboard-title">
       <header className="edu-page-header">
         <h1 id="dashboard-title" className="edu-page-title">
           Xin chào, {dashboard?.profile.fullName}!
@@ -286,7 +286,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 overflow-x-hidden max-w-full">
       <header className="edu-page-header">
         <h1 className="edu-page-title">Tổng quan hệ thống</h1>
         <p className="edu-page-subtitle">

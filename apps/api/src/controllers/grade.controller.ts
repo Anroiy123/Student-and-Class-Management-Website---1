@@ -7,15 +7,17 @@ import {
   verifyTeacherEnrollmentAccess,
 } from '../utils/teacherAccess';
 import { convertToGPA4, computeLetterGrade } from '../constants/messages';
+import { createGradeNotification } from '../utils/notificationService';
 
 const computeTotal = (attendance: number, midterm: number, final: number) =>
   Number((attendance * 0.1 + midterm * 0.3 + final * 0.6).toFixed(2));
 
 export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
   const filter: Record<string, unknown> = {};
-  const enrollmentMatch: Record<string, unknown> = {};
+  const enrollmentMatch: Record<string, any> = {};
 
   // Apply teacher scope filtering
+  let teacherScope: { classIds: any[]; courseIds: any[] } | null = null;
   if (req.user) {
     const scope = await getTeacherAccessScope(req.user);
     if (scope) {
@@ -24,6 +26,7 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
         // Unlinked teacher - return empty
         return res.json({ items: [], total: 0, page: 1, pageSize: 10 });
       }
+      teacherScope = scope;
       // Filter enrollments by classId OR courseId in scope
       enrollmentMatch.$or = [
         { classId: { $in: scope.classIds } },
@@ -37,10 +40,49 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
     enrollmentMatch.studentId = req.query.studentId;
   }
   if (req.query.classId) {
-    enrollmentMatch.classId = req.query.classId;
+    if (teacherScope) {
+      // For teachers, verify access and rebuild filter
+      const hasClassAccess = teacherScope.classIds.some(
+        (id) => id.toString() === req.query.classId
+      );
+      if (!hasClassAccess) {
+        return res.json({ items: [], total: 0, page: 1, pageSize: 10 });
+      }
+      // Rebuild the $or to include the specific classId filter
+      (enrollmentMatch as any).$or = [
+        { classId: req.query.classId },
+      ];
+      if (teacherScope.courseIds.length > 0) {
+        enrollmentMatch.$or.push({ courseId: { $in: teacherScope.courseIds }, classId: req.query.classId });
+      }
+    } else {
+      enrollmentMatch.classId = req.query.classId;
+    }
   }
   if (req.query.courseId) {
-    enrollmentMatch.courseId = req.query.courseId;
+    if (teacherScope) {
+      // For teachers, verify access and rebuild filter
+      const hasCourseAccess = teacherScope.courseIds.some(
+        (id) => id.toString() === req.query.courseId
+      );
+      if (!hasCourseAccess) {
+        return res.json({ items: [], total: 0, page: 1, pageSize: 10 });
+      }
+      // Rebuild the $or to include the specific courseId filter
+      if (req.query.classId) {
+        // Both filters applied
+        (enrollmentMatch as any).$or = [{ classId: req.query.classId, courseId: req.query.courseId }];
+      } else {
+        (enrollmentMatch as any).$or = [
+          { courseId: req.query.courseId },
+        ];
+        if (teacherScope.classIds.length > 0) {
+          enrollmentMatch.$or.push({ classId: { $in: teacherScope.classIds }, courseId: req.query.courseId });
+        }
+      }
+    } else {
+      enrollmentMatch.courseId = req.query.courseId;
+    }
   }
   if (req.query.semester) {
     // Support partial semester matching (HK1, 2024, or HK1-2024)
@@ -86,6 +128,13 @@ export const listGrades: RequestHandler = asyncHandler(async (req, res) => {
       }
     });
   }
+
+  // Sort by MSSV ascending
+  filteredGrades.sort((a, b) => {
+    const mssvA = (a.enrollmentId as any)?.studentId?.mssv || '';
+    const mssvB = (b.enrollmentId as any)?.studentId?.mssv || '';
+    return mssvA.localeCompare(mssvB);
+  });
 
   // Apply pagination
   const paginatedGrades = filteredGrades.slice(skip, skip + pageSize);
@@ -263,10 +312,16 @@ export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
     }
   }
 
-  const enrollment = await EnrollmentModel.findById(enrollmentId);
+  const enrollment = await EnrollmentModel.findById(enrollmentId).populate(
+    'courseId studentId'
+  );
   if (!enrollment) {
     return res.status(404).json({ message: 'Enrollment not found' });
   }
+
+  // Check if grade already exists (to determine if this is an update)
+  const existingGrade = await GradeModel.findOne({ enrollmentId });
+  const isUpdate = !!existingGrade;
 
   const total = computeTotal(attendance, midterm, final);
   const gpa4 = convertToGPA4(total);
@@ -288,6 +343,14 @@ export const upsertGrade: RequestHandler = asyncHandler(async (req, res) => {
     path: 'enrollmentId',
     populate: ['studentId', 'classId', 'courseId'],
   });
+
+  // Send notification to student
+  if (req.user && grade) {
+    // Create notification asynchronously (don't wait)
+    createGradeNotification(grade as any, isUpdate).catch((err) =>
+      console.error('Failed to create notification:', err),
+    );
+  }
 
   res.json(grade);
 });

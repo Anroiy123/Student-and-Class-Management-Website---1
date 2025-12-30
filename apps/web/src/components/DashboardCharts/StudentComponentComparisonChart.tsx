@@ -10,20 +10,17 @@ import {
 } from 'recharts';
 import type { StudentComponentComparison } from '../../lib/me';
 import { useTheme } from '../../lib/themeHooks';
-import { useIsMobile } from '../../lib/useIsMobile';
+import { useBreakpoint, CHART_HEIGHT } from '../../lib/responsive';
 
 type StudentComponentComparisonChartProps = {
   data: StudentComponentComparison;
 };
 
-const CHART_HEIGHT_MOBILE = 200;
-const CHART_HEIGHT_DESKTOP = 250;
-
 export function StudentComponentComparisonChart({ data }: StudentComponentComparisonChartProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const isMobile = useIsMobile();
-  const chartHeight = isMobile ? CHART_HEIGHT_MOBILE : CHART_HEIGHT_DESKTOP;
+  const { isMobile } = useBreakpoint();
+  const chartHeight = isMobile ? CHART_HEIGHT.MOBILE : CHART_HEIGHT.DESKTOP;
 
   if (data.count === 0) {
     return (

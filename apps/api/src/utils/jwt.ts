@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env";
 
 export type JwtPayload = {
+  _id: string;
   sub: string;
   role: string;
 };
