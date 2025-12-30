@@ -13,41 +13,46 @@ import {
 } from 'recharts';
 import type { EnrollmentTrendItem } from '../../lib/dashboard';
 import { useTheme } from '../../lib/themeHooks';
-import { useIsMobile } from '../../lib/useIsMobile';
+import { useBreakpoint } from '../../lib/responsive';
+import { getChartConfig } from './ChartConfig';
 
 type EnrollmentTrendChartProps = {
   data: EnrollmentTrendItem[];
 };
 
-// Chart height constants for responsive design (Requirements: 7.1, 7.2)
-const CHART_HEIGHT_MOBILE = 200;
-const CHART_HEIGHT_DESKTOP = 250;
-
 export function EnrollmentTrendChart({ data }: EnrollmentTrendChartProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const isMobile = useIsMobile();
-  const chartHeight = isMobile ? CHART_HEIGHT_MOBILE : CHART_HEIGHT_DESKTOP;
+  const { breakpoint } = useBreakpoint();
+
+  // Get responsive config
+  const config = getChartConfig(breakpoint);
 
   return (
     <div className="edu-card">
       <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">
         Xu hướng đăng ký môn học
       </h3>
-      <ResponsiveContainer width="100%" height={chartHeight}>
-        <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+      <ResponsiveContainer width="100%" height={config.height}>
+        <LineChart data={data} margin={config.margin}>
           <CartesianGrid
             strokeDasharray="3 3"
             stroke={isDark ? '#334155' : '#E2E8F0'}
           />
           <XAxis
             dataKey="monthLabel"
-            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
+            tick={{
+              fill: isDark ? '#94A3B8' : '#475569',
+              fontSize: config.fontSize.axis,
+            }}
             axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
             tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
           />
           <YAxis
-            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
+            tick={{
+              fill: isDark ? '#94A3B8' : '#475569',
+              fontSize: config.fontSize.axis,
+            }}
             allowDecimals={false}
             axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
             tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}

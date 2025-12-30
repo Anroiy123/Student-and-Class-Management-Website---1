@@ -26,3 +26,5 @@ apps/api/dist
 .claude
 AGENTS.MD
 CLAUDE.md
+
+docs/report.md

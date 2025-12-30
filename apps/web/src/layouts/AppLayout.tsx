@@ -5,65 +5,96 @@ import { useAuth } from '../lib/authHooks';
 import { useTheme } from '../lib/themeHooks';
 import { NotificationBell } from '../components/NotificationBell';
 import type { UserRole } from '../lib/authContext';
+import {
+  LayoutDashboard,
+  GraduationCap,
+  School,
+  BookOpen,
+  ClipboardList,
+  BarChart3,
+  Users,
+  Send,
+  User,
+  Award,
+  BookMarked,
+  LogOut,
+  Moon,
+  Sun,
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+  type LucideIcon,
+} from 'lucide-react';
 
 type NavItem = {
   label: string;
   path: string;
+  icon: LucideIcon;
   roles?: UserRole[];
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', path: '/' },
+  { label: 'Dashboard', path: '/', icon: LayoutDashboard },
   // Admin/Teacher items
   {
     label: 'Quản lý sinh viên',
     path: '/students',
+    icon: GraduationCap,
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Quản lý lớp học',
     path: '/classes',
+    icon: School,
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Quản lý môn học',
     path: '/courses',
+    icon: BookOpen,
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Quản lý điểm',
     path: '/grades',
+    icon: ClipboardList,
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Báo cáo',
     path: '/reports',
+    icon: BarChart3,
     roles: ['ADMIN', 'TEACHER'],
   },
   {
     label: 'Quản lý tài khoản',
     path: '/users',
+    icon: Users,
     roles: ['ADMIN'],
   },
   {
     label: 'Gửi thông báo',
     path: '/send-notification',
+    icon: Send,
     roles: ['ADMIN', 'TEACHER'],
   },
   // Student items
   {
     label: 'Hồ sơ cá nhân',
     path: '/profile',
+    icon: User,
     roles: ['STUDENT'],
   },
   {
     label: 'Điểm của tôi',
     path: '/my-grades',
+    icon: Award,
     roles: ['STUDENT'],
   },
   {
     label: 'Môn học của tôi',
     path: '/my-courses',
+    icon: BookMarked,
     roles: ['STUDENT'],
   },
 ];
@@ -86,6 +117,18 @@ export const AppLayout = () => {
       console.error('Failed to load nav collapse state:', error);
     }
   }, []);
+
+  // Body scroll lock when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, [isMobileMenuOpen]);
 
   const handleSignOut = () => {
     logout();
@@ -137,11 +180,11 @@ export const AppLayout = () => {
         Bỏ qua đến điều hướng
       </a>
 
-      <div className="min-h-screen flex bg-edu-background dark:bg-edu-dark-bg">
+      <div className="min-h-screen flex bg-edu-background dark:bg-edu-dark-bg overflow-x-hidden max-w-full w-full">
         {/* Mobile Overlay */}
         {isMobileMenuOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
@@ -150,13 +193,13 @@ export const AppLayout = () => {
         {/* Sidebar */}
         <aside
           className={clsx(
-            'h-screen edu-sidebar transition-all duration-300 flex-shrink-0',
-            // Desktop - sticky sidebar
-            'lg:sticky lg:top-0 lg:block',
-            isCollapsed ? 'lg:w-20 lg:min-w-20' : 'lg:w-64 lg:min-w-64',
-            // Mobile - fixed overlay
+            'edu-sidebar transition-all duration-300 flex-shrink-0 h-screen',
+            // Desktop - fixed sidebar
+            'lg:fixed lg:inset-y-0 lg:left-0 lg:z-30',
+            isCollapsed ? 'lg:w-20' : 'lg:w-64',
+            // Mobile - fixed overlay with max-width constraint
             isMobileMenuOpen 
-              ? 'fixed inset-y-0 left-0 w-64 min-w-64 z-50' 
+              ? 'fixed inset-y-0 left-0 w-64 max-w-[85vw] z-50' 
               : 'hidden lg:block',
           )}
           onMouseEnter={() => setShowCollapseButton(true)}
@@ -165,49 +208,58 @@ export const AppLayout = () => {
         >
           <div
             className={clsx(
-              'flex h-full flex-col gap-4',
+              'flex h-full flex-col gap-4 overflow-y-auto',
               isCollapsed ? 'p-3' : 'p-4',
             )}
           >
-            {!isCollapsed && (
-              <Link
-                to="/"
-                className="block px-2 py-3"
-                aria-label="Trang chủ - Quản lý Sinh viên/Lớp học"
-              >
-                <div className="font-display text-2xl font-extrabold text-white tracking-tight">
-                  Edu<span className="text-emerald-300">Manager</span>
-                </div>
-                <p className="text-xs text-white/60 mt-0.5">Hệ thống quản lý sinh viên</p>
-              </Link>
-            )}
-            {isCollapsed && (
-              <Link
-                to="/"
-                className="w-full aspect-square flex items-center justify-center"
-                title="EduManager - Trang chủ"
-                aria-label="Trang chủ"
-              >
-                <span className="font-display text-xl font-extrabold text-white">E</span>
-              </Link>
-            )}
+            {/* Logo - fixed at top */}
+            <div className="flex-shrink-0">
+              {!isCollapsed && (
+                <Link
+                  to="/"
+                  className="block px-2 py-3"
+                  aria-label="Trang chủ - Quản lý Sinh viên/Lớp học"
+                >
+                  <div className="font-display text-2xl font-extrabold text-white tracking-tight">
+                    Edu<span className="text-emerald-300">Manager</span>
+                  </div>
+                  <p className="text-xs text-white/60 mt-0.5">Hệ thống quản lý sinh viên</p>
+                </Link>
+              )}
+              {isCollapsed && (
+                <Link
+                  to="/"
+                  className="w-full aspect-square flex items-center justify-center"
+                  title="EduManager - Trang chủ"
+                  aria-label="Trang chủ"
+                >
+                  <span className="font-display text-xl font-extrabold text-white">E</span>
+                </Link>
+              )}
+            </div>
+
+            {/* Navigation - scrollable */}
             <nav 
               id="main-nav" 
-              className="flex flex-col gap-1"
+              className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto"
               role="navigation"
               aria-label="Menu chính"
             >
               {visibleNavItems.map((item) => (
-                <NavItem
+                <NavItemComponent
                   key={item.path}
                   to={item.path}
+                  icon={item.icon}
                   isCollapsed={isCollapsed}
+                  onMobileClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.label}
-                </NavItem>
+                </NavItemComponent>
               ))}
             </nav>
-            <div className="mt-auto" role="region" aria-label="Thông tin người dùng">
+
+            {/* User section - fixed at bottom */}
+            <div className="flex-shrink-0 mt-auto" role="region" aria-label="Thông tin người dùng">
               {user && !isCollapsed && (
                 <div className="mb-3 bg-white/10 rounded-xl p-3">
                   <div className="flex items-center gap-3 mb-3">
@@ -240,7 +292,11 @@ export const AppLayout = () => {
                     }
                     aria-pressed={theme === 'dark'}
                   >
-                    <span className="text-base">{theme === 'light' ? '🌙' : '☀️'}</span>
+                    {theme === 'light' ? (
+                      <Moon className="w-4 h-4" />
+                    ) : (
+                      <Sun className="w-4 h-4" />
+                    )}
                     <span>{theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}</span>
                   </button>
                 </div>
@@ -263,7 +319,11 @@ export const AppLayout = () => {
                     aria-label={theme === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
                     aria-pressed={theme === 'dark'}
                   >
-                    <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
+                    {theme === 'light' ? (
+                      <Moon className="w-5 h-5" />
+                    ) : (
+                      <Sun className="w-5 h-5" />
+                    )}
                   </button>
                 </>
               )}
@@ -277,7 +337,8 @@ export const AppLayout = () => {
                 title={isCollapsed ? 'Đăng xuất' : undefined}
                 aria-label="Đăng xuất khỏi hệ thống"
               >
-                {isCollapsed ? '→' : 'Đăng xuất'}
+                <LogOut className={clsx(isCollapsed ? 'w-5 h-5' : 'w-4 h-4')} />
+                {!isCollapsed && <span>Đăng xuất</span>}
               </button>
             </div>
           </div>
@@ -295,48 +356,54 @@ export const AppLayout = () => {
             aria-expanded={!isCollapsed}
             aria-controls="main-nav"
           >
-            <span className="text-xs font-bold text-white dark:text-edu-dark-text" aria-hidden="true">{isCollapsed ? '›' : '‹'}</span>
+            {isCollapsed ? (
+              <ChevronRight className="w-4 h-4 text-white dark:text-edu-dark-text" />
+            ) : (
+              <ChevronLeft className="w-4 h-4 text-white dark:text-edu-dark-text" />
+            )}
           </button>
         </aside>
 
-        {/* Main Content */}
+        {/* Main Content - with margin for fixed sidebar on desktop */}
         <main 
           id="main-content" 
-          className="flex-1 flex flex-col bg-edu-background dark:bg-edu-dark-bg"
+          className={clsx(
+            'flex-1 flex flex-col bg-edu-background dark:bg-edu-dark-bg min-w-0 overflow-x-hidden',
+            // Add margin-left on desktop to account for fixed sidebar
+            isCollapsed ? 'lg:ml-20' : 'lg:ml-64',
+          )}
           role="main"
           tabIndex={-1}
           aria-label="Nội dung chính"
         >
           {/* Mobile Header */}
-          <header className="lg:hidden sticky top-0 z-30 bg-edu-primary dark:bg-edu-dark-surface border-b border-edu-border dark:border-edu-dark-border px-4 py-3 flex items-center justify-between">
+          <header className="lg:hidden sticky top-0 z-30 bg-edu-primary dark:bg-edu-dark-surface border-b border-edu-border dark:border-edu-dark-border px-3 py-2 sm:px-4 sm:py-3 flex items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded-lg transition-colors touch-manipulation"
               aria-label="Mở menu"
             >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu className="w-6 h-6 text-white" />
             </button>
-            <div className="font-display text-lg font-bold text-white">
+            <div className="font-display text-base sm:text-lg font-bold text-white truncate flex-1 text-center px-2">
               Edu<span className="text-emerald-300">Manager</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <NotificationBell isCollapsed={false} />
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-white"
+                className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded-lg transition-colors text-white touch-manipulation"
                 aria-label={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
               >
-                {theme === 'dark' ? '☀️' : '🌙'}
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
             </div>
           </header>
 
           {/* Page Content */}
-          <div className="flex-1 px-4 py-4 lg:px-8 lg:py-6">
+          <div className="flex-1 px-3 py-3 sm:px-4 sm:py-4 lg:px-8 lg:py-6 overflow-x-hidden max-w-full">
             <Outlet />
           </div>
         </main>
@@ -345,26 +412,29 @@ export const AppLayout = () => {
   );
 };
 
-const NavItem = ({
+const NavItemComponent = ({
   to,
+  icon: Icon,
   isCollapsed,
+  onMobileClick,
   children,
 }: {
   to: string;
+  icon: LucideIcon;
   isCollapsed: boolean;
+  onMobileClick?: () => void;
   children: ReactNode;
 }) => (
   <NavLink
     to={to}
+    onClick={onMobileClick}
     className={({ isActive }) =>
       clsx(
         'flex items-center rounded-lg transition-all duration-150 no-underline',
         isActive
           ? 'bg-white/20 text-white font-semibold hover:text-white hover:bg-white/25'
           : 'text-white/70 hover:bg-white/10 hover:text-white',
-        isCollapsed
-          ? 'justify-center p-3 text-xs'
-          : 'px-4 py-2.5',
+        isCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-2.5',
       )
     }
     end={to === '/'}
@@ -373,11 +443,8 @@ const NavItem = ({
   >
     {({ isActive }) => (
       <>
-        {isCollapsed ? (
-          <span className="text-xs font-medium">{String(children).charAt(0)}</span>
-        ) : (
-          <span className="text-sm">{children}</span>
-        )}
+        <Icon className={clsx('flex-shrink-0', isCollapsed ? 'w-5 h-5' : 'w-5 h-5')} />
+        {!isCollapsed && <span className="text-sm">{children}</span>}
         {isActive && <span className="sr-only">(trang hiện tại)</span>}
       </>
     )}

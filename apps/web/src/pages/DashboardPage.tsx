@@ -48,7 +48,7 @@ const StudentDashboard = () => {
 
   if (isLoading) {
     return (
-      <section className="space-y-6">
+      <section className="space-y-6 overflow-x-hidden max-w-full">
         <header className="edu-page-header">
           <h1 className="edu-page-title">Dashboard</h1>
         </header>
@@ -69,7 +69,7 @@ const StudentDashboard = () => {
     const errorMessage =
       axiosError?.response?.data?.message || 'Không thể tải dữ liệu';
     return (
-      <section className="space-y-6">
+      <section className="space-y-6 overflow-x-hidden max-w-full">
         <header className="edu-page-header">
           <h1 className="edu-page-title">Dashboard</h1>
         </header>
@@ -86,7 +86,7 @@ const StudentDashboard = () => {
     : null;
 
   return (
-    <section className="space-y-6" aria-labelledby="dashboard-title">
+    <section className="space-y-6 overflow-x-hidden max-w-full" aria-labelledby="dashboard-title">
       <header className="edu-page-header">
         <h1 id="dashboard-title" className="edu-page-title">
           Xin chào, {dashboard?.profile.fullName}!
@@ -206,21 +206,6 @@ function getClassificationBadge(classification: string): string {
   }
 }
 
-function getClassificationColor(classification: string): string {
-  switch (classification) {
-    case 'Giỏi':
-      return 'bg-edu-success-light text-edu-success';
-    case 'Khá':
-      return 'bg-edu-info-light text-edu-info';
-    case 'Trung bình':
-      return 'bg-edu-warning-light text-edu-warning';
-    case 'Yếu':
-      return 'bg-edu-error-light text-edu-error';
-    default:
-      return 'bg-edu-muted text-edu-ink-light dark:bg-edu-dark-muted dark:text-edu-dark-text-dim';
-  }
-}
-
 function getGpaClassification(gpa: number): string {
   if (gpa >= 8) return 'Giỏi';
   if (gpa >= 6.5) return 'Khá';
@@ -301,7 +286,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 overflow-x-hidden max-w-full">
       <header className="edu-page-header">
         <h1 className="edu-page-title">Tổng quan hệ thống</h1>
         <p className="edu-page-subtitle">

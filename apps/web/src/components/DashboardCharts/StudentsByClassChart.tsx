@@ -13,21 +13,20 @@ import {
 } from 'recharts';
 import type { StudentsByClassItem } from '../../lib/dashboard';
 import { useTheme } from '../../lib/themeHooks';
-import { useIsMobile } from '../../lib/useIsMobile';
+import { useBreakpoint } from '../../lib/responsive';
+import { getChartConfig } from './ChartConfig';
 
 type StudentsByClassChartProps = {
   data: StudentsByClassItem[];
 };
 
-// Chart height constants for responsive design (Requirements: 7.1, 7.2)
-const CHART_HEIGHT_MOBILE = 200;
-const CHART_HEIGHT_DESKTOP = 250;
-
 export function StudentsByClassChart({ data }: StudentsByClassChartProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const isMobile = useIsMobile();
-  const chartHeight = isMobile ? CHART_HEIGHT_MOBILE : CHART_HEIGHT_DESKTOP;
+  const { breakpoint, isMobile } = useBreakpoint();
+
+  // Get responsive config
+  const config = getChartConfig(breakpoint);
 
   const chartData = data.map((item) => ({
     ...item,
@@ -39,29 +38,45 @@ export function StudentsByClassChart({ data }: StudentsByClassChartProps) {
       <h3 className="font-display font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">
         Sinh viên theo lớp
       </h3>
-      <ResponsiveContainer width="100%" height={chartHeight}>
-        <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+      <ResponsiveContainer width="100%" height={config.height}>
+        <BarChart
+          data={chartData}
+          margin={{
+            top: 10,
+            right: 10,
+            left: 0,
+            bottom: isMobile ? 40 : 20,
+          }}
+        >
           <CartesianGrid
             strokeDasharray="3 3"
             stroke={isDark ? '#334155' : '#E2E8F0'}
           />
           <XAxis
             dataKey="name"
-            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 11 }}
+            tick={{
+              fill: isDark ? '#94A3B8' : '#475569',
+              fontSize: config.fontSize.axis,
+            }}
             angle={-45}
             textAnchor="end"
-            height={60}
+            height={isMobile ? 50 : 60}
             interval={0}
           />
           <YAxis
-            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 11 }}
+            tick={{
+              fill: isDark ? '#94A3B8' : '#475569',
+              fontSize: config.fontSize.axis,
+            }}
             allowDecimals={false}
           />
           <Tooltip
             cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
-                const item = payload[0].payload as StudentsByClassItem & { name: string };
+                const item = payload[0].payload as StudentsByClassItem & {
+                  name: string;
+                };
                 return (
                   <div
                     className={`px-3 py-2 border rounded-lg shadow-card ${
@@ -71,7 +86,9 @@ export function StudentsByClassChart({ data }: StudentsByClassChartProps) {
                     }`}
                   >
                     <p className="font-semibold">{item.className}</p>
-                    <p className="text-sm text-edu-ink-light dark:text-edu-dark-text-dim">Mã lớp: {item.classCode}</p>
+                    <p className="text-sm text-edu-ink-light dark:text-edu-dark-text-dim">
+                      Mã lớp: {item.classCode}
+                    </p>
                     <p>Số sinh viên: {item.studentCount}</p>
                   </div>
                 );

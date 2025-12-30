@@ -131,7 +131,7 @@ export const StudentGradesPage = () => {
     : null;
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 overflow-x-hidden max-w-full">
       <header>
         <div className="nb-card--flat">
           <h1 className="text-2xl font-bold">Điểm của tôi</h1>

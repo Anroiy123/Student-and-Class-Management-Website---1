@@ -38,7 +38,7 @@ export default function SendNotificationPage() {
   const isTeacher = user?.role === 'TEACHER';
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 overflow-x-hidden max-w-full">
       <header className="nb-card--flat">
         <h1 className="nb-title">Gửi Thông Báo</h1>
         <p className="mt-2 text-edu-ink-light dark:text-edu-dark-muted">

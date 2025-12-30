@@ -13,22 +13,17 @@ import {
 } from 'recharts';
 import type { CoursePopularityItem } from '../../lib/dashboard';
 import { useTheme } from '../../lib/themeHooks';
-import { useIsMobile } from '../../lib/useIsMobile';
+import { useBreakpoint } from '../../lib/responsive';
+import { getDynamicChartHeight } from './ChartConfig';
 
 type CoursePopularityChartProps = {
   data: CoursePopularityItem[];
 };
 
-// Chart height constants for responsive design (Requirements: 7.1, 7.2)
-const MIN_CHART_HEIGHT_MOBILE = 200;
-const MIN_CHART_HEIGHT_DESKTOP = 250;
-const HEIGHT_PER_ITEM_MOBILE = 30;
-const HEIGHT_PER_ITEM_DESKTOP = 35;
-
 export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const isMobile = useIsMobile();
+  const { breakpoint, isMobile } = useBreakpoint();
 
   const chartData = data.map((item) => ({
     ...item,
@@ -36,9 +31,10 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
   }));
 
   // Calculate dynamic height based on number of items and viewport
-  const chartHeight = isMobile
-    ? Math.max(MIN_CHART_HEIGHT_MOBILE, data.length * HEIGHT_PER_ITEM_MOBILE)
-    : Math.max(MIN_CHART_HEIGHT_DESKTOP, data.length * HEIGHT_PER_ITEM_DESKTOP);
+  const chartHeight = getDynamicChartHeight(breakpoint, data.length);
+
+  // Responsive font size
+  const fontSize = isMobile ? 10 : 12;
 
   return (
     <div className="edu-card">
@@ -49,7 +45,12 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
         <BarChart
           data={chartData}
           layout="vertical"
-          margin={{ top: 10, right: 10, left: 60, bottom: 10 }}
+          margin={{
+            top: 10,
+            right: 10,
+            left: isMobile ? 50 : 60,
+            bottom: 10,
+          }}
         >
           <CartesianGrid
             strokeDasharray="3 3"
@@ -59,7 +60,7 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
           />
           <XAxis
             type="number"
-            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize }}
             allowDecimals={false}
             axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
             tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
@@ -67,8 +68,8 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
-            width={55}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize }}
+            width={isMobile ? 45 : 55}
             axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
             tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
           />
@@ -76,7 +77,9 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
             cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
-                const item = payload[0].payload as CoursePopularityItem & { name: string };
+                const item = payload[0].payload as CoursePopularityItem & {
+                  name: string;
+                };
                 return (
                   <div
                     className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${

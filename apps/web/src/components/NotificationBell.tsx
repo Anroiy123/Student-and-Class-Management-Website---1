@@ -10,46 +10,56 @@ import {
 } from '../lib/notifications';
 import type { Notification } from '../lib/notifications';
 import { Link } from 'react-router-dom';
+import { useBreakpoint } from '../lib/responsive';
+import { BottomSheet } from './BottomSheet';
+import {
+  Bell,
+  ClipboardCheck,
+  PenLine,
+  Info,
+  X,
+  Inbox,
+} from 'lucide-react';
 
 export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { isMobile } = useBreakpoint();
 
   const { data: unreadCount = 0 } = useUnreadCountQuery();
   const { data: notificationsData, isLoading } = useNotificationsQuery(
     { page: 1, pageSize: 5 },
-    { enabled: isOpen },
+    { enabled: isOpen }
   );
 
   const markAsReadMutation = useMarkAsRead();
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
 
-  // Tính toán vị trí dropdown khi mở
+  // Tính toán vị trí dropdown khi mở (chỉ cho desktop)
   useEffect(() => {
-    if (isOpen && buttonRef.current) {
+    if (isOpen && buttonRef.current && !isMobile) {
       const rect = buttonRef.current.getBoundingClientRect();
       const dropdownWidth = 384;
-      const dropdownMaxHeight = 420; // ước tính chiều cao dropdown
-      
+      const dropdownMaxHeight = 420;
+
       let left = rect.right + 8;
-      
+
       if (left + dropdownWidth > window.innerWidth - 8) {
         left = rect.left - dropdownWidth - 8;
       }
       if (left < 8) {
         left = 8;
       }
-      
-      // Căn dropdown với đỉnh icon
+
       let top = rect.top;
-      
+
       if (top + dropdownMaxHeight > window.innerHeight - 8) {
         top = window.innerHeight - dropdownMaxHeight - 8;
       }
-      
+
       if (top < 8) {
         top = 8;
       }
@@ -58,10 +68,12 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
         left: left,
       });
     }
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
-  // Đóng dropdown khi click bên ngoài
+  // Đóng dropdown khi click bên ngoài (chỉ cho desktop)
   useEffect(() => {
+    if (isMobile) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
@@ -80,7 +92,7 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.isRead) {
@@ -97,69 +109,19 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
     deleteNotificationMutation.mutate(notificationId);
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
   const getNotificationIcon = (notification: Notification) => {
-    let icon;
     switch (notification.type) {
       case 'grade_added':
-        icon = (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-6 h-6 text-green-500"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"
-            />
-          </svg>
-        );
-        break;
+        return <ClipboardCheck className="w-6 h-6 text-green-500" />;
       case 'grade_updated':
-        icon = (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-6 h-6 text-blue-500"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-            />
-          </svg>
-        );
-        break;
-      case 'info_updated':
-      case 'general':
-      case 'announcement':
+        return <PenLine className="w-6 h-6 text-blue-500" />;
       default:
-        icon = (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-6 h-6 text-amber-500"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-            />
-          </svg>
-        );
-        break;
+        return <Info className="w-6 h-6 text-amber-500" />;
     }
-
-    return icon;
   };
 
   const formatTime = (dateString: string) => {
@@ -177,6 +139,108 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
     return date.toLocaleDateString('vi-VN');
   };
 
+  // Notification list content (shared between mobile and desktop)
+  const NotificationContent = () => (
+    <>
+      {isLoading ? (
+        <div className="p-8 text-center text-sm text-edu-ink-light dark:text-edu-dark-muted">
+          Đang tải...
+        </div>
+      ) : notificationsData && notificationsData.items.length > 0 ? (
+        notificationsData.items.map((notification) => (
+          <div
+            key={notification._id}
+            onClick={() => handleNotificationClick(notification)}
+            className={clsx(
+              'border-b border-edu-border dark:border-edu-dark-border p-4 cursor-pointer',
+              'transition-colors hover:bg-gray-50 dark:hover:bg-edu-dark-muted/30',
+              !notification.isRead && 'bg-blue-50 dark:bg-blue-900/20'
+            )}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                {getNotificationIcon(notification)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4
+                        className={clsx(
+                          'text-sm font-semibold',
+                          !notification.isRead
+                            ? 'text-edu-primary dark:text-edu-dark-accent'
+                            : 'text-edu-ink dark:text-edu-dark-text'
+                        )}
+                      >
+                        {notification.title}
+                      </h4>
+                      {notification.category &&
+                        notification.category !== 'general' && (
+                          <span
+                            className={clsx(
+                              'text-xs px-2 py-0.5 rounded-full',
+                              notification.category === 'academic' &&
+                                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                              notification.category === 'administrative' &&
+                                'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+                              notification.category === 'event' &&
+                                'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                              notification.category === 'urgent' &&
+                                'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                            )}
+                          >
+                            {notification.category === 'academic' && 'Học tập'}
+                            {notification.category === 'administrative' &&
+                              'Hành chính'}
+                            {notification.category === 'event' && 'Sự kiện'}
+                            {notification.category === 'urgent' && 'Khẩn cấp'}
+                          </span>
+                        )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => handleDelete(notification._id, e)}
+                    className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
+                    title="Xóa"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-sm text-edu-ink-light dark:text-edu-dark-muted mt-1">
+                  {notification.message}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {formatTime(notification.createdAt)}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))
+      ) : (
+        <div className="p-8 text-center">
+          <Inbox className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+          <p className="text-sm text-edu-ink-light dark:text-edu-dark-muted">
+            Không có thông báo nào
+          </p>
+        </div>
+      )}
+    </>
+  );
+
+  // Footer content
+  const FooterContent = () =>
+    notificationsData && notificationsData.total > 5 ? (
+      <Link
+        to="/notifications"
+        className="block text-center text-sm text-edu-primary dark:text-edu-dark-accent hover:underline py-2"
+        onClick={handleClose}
+      >
+        Xem tất cả ({notificationsData.total})
+      </Link>
+    ) : null;
+
   return (
     <div className="relative">
       <button
@@ -184,27 +248,17 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          'relative p-2 rounded-lg transition-colors',
+          'relative p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center',
           'bg-white/10 hover:bg-white/20',
           'text-white',
-          isCollapsed && 'w-full',
+          isCollapsed && 'w-full'
         )}
         title="Thông báo"
+        aria-label={`Thông báo${unreadCount > 0 ? ` (${unreadCount} chưa đọc)` : ''}`}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-5 h-5"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
-          />
-        </svg>
+        <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-lg">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -212,13 +266,39 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
         )}
       </button>
 
-      {isOpen &&
+      {/* Mobile: Bottom Sheet */}
+      {isMobile && (
+        <BottomSheet
+          isOpen={isOpen}
+          onClose={handleClose}
+          title="Thông báo"
+          footer={<FooterContent />}
+        >
+          {/* Header actions */}
+          {notificationsData && notificationsData.items.length > 0 && (
+            <div className="px-4 py-2 border-b border-edu-border dark:border-edu-dark-border">
+              <button
+                type="button"
+                onClick={handleMarkAllAsRead}
+                className="text-sm text-edu-primary dark:text-edu-dark-accent hover:underline"
+              >
+                Đánh dấu tất cả đã đọc
+              </button>
+            </div>
+          )}
+          <NotificationContent />
+        </BottomSheet>
+      )}
+
+      {/* Desktop: Dropdown */}
+      {!isMobile &&
+        isOpen &&
         createPortal(
           <>
             {/* Overlay */}
             <div
               className="fixed inset-0 bg-black/20 z-[9998]"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
               style={{
                 animation: 'fadeIn 0.2s ease-out forwards',
               }}
@@ -230,117 +310,42 @@ export const NotificationBell = ({ isCollapsed }: { isCollapsed: boolean }) => {
               style={{
                 top: `${dropdownPosition.top}px`,
                 left: `${dropdownPosition.left}px`,
-                animation: 'slideInFromLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                animation:
+                  'slideInFromLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                 transformOrigin: 'left top',
               }}
             >
-            <div className="flex items-center justify-between border-b border-edu-border dark:border-edu-dark-border p-4">
-              <h3 className="font-semibold text-lg">Thông báo</h3>
-              {notificationsData && notificationsData.items.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleMarkAllAsRead}
-                  className="text-sm text-edu-primary dark:text-edu-dark-accent hover:underline"
-                >
-                  Đánh dấu đã đọc
-                </button>
-              )}
-            </div>
-
-            <div className="max-h-[400px] overflow-y-auto">
-              {isLoading ? (
-                <div className="p-8 text-center text-sm text-edu-ink-light dark:text-edu-dark-muted">
-                  Đang tải...
-                </div>
-              ) : notificationsData && notificationsData.items.length > 0 ? (
-                notificationsData.items.map((notification) => (
-                  <div
-                    key={notification._id}
-                    onClick={() => handleNotificationClick(notification)}
-                    className={clsx(
-                      'border-b border-edu-border dark:border-edu-dark-border p-4 cursor-pointer',
-                      'transition-colors hover:bg-gray-50 dark:hover:bg-edu-dark-muted/30',
-                      !notification.isRead && 'bg-blue-50 dark:bg-blue-900/20',
-                    )}
+              <div className="flex items-center justify-between border-b border-edu-border dark:border-edu-dark-border p-4">
+                <h3 className="font-semibold text-lg">Thông báo</h3>
+                {notificationsData && notificationsData.items.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllAsRead}
+                    className="text-sm text-edu-primary dark:text-edu-dark-accent hover:underline"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        {getNotificationIcon(notification)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4
-                                className={clsx(
-                                  'text-sm font-semibold',
-                                  !notification.isRead
-                                    ? 'text-edu-primary dark:text-edu-dark-accent'
-                                    : 'text-edu-ink dark:text-edu-dark-text',
-                                )}
-                              >
-                                {notification.title}
-                              </h4>
-                              {/* Category badge */}
-                              {notification.category && notification.category !== 'general' && (
-                                <span className={clsx(
-                                  'text-xs px-2 py-0.5 rounded-full',
-                                  notification.category === 'academic' && 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-                                  notification.category === 'administrative' && 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
-                                  notification.category === 'event' && 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
-                                  notification.category === 'urgent' && 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                )}>
-                                  {notification.category === 'academic' && 'Học tập'}
-                                  {notification.category === 'administrative' && 'Hành chính'}
-                                  {notification.category === 'event' && 'Sự kiện'}
-                                  {notification.category === 'urgent' && 'Khẩn cấp'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => handleDelete(notification._id, e)}
-                            className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                            title="Xóa"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        <p className="text-sm text-edu-ink-light dark:text-edu-dark-muted mt-1">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {formatTime(notification.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center">
-                  <span className="text-4xl mb-2 block">📭</span>
-                  <p className="text-sm text-edu-ink-light dark:text-edu-dark-muted">
-                    Không có thông báo nào
-                  </p>
+                    Đánh dấu đã đọc
+                  </button>
+                )}
+              </div>
+
+              <div className="max-h-[400px] overflow-y-auto">
+                <NotificationContent />
+              </div>
+
+              {notificationsData && notificationsData.total > 5 && (
+                <div className="border-t border-edu-border dark:border-edu-dark-border p-3 text-center">
+                  <Link
+                    to="/notifications"
+                    className="text-sm text-edu-primary dark:text-edu-dark-accent hover:underline"
+                    onClick={handleClose}
+                  >
+                    Xem tất cả ({notificationsData.total})
+                  </Link>
                 </div>
               )}
             </div>
-
-            {notificationsData && notificationsData.total > 5 && (
-              <div className="border-t border-edu-border dark:border-edu-dark-border p-3 text-center">
-                <Link
-                  to="/notifications"
-                  className="text-sm text-edu-primary dark:text-edu-dark-accent hover:underline"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Xem tất cả ({notificationsData.total})
-                </Link>
-              </div>
-            )}
-          </div>
           </>,
-          document.body,
+          document.body
         )}
     </div>
   );
