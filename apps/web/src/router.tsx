@@ -7,6 +7,7 @@ import { CoursesPage } from './pages/CoursesPage';
 import { GradesPage } from './pages/GradesPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { UsersPage } from './pages/UsersPage';
+import SendNotificationPage from './pages/SendNotificationPage';
 import { SignInPage } from './pages/SignInPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -78,6 +79,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <UsersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'send-notification',
+        element: (
+          <ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}>
+            <SendNotificationPage />
           </ProtectedRoute>
         ),
       },

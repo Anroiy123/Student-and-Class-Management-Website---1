@@ -1,0 +1,15 @@
+2025-12-27T10:10:58.956674Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T10:36:48.824915Z  WARN turborepo_filewatch: failed to remove cookie file failed to remove file `D:\Student-and-Class-Management-Website---1\.turbo\cookies\.turbo-cookie`
+2025-12-27T10:36:49.565908Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T10:36:50.161497Z  WARN turborepo_filewatch: failed to remove cookie file failed to remove file `D:\Student-and-Class-Management-Website---1\.turbo\cookies\.turbo-cookie`
+2025-12-27T12:46:41.774181Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T12:46:42.011900Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T12:57:50.920626Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T12:57:51.037359Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T13:00:19.279494Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T13:00:19.524677Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T13:02:59.757574Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T13:03:00.252989Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T13:13:42.964973Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T13:13:43.136607Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2025-12-27T15:00:52.909519Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running

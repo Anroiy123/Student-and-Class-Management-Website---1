@@ -56,6 +56,7 @@ export const login: RequestHandler = asyncHandler(async (req, res) => {
   }
 
   const accessToken = signAccessToken({
+    _id: user._id.toString(),
     sub: user._id.toString(),
     role: user.role,
   });
