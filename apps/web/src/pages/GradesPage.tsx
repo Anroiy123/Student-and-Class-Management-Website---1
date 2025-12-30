@@ -75,7 +75,8 @@ export const GradesPage = () => {
     !!(
       searchParams.get('classId') ||
       searchParams.get('courseId') ||
-      searchParams.get('semester')
+      searchParams.get('semester') ||
+      searchParams.get('searchValue')
     ),
   );
 
@@ -93,19 +94,24 @@ export const GradesPage = () => {
   );
 
   // Auto-apply filters when classId or courseId changes
+  // Special values: "" = not selected, "__all__" = all items
   useEffect(() => {
+    // Only apply when user has made a selection (not empty string)
     if (classId || courseId) {
       setAppliedFilters({
-        classId,
-        courseId,
+        // Convert "__all__" to empty string for API (means no filter)
+        classId: classId === '__all__' ? '' : classId,
+        courseId: courseId === '__all__' ? '' : courseId,
         semester,
       });
       setHasAppliedOnce(true);
     }
   }, [classId, courseId, semester]);
 
-  // Check if filters have been applied (even if empty - "Tất cả")
-  const hasActiveFilters = hasAppliedOnce;
+  // Check if filters have been applied OR search value is entered
+  // This allows global search without requiring class/course selection
+  // User must select something (including "All") to trigger data load
+  const hasActiveFilters = hasAppliedOnce || !!searchValue.trim();
 
   useEffect(() => {
     const s = new URLSearchParams();
@@ -148,7 +154,7 @@ export const GradesPage = () => {
   const { data: classCoursesData } = useQuery({
     queryKey: ['enrollments', 'courses', classId],
     queryFn: async () => {
-      if (!classId) return [];
+      if (!classId || classId === '__all__') return [];
       const { data } = await apiClient.get<
         Array<{ courseId: CourseItem; _id: string }>
       >('/enrollments', {
@@ -160,18 +166,18 @@ export const GradesPage = () => {
       );
       return uniqueCourses;
     },
-    enabled: !!classId,
+    enabled: !!classId && classId !== '__all__',
     staleTime: 5 * 60 * 1000,
   });
 
   // Use filtered courses if class is selected, otherwise all courses
-  const availableCourses = classId
+  const availableCourses = classId && classId !== '__all__'
     ? (classCoursesData ?? [])
     : (coursesData ?? []);
 
   // Reset courseId when classId changes
   useEffect(() => {
-    if (classId && courseId) {
+    if (classId && classId !== '__all__' && courseId && courseId !== '__all__') {
       // Check if current courseId is still valid for the new class
       const isValidCourse = classCoursesData?.some((c) => c._id === courseId);
       if (!isValidCourse) {
@@ -377,7 +383,8 @@ export const GradesPage = () => {
                 value={classId}
                 onChange={(e) => setClassId(e.target.value)}
               >
-                <option value="">-- Tất cả lớp --</option>
+                <option value="">-- Chọn lớp --</option>
+                <option value="__all__">Tất cả lớp</option>
                 {(classesData ?? []).map((c) => (
                   <option key={c._id} value={c._id}>
                     {c.code} - {c.name}
@@ -390,8 +397,9 @@ export const GradesPage = () => {
                 value={courseId}
                 onChange={(e) => setCourseId(e.target.value)}
               >
-                <option value="">
-                  -- {classId ? 'Tất cả môn của lớp' : 'Tất cả môn học'} --
+                <option value="">-- Chọn môn học --</option>
+                <option value="__all__">
+                  {classId && classId !== '__all__' ? 'Tất cả môn của lớp' : 'Tất cả môn học'}
                 </option>
                 {availableCourses.map((c) => (
                   <option key={c._id} value={c._id}>
