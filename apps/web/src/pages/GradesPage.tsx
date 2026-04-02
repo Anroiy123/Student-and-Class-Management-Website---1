@@ -284,7 +284,7 @@ export const GradesPage = () => {
           return (
             <div className="group relative">
               <span className={`font-semibold ${colorClass}`}>{total}</span>
-              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded border-2 border-black bg-white px-2 py-1 text-xs shadow-neo-sm whitespace-nowrap dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
+              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded-lg border border-edu-border bg-white px-2 py-1 text-xs shadow-elevated whitespace-nowrap dark:bg-edu-dark-surface dark:border-edu-dark-border dark:text-edu-dark-text">
                 {classification}
               </div>
             </div>

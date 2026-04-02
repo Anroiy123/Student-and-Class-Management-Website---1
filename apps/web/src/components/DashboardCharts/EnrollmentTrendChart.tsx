@@ -30,23 +30,27 @@ export function EnrollmentTrendChart({ data }: EnrollmentTrendChartProps) {
   const chartHeight = isMobile ? CHART_HEIGHT_MOBILE : CHART_HEIGHT_DESKTOP;
 
   return (
-    <div className="nb-card">
-      <h3 className="font-display font-semibold text-lg mb-4">
+    <div className="edu-card">
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">
         Xu hướng đăng ký môn học
       </h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#4a4a4a' : '#ddd'}
+            stroke={isDark ? '#334155' : '#E2E8F0'}
           />
           <XAxis
             dataKey="monthLabel"
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
+            axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
+            tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
           />
           <YAxis
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
             allowDecimals={false}
+            axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
+            tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -54,10 +58,10 @@ export function EnrollmentTrendChart({ data }: EnrollmentTrendChartProps) {
                 const item = payload[0].payload as EnrollmentTrendItem;
                 return (
                   <div
-                    className={`px-3 py-2 border-2 rounded shadow-neo-sm ${
+                    className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
                       isDark
-                        ? 'bg-nb-dark-section border-nb-dark-border text-nb-dark-text'
-                        : 'bg-white border-black'
+                        ? 'bg-edu-dark-surface border border-edu-dark-border text-edu-dark-text'
+                        : 'bg-white border border-edu-border text-edu-ink'
                     }`}
                   >
                     <p className="font-semibold">{item.monthLabel}</p>
@@ -71,19 +75,19 @@ export function EnrollmentTrendChart({ data }: EnrollmentTrendChartProps) {
           <Line
             type="monotone"
             dataKey="count"
-            stroke={isDark ? '#D4AF37' : '#7868D8'}
-            strokeWidth={3}
+            stroke={isDark ? '#60A5FA' : '#6366F1'}
+            strokeWidth={2}
             dot={{
-              fill: isDark ? '#D4AF37' : '#7868D8',
-              stroke: isDark ? '#393947' : '#111',
-              strokeWidth: 2,
-              r: 5,
+              fill: isDark ? '#60A5FA' : '#6366F1',
+              stroke: 'transparent',
+              strokeWidth: 0,
+              r: 4,
             }}
             activeDot={{
-              fill: isDark ? '#e5c350' : '#FFE76A',
-              stroke: isDark ? '#393947' : '#111',
-              strokeWidth: 2,
-              r: 7,
+              fill: isDark ? '#93C5FD' : '#818CF8',
+              stroke: 'transparent',
+              strokeWidth: 0,
+              r: 6,
             }}
           />
         </LineChart>

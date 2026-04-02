@@ -41,8 +41,8 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
     : Math.max(MIN_CHART_HEIGHT_DESKTOP, data.length * HEIGHT_PER_ITEM_DESKTOP);
 
   return (
-    <div className="nb-card">
-      <h3 className="font-display font-semibold text-lg mb-4">
+    <div className="edu-card">
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">
         Môn học phổ biến
       </h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
@@ -53,36 +53,41 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={isDark ? '#4a4a4a' : '#ddd'}
+            stroke={isDark ? '#334155' : '#E2E8F0'}
             horizontal={true}
             vertical={false}
           />
           <XAxis
             type="number"
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
             allowDecimals={false}
+            axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
+            tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
           />
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: isDark ? '#e5e5e5' : '#111', fontSize: 12 }}
+            tick={{ fill: isDark ? '#94A3B8' : '#475569', fontSize: 12 }}
             width={55}
+            axisLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
+            tickLine={{ stroke: isDark ? '#334155' : '#E2E8F0' }}
           />
           <Tooltip
+            cursor={false}
             content={({ active, payload }) => {
               if (active && payload && payload.length) {
                 const item = payload[0].payload as CoursePopularityItem & { name: string };
                 return (
                   <div
-                    className={`px-3 py-2 border-2 rounded shadow-neo-sm ${
+                    className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
                       isDark
-                        ? 'bg-nb-dark-section border-nb-dark-border text-nb-dark-text'
-                        : 'bg-white border-black'
+                        ? 'bg-edu-dark-surface border border-edu-dark-border text-edu-dark-text'
+                        : 'bg-white border border-edu-border text-edu-ink'
                     }`}
                   >
                     <p className="font-semibold">{item.courseName}</p>
-                    <p className="text-sm opacity-70">Mã môn: {item.courseCode}</p>
-                    <p>Số đăng ký: {item.enrollmentCount}</p>
+                    <p className="text-xs opacity-70">Mã môn: {item.courseCode}</p>
+                    <p className="font-medium">Số đăng ký: {item.enrollmentCount}</p>
                   </div>
                 );
               }
@@ -91,9 +96,7 @@ export function CoursePopularityChart({ data }: CoursePopularityChartProps) {
           />
           <Bar
             dataKey="enrollmentCount"
-            fill={isDark ? '#8AC186' : '#8AC186'}
-            stroke={isDark ? '#393947' : '#111'}
-            strokeWidth={2}
+            fill={isDark ? '#0D9488' : '#0D9488'}
             radius={[0, 4, 4, 0]}
           />
         </BarChart>

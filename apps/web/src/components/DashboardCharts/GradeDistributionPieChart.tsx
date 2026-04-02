@@ -26,10 +26,10 @@ const GRADE_LABELS: Record<string, string> = {
 };
 
 const COLORS = {
-  excellent: { light: '#8AC186', dark: '#8AC186' }, // mint
-  good: { light: '#9AD9FF', dark: '#9AD9FF' }, // sky
-  average: { light: '#FFE76A', dark: '#D4AF37' }, // lemon/gold
-  poor: { light: '#FFACC8', dark: '#FFACC8' }, // coral
+  excellent: { light: '#059669', dark: '#34D399' }, // emerald
+  good: { light: '#0284C7', dark: '#38BDF8' }, // sky
+  average: { light: '#D97706', dark: '#FBBF24' }, // amber
+  poor: { light: '#DC2626', dark: '#F87171' }, // red
 };
 
 // Chart height constants for responsive design (Requirements: 7.1, 7.2)
@@ -72,8 +72,8 @@ export function GradeDistributionPieChart({ data }: GradeDistributionPieChartPro
   const total = data.total || chartData.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className="nb-card">
-      <h3 className="font-display font-semibold text-lg mb-4">Phân bố điểm số</h3>
+    <div className="edu-card">
+      <h3 className="font-semibold text-base text-edu-ink dark:text-edu-dark-text mb-4">Phân bố điểm số</h3>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <PieChart>
           <Pie
@@ -84,15 +84,20 @@ export function GradeDistributionPieChart({ data }: GradeDistributionPieChartPro
             outerRadius={80}
             paddingAngle={2}
             dataKey="value"
-            label={({ name, percent }) => `${(name ?? '').split(' ')[0]} ${((percent ?? 0) * 100).toFixed(0)}%`}
+            label={({ name, percent }) => {
+              const label = (name ?? '').split(' ')[0];
+              // Fix "Trung" to show as "Trung bình"
+              const displayLabel = label === 'Trung' ? 'Trung bình' : label;
+              return `${displayLabel} ${((percent ?? 0) * 100).toFixed(0)}%`;
+            }}
             labelLine={false}
           >
             {chartData.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={isDark ? entry.darkColor : entry.color}
-                stroke={isDark ? '#393947' : '#111'}
-                strokeWidth={2}
+                stroke="transparent"
+                strokeWidth={0}
               />
             ))}
           </Pie>
@@ -103,10 +108,10 @@ export function GradeDistributionPieChart({ data }: GradeDistributionPieChartPro
                 const percentage = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
                 return (
                   <div
-                    className={`px-3 py-2 border-2 rounded shadow-neo-sm ${
+                    className={`px-3 py-2 rounded-lg shadow-elevated text-sm ${
                       isDark
-                        ? 'bg-nb-dark-section border-nb-dark-border text-nb-dark-text'
-                        : 'bg-white border-black'
+                        ? 'bg-edu-dark-surface border border-edu-dark-border text-edu-dark-text'
+                        : 'bg-white border border-edu-border text-edu-ink'
                     }`}
                   >
                     <p className="font-semibold">{item.name}</p>
@@ -120,7 +125,8 @@ export function GradeDistributionPieChart({ data }: GradeDistributionPieChartPro
           />
           <Legend
             wrapperStyle={{
-              color: isDark ? '#e5e5e5' : '#111',
+              color: isDark ? '#94A3B8' : '#475569',
+              fontSize: '12px',
             }}
           />
         </PieChart>

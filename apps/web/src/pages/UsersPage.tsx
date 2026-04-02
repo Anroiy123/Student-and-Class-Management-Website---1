@@ -374,15 +374,15 @@ export const UsersPage = () => {
       </header>
 
       <div className="nb-card">
-        <div className="flex gap-2 border-b-2 border-black pb-2 mb-4 dark:border-nb-dark-border">
+        <div className="flex gap-2 border-b border-edu-border pb-2 mb-4 dark:border-edu-dark-border">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               type="button"
-              className={`px-4 py-2 text-sm font-medium border-2 border-black rounded-md transition-all ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                 activeTab === tab.key
-                  ? 'bg-nb-lemon shadow-neo-sm dark:bg-nb-gold'
-                  : 'bg-white hover:bg-nb-sky dark:bg-nb-dark-section dark:border-nb-dark-border'
+                  ? 'bg-edu-primary text-white shadow-card dark:bg-edu-dark-primary dark:text-edu-dark-bg'
+                  : 'bg-edu-muted text-edu-ink hover:bg-edu-border dark:bg-edu-dark-muted dark:text-edu-dark-text dark:hover:bg-edu-dark-surface'
               }`}
               onClick={() => {
                 setActiveTab(tab.key);

@@ -164,7 +164,7 @@ export const StudentsPage = () => {
           return (
             <div className="group relative">
               <span className="block max-w-[200px] truncate">{email}</span>
-              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded border-2 border-black bg-white px-2 py-1 text-xs shadow-neo-sm whitespace-nowrap dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text">
+              <div className="invisible group-hover:visible absolute left-0 top-full z-10 mt-1 rounded-lg border bg-edu-surface px-2 py-1 text-xs shadow-elevated whitespace-nowrap text-edu-ink border-edu-border dark:bg-edu-dark-surface dark:border-edu-dark-border dark:text-edu-dark-text">
                 {email}
               </div>
             </div>
@@ -182,12 +182,12 @@ export const StudentsPage = () => {
             <div className="group relative">
               <button
                 type="button"
-                className="text-xs text-black px-2 py-1 border-2 border-black rounded-md bg-nb-sky hover:bg-nb-lemon  transition-colors dark:border-nb-dark-border"
+                className="text-xs px-2 py-1 border rounded-md transition-colors bg-edu-primary/10 text-edu-primary border-edu-primary/30 hover:bg-edu-primary hover:text-white dark:bg-edu-dark-primary/20 dark:text-edu-dark-primary dark:border-edu-dark-primary/30 dark:hover:bg-edu-dark-primary dark:hover:text-edu-dark-bg"
               >
                 Chi tiết
               </button>
               <div
-                className={`invisible group-hover:visible absolute left-0 z-10 rounded border-2 border-black bg-white p-3 text-xs shadow-neo-sm min-w-[250px] dark:bg-nb-dark-section dark:border-nb-dark-border dark:text-nb-dark-text ${
+                className={`invisible group-hover:visible absolute left-0 z-10 rounded-lg border bg-edu-surface p-3 text-xs shadow-elevated min-w-[250px] text-edu-ink border-edu-border dark:bg-edu-dark-surface dark:border-edu-dark-border dark:text-edu-dark-text ${
                   isLastRow ? 'bottom-full mb-1' : 'top-full mt-1'
                 }`}
               >
